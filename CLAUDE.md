@@ -62,6 +62,10 @@ Paperboy is an AI research podcast pipeline. It sources academic papers from ArX
 
 The target user is a research scientist who wants daily AI briefings tailored to their work, consumed during exercise or commute via podcast.
 
+### About the Name
+
+The name "Paperboy" is a lighthearted nod to the 1985 arcade game — the image of riding an exercise bike while getting ArXiv papers delivered. But the arcade and fitness angles are flavor, not focus. This repo's primary mission is **daily academic paper curation and delivery**. The delivery mechanism happens to be TTS consumed during a workout, which makes the name fun, but code, features, and documentation should stay grounded in the research pipeline domain. Don't theme things around arcades, bikes, or fitness.
+
 ## Tech Stack
 
 - **Language**: Python (3.10+)

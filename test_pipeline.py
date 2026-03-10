@@ -10,11 +10,19 @@ import sys
 from pathlib import Path
 from datetime import datetime, timezone
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.config import PipelineConfig
 from src.selector import PaperSelector
 from src.models import Paper, Article
+
+
+@pytest.fixture
+def config():
+    """Load pipeline config for tests that need it."""
+    return PipelineConfig.load()
 
 
 # ── Mock data for testing ──────────────────────────────────────────
@@ -122,7 +130,6 @@ def test_config():
     assert len(config.arxiv.categories) > 0
     assert len(config.focus_areas.keywords) > 0
     print(f"  PASSED\n")
-    return config
 
 
 def test_selection(config):
@@ -146,7 +153,6 @@ def test_selection(config):
     print(f"\n  Top pick: {top.paper.title[:70]}...")
     print(f"  Score:    {top.score:.3f}")
     print(f"  PASSED\n")
-    return scored
 
 
 def test_model_conversions():
@@ -193,8 +199,9 @@ if __name__ == "__main__":
     print("  (Using mock data — run on your machine for live tests)")
     print("=" * 60 + "\n")
 
-    config = test_config()
-    test_selection(config)
+    test_config()
+    cfg = PipelineConfig.load()
+    test_selection(cfg)
     test_model_conversions()
     test_cli_info()
 

@@ -6,6 +6,10 @@ Paperboy is an end-to-end pipeline that sources academic papers from ArXiv and b
 
 The target user is a research scientist who wants daily AI briefings tailored to their work, consumed during exercise or commute.
 
+### Why "Paperboy"?
+
+You're literally on a bike, getting papers delivered. It's the 1985 arcade game but instead of throwing newspapers at houses, you're absorbing ArXiv papers on an exercise bike. The name is a nod to that image, but the repo's real job is straightforward: source, score, and deliver a daily academic briefing — like a real paperboy, rain or shine.
+
 ## How It Works
 
 ```
