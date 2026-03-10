@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""
+Research Podcast Pipeline — CLI Entry Point
+
+Usage:
+    python main.py run                          # Run the full pipeline
+    python main.py run --config my_config.yaml  # Use custom config
+    python main.py run --output-dir ./my_output # Override output directory
+    python main.py health                       # Check service connectivity
+    python main.py info                         # Show current configuration
+"""
+
+import sys
+from pathlib import Path
+
+import click
+
+# Add project root to path so `src` is importable
+sys.path.insert(0, str(Path(__file__).parent))
+
+from src.config import PipelineConfig
+from src.pipeline import DailyPipeline
+
+
+@click.group()
+def cli():
+    """Research Podcast Pipeline — Daily AI research briefings for your workout."""
+    pass
+
+
+@cli.command()
+@click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
+@click.option("--output-dir", type=click.Path(), default=None, help="Override output directory")
+@click.option("--days-back", type=int, default=None, help="Override days lookback for paper search")
+def run(config, output_dir, days_back):
+    """Run the full pipeline: source → select → distill → save."""
+    cfg = PipelineConfig.load(config_path=config)
+
+    if output_dir:
+        cfg.output_dir = output_dir
+    if days_back:
+        cfg.days_lookback = days_back
+
+    # Validate
+    errors = cfg.validate()
+    if errors:
+        for err in errors:
+            click.echo(f"Config error: {err}", err=True)
+        click.echo("\nSet ANTHROPIC_API_KEY in your .env file or environment.", err=True)
+        sys.exit(1)
+
+    pipeline = DailyPipeline(cfg)
+    result = pipeline.run()
+
+    if result.success:
+        click.echo(f"\n{'=' * 60}")
+        click.echo(f"SUCCESS!")
+        click.echo(f"{'=' * 60}")
+        click.echo(f"Paper:    {result.selected_paper.paper.title[:80]}")
+        click.echo(f"Score:    {result.selected_paper.score:.2f}")
+        click.echo(f"Words:    {result.briefing.word_count}")
+        click.echo(f"Saved to: {result.briefing_path}")
+        click.echo(f"\nUpload this file to NotebookLM to generate your podcast!")
+    else:
+        click.echo(f"\nPipeline failed: {result.error}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
+def health(config):
+    """Check connectivity to ArXiv, blog feeds, and Claude API."""
+    cfg = PipelineConfig.load(config_path=config)
+
+    if not cfg.anthropic_api_key:
+        click.echo("Warning: ANTHROPIC_API_KEY not set. Claude API check will fail.")
+
+    pipeline = DailyPipeline(cfg)
+    results = pipeline.health_check()
+
+    click.echo(f"\nHealth Check Results:")
+    click.echo(f"{'=' * 40}")
+    all_ok = True
+    for service, healthy in results.items():
+        status = click.style("OK", fg="green") if healthy else click.style("FAILED", fg="red")
+        click.echo(f"  {service:.<30} {status}")
+        if not healthy:
+            all_ok = False
+
+    if all_ok:
+        click.echo(f"\nAll services healthy!")
+    else:
+        click.echo(f"\nSome services are unhealthy. Check logs for details.")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
+def info(config):
+    """Display current pipeline configuration."""
+    cfg = PipelineConfig.load(config_path=config)
+
+    click.echo(f"\nResearch Podcast Pipeline — Configuration")
+    click.echo(f"{'=' * 50}")
+    click.echo(f"Output dir:     {cfg.output_dir}")
+    click.echo(f"Days lookback:  {cfg.days_lookback}")
+    click.echo(f"ArXiv categories: {', '.join(cfg.arxiv.categories)}")
+    click.echo(f"Blog feeds:     {len(cfg.blogs.feeds)}")
+    for feed in cfg.blogs.feeds:
+        click.echo(f"  - {feed.name}")
+    click.echo(f"Focus keywords: {len(cfg.focus_areas.keywords)}")
+    click.echo(f"Claude model:   {cfg.claude.model}")
+    click.echo(f"Scoring model:  {cfg.claude.scoring_model}")
+    click.echo(f"Claude scoring: {'enabled' if cfg.selector.use_claude_scoring else 'disabled'}")
+    click.echo(f"Target words:   {cfg.distiller.target_word_count}")
+    click.echo(f"API key set:    {'yes' if cfg.anthropic_api_key else 'NO'}")
+
+
+if __name__ == "__main__":
+    cli()

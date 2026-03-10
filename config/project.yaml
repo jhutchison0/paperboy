@@ -1,0 +1,160 @@
+# =============================================================================
+# PROJECT.YAML — Paperboy Research Podcast Pipeline Configuration
+# =============================================================================
+# The single source of truth for project identity and structure.
+#
+# See also:
+#   - config/default_config.yaml         — Pipeline settings (sources, scoring, distillation)
+#   - docs/design/pillars.md             — Design principles
+#   - docs/design/roadmap.md             — Project roadmap
+
+# -----------------------------------------------------------------------------
+# Project Identity
+# -----------------------------------------------------------------------------
+project:
+  name: "Paperboy - Research Podcast Pipeline"
+  version: "0.1.0"
+  current_phase: "Phase 2 — Configuration & Polish"
+  language: "Python"
+  description: "AI research podcast pipeline that sources papers from ArXiv and blogs from RSS feeds, scores for relevance, and distills into briefings for NotebookLM podcast generation"
+
+# -----------------------------------------------------------------------------
+# Design Pillars (Quick Reference)
+# -----------------------------------------------------------------------------
+# Full documentation: docs/design/pillars.md
+design_pillars:
+  content_quality_first: "Briefings optimized for NotebookLM's two-voice podcast dialogue. Structure, tone, depth serve listener comprehension."
+  source_diversity_resilience: "ArXiv + blog RSS with graceful degradation. If one source fails, pipeline continues. Pluggable source architecture."
+  relevance_through_hybrid_scoring: "Two-phase: fast keyword matching + Claude semantic scoring. Configurable weights, thresholds, focus areas."
+  pipeline_idempotency: "Same date + config = same output. Date-stamped runs, deterministic selection, reproducible briefings."
+  extensibility_by_design: "Pluggable sources, scorers, output formats. NotebookLM today, TTS tomorrow. New capabilities slot in without rewriting."
+
+# -----------------------------------------------------------------------------
+# Directory Structure
+# -----------------------------------------------------------------------------
+paths:
+  # Configuration
+  config: config
+
+  # Source code
+  src: src
+
+  # CLI entry point
+  main: main.py
+
+  # Tests
+  tests: tests
+  test_integration: test_pipeline.py
+
+  # Documentation
+  docs: docs
+  docs_design: docs/design
+  docs_sessions: docs/sessions
+  docs_plans: docs/plans
+
+  # Output (gitignored)
+  output: output
+  briefings: output/briefings
+
+# -----------------------------------------------------------------------------
+# Build Phases
+# -----------------------------------------------------------------------------
+# 6 phases, sequential. Each produces a testable deliverable.
+build_phases:
+  phase_1:
+    name: "Core Pipeline"
+    status: "complete"
+    description: "Source papers from ArXiv + RSS, score with hybrid keyword + Claude, distill via Claude, save markdown"
+    deliverable: "End-to-end pipeline: python main.py run produces a briefing from today's papers"
+
+  phase_2:
+    name: "Configuration & Polish"
+    status: "in_progress"
+    description: "Agent/command alignment, error handling, CLI refinements, config validation"
+    deliverable: "Robust CLI with clear error messages, validated config, aligned agent roster"
+
+  phase_3:
+    name: "Scheduling & Automation"
+    status: "planned"
+    description: "Cron/scheduled runs, output management, date-based deduplication"
+    deliverable: "Automated daily runs with deduplication, output rotation, run history"
+
+  phase_4:
+    name: "TTS Integration"
+    status: "planned"
+    description: "ElevenLabs API or custom TTS for direct audio generation"
+    deliverable: "Pipeline produces audio files directly, bypassing manual NotebookLM upload"
+
+  phase_5:
+    name: "Distribution"
+    status: "planned"
+    description: "Podcast RSS feed generation, automated upload/hosting"
+    deliverable: "Subscribable podcast feed with automated episode publishing"
+
+  phase_6:
+    name: "Multi-Paper Briefings"
+    status: "planned"
+    description: "Multiple papers per episode, comparative analysis, thematic grouping"
+    deliverable: "Episodes covering multiple related papers with cross-paper analysis"
+
+# -----------------------------------------------------------------------------
+# Python Settings
+# -----------------------------------------------------------------------------
+# IMPORTANT: All Python commands (pytest, python main.py, pip) must run inside the
+# project venv. The venv lives at .venv/ in the repo root.
+#
+# Setup:
+#   python3 -m venv .venv
+#   source .venv/bin/activate
+#   pip install -r requirements.txt
+#
+# Running without activating:
+#   .venv/bin/pytest                    # Tests
+#   .venv/bin/python main.py run        # Pipeline
+python:
+  min_version: "3.10"
+  venv: ".venv"
+  requirements: requirements.txt
+  dependencies:
+    - arxiv>=2.1.0
+    - feedparser>=6.0
+    - anthropic>=0.40.0
+    - click>=8.0
+    - pyyaml>=6.0
+    - python-slugify>=8.0
+    - python-dotenv>=1.0
+    - python-dateutil>=2.8
+    - pytest  # test runner (dev dependency)
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+testing:
+  framework: "pytest"
+  test_directory: tests
+  integration_test: test_pipeline.py
+  key_test_categories:
+    - sourcing             # ArXiv + RSS fetching, error handling, deduplication
+    - selection            # Keyword scoring, Claude scoring, hybrid ranking
+    - distillation         # Briefing structure, section completeness, tone
+    - pipeline             # End-to-end orchestration, stage handoffs
+    - config               # YAML loading, validation, defaults
+
+# -----------------------------------------------------------------------------
+# Commands
+# -----------------------------------------------------------------------------
+commands:
+  test: "pytest"
+  test_verbose: "pytest -v"
+  test_specific: "pytest -k <pattern>"
+  run_pipeline: "python main.py run"
+  run_source: "python main.py source"
+  run_select: "python main.py select"
+  run_distill: "python main.py distill"
+  help: "python main.py --help"
+
+# =============================================================================
+# LAST UPDATED
+# =============================================================================
+last_updated: "2026-03-10"
+updated_by: "Rewrite: project identity files aligned to paperboy research podcast pipeline"
