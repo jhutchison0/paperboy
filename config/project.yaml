@@ -13,7 +13,7 @@
 # -----------------------------------------------------------------------------
 project:
   name: "Paperboy - Research Podcast Pipeline"
-  version: "0.1.0"
+  version: "0.2.0"
   current_phase: "Phase 2 — Configuration & Polish"
   language: "Python"
   description: "AI research podcast pipeline that sources papers from ArXiv and blogs from RSS feeds, scores for relevance, and distills into briefings for NotebookLM podcast generation"
@@ -157,4 +157,4 @@ commands:
 # LAST UPDATED
 # =============================================================================
 last_updated: "2026-03-10"
-updated_by: "Rewrite: project identity files aligned to paperboy research podcast pipeline"
+updated_by: "v0.2.0: Added Claude Code CLI as dual backend (AgentRunner)"
