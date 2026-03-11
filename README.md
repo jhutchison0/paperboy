@@ -1,5 +1,7 @@
 # Paperboy
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 **Daily AI research briefings, delivered as podcasts.**
 
 Paperboy is an end-to-end pipeline that sources academic papers from ArXiv and blog posts from RSS feeds, scores them for relevance to your research interests, and distills the best into structured markdown briefings optimized for [Google NotebookLM](https://notebooklm.google.com/)'s two-voice podcast generation.
