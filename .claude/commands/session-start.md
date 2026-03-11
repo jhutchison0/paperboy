@@ -22,6 +22,14 @@ Read `config/project.yaml` build_phases section:
 
 Find and read the most recently modified file in `docs/sessions/` to understand what was done last session.
 
+## Step 3.5: Check Task List
+
+Read `docs/tasks.md` and report:
+- Active tasks (count and list)
+- Blocked tasks (count and reasons)
+- Any stale tasks (no update in 3+ sessions)
+- Suggest which active tasks align with today's work
+
 ## Step 4: Verify Health
 
 Run these commands:
@@ -38,9 +46,10 @@ Provide a brief summary:
 1. **Version**: Current version from project.yaml
 2. **Phase**: Current build phase and its deliverable
 3. **Recent Work**: Last session summary
-4. **Pending**: Key items remaining in current phase
-5. **Test Status**: All passing or failures?
-6. **Git State**: Branch, uncommitted changes?
+4. **Tasks**: Active count, blocked count, top priority items
+5. **Pending**: Key items remaining in current phase
+6. **Test Status**: All passing or failures?
+7. **Git State**: Branch, uncommitted changes?
 
 Then ask: **"What would you like to work on today?"**
 

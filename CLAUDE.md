@@ -54,6 +54,15 @@ python main.py run --date 2026-03-10  # Run for specific date
 python main.py source              # Source papers only
 python main.py select              # Score and select only
 python main.py distill             # Distill briefing only
+
+# Task Management (slash commands)
+/task                              # List active tasks
+/task add <description>            # Add a new task (default P2)
+/task done <task>                  # Mark task complete
+/task block <task> — <reason>      # Mark task blocked
+/task promote <task>               # Escalate to TCS/CONOP/OPORD
+/task brief                        # Generate session backbrief
+/task plan <task>                  # Get planning recommendation
 ```
 
 ## Project Overview
@@ -98,6 +107,28 @@ flowchart TD
 ```
 
 **Key principle**: The pipeline is modular. Each stage (source, select, distill) can run independently and produces a well-defined output that feeds the next stage.
+
+## Workflow Commands
+
+The project uses military-inspired slash commands for structured development workflow:
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/session-start` | Load context, check health, review tasks | Start of every session |
+| `/session-end` | Commit, update tasks, write session doc | End of every session |
+| `/task` | Manage task list, escalate work items | Track and plan work |
+| `/pcc` | Pre-Code Check — fast pass/fail checklist | Before every push |
+| `/pci` | Pre-Code Inspection — context-aware review | Before merge/PR or when PCC passes but confidence is low |
+| `/implement-source` | Guided workflow for adding a new content source | Adding ArXiv categories, RSS feeds, API sources |
+
+### Planning Escalation
+
+Work scales through four levels. Use `/task promote` or `/task plan` to evaluate:
+
+1. **Task** — One person, one session, clear action (`docs/tasks.md`)
+2. **TCS** — Multi-step with pass/fail criteria (Task, Condition, Standard)
+3. **CONOP** — Multi-phase with design decisions and parallel tracks (`docs/plans/`)
+4. **OPORD** — Sequential execution of a decided strategy (`docs/plans/`)
 
 ## Project Structure
 

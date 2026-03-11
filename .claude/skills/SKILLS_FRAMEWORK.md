@@ -79,6 +79,19 @@ These skills are **100% portable** to any software project. They contain no proj
 
 **Use when**: Setting up Python environments, resolving dependency conflicts
 
+### task-management (command: `/task`)
+**Focus**: Military-inspired work tracking with structured escalation from tasks to operations orders
+
+**Key Concepts**:
+- Task list management (add, complete, block, unblock, assign, update)
+- Escalation ladder: Task → TCS → CONOP → OPORD
+- Decision point guidance for promotion between levels
+- Backbrief generation for session progress reporting
+- Team composition recommendations based on work domain
+- Integration with session-start (review tasks) and session-end (update tasks)
+
+**Use when**: Tracking work items, deciding how to scope work, promoting simple tasks to structured plans, generating progress reports, assigning agent teams to work
+
 ---
 
 ## Level 1: Project-Specific Skills
@@ -207,6 +220,9 @@ Links to relevant docs, tools, standards
 │   ├── session-end.md
 │   ├── shift-left-testing.md
 │   └── python-venv-management.md
+│
+├── [Level 0: Workflow Commands]
+│   └── task management           # .claude/commands/task.md — escalation ladder, backbriefs
 │
 └── [Level 1: Project-Specific]
     └── (add as needed)

@@ -39,7 +39,15 @@ See `@pcc` for the full checklist and output format.
 - Example: `[source] Add HuggingFace Daily Papers as content source`
 - Push to the current branch
 
-## Step 4: Update Project Status
+## Step 4: Update Task List
+- Read `docs/tasks.md` and update based on this session's work:
+  - Mark completed tasks with today's date: `- [x] 2026-03-11: Description`
+  - Add any new tasks discovered during the session
+  - Move blocked tasks if blockers were resolved
+  - Flag any tasks that should be promoted (use the `/task promote` escalation ladder)
+- Run `/task brief` mentally — does the backbrief make sense?
+
+## Step 4.5: Update Project Status
 - **config/project.yaml**: Update version, phase status
   - Update `build_phases` status as work progresses
   - Bump version number if appropriate
