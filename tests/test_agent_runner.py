@@ -576,9 +576,9 @@ focus_areas:
         with patch.dict("os.environ", env_without_key, clear=True):
             cfg = PipelineConfig.load(config_path=str(config_file))
 
-        errors = cfg.validate()
-        # The missing-API-key message should be present but framed as a fallback notice
-        api_key_msgs = [e for e in errors if "ANTHROPIC_API_KEY" in e]
+        errors, warnings = cfg.validate()
+        # The missing-API-key message should be a warning, not an error
+        api_key_msgs = [w for w in warnings if "ANTHROPIC_API_KEY" in w]
         assert len(api_key_msgs) == 1
         # Should NOT say "not set" alone — should mention fallback behavior
         assert "AgentRunner" in api_key_msgs[0] or "keyword-only" in api_key_msgs[0]

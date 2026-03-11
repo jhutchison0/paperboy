@@ -213,29 +213,65 @@ class PipelineConfig:
 
         return config
 
-    def validate(self) -> list[str]:
+    def validate(self) -> tuple[list[str], list[str]]:
         """
-        Return a list of validation errors. Empty list means config is valid.
+        Validate configuration and return (errors, warnings).
 
-        Note: ANTHROPIC_API_KEY absence is a warning, not a hard error.
-        If the key is missing, Claude scoring and distillation will use the
-        AgentRunner (Claude Code CLI) backend if available, or fall back to
-        keyword-only scoring.
+        Errors are fatal — the pipeline should not start.
+        Warnings are informational — the pipeline can proceed.
+
+        Returns:
+            Tuple of (errors, warnings). Empty errors list means config is valid.
         """
         errors = []
+        warnings = []
+
         if not self.anthropic_api_key:
-            errors.append(
+            warnings.append(
                 "ANTHROPIC_API_KEY not set. Claude scoring/distillation will use the "
                 "AgentRunner (Claude Code CLI) backend if available, or keyword-only scoring."
             )
+
+        # Required content
         if not self.arxiv.categories:
             errors.append("No ArXiv categories configured.")
         if not self.focus_areas.keywords:
             errors.append("No focus area keywords configured.")
+
+        # Claude settings
+        if not (0.0 <= self.claude.temperature <= 1.0):
+            errors.append(f"claude.temperature must be 0.0-1.0, got {self.claude.temperature}.")
+        if self.claude.max_tokens <= 0:
+            errors.append("claude.max_tokens must be positive.")
+
+        # Selector settings
+        if not (0.0 <= self.selector.min_score_threshold <= 1.0):
+            errors.append(f"selector.min_score_threshold must be 0.0-1.0, got {self.selector.min_score_threshold}.")
+        if self.selector.top_k_for_claude <= 0:
+            errors.append("selector.top_k_for_claude must be positive.")
+        weight_sum = self.selector.keyword_weight + self.selector.claude_weight
+        if abs(weight_sum - 1.0) > 0.01:
+            warnings.append(
+                f"selector.keyword_weight + claude_weight = {weight_sum:.2f} (expected ~1.0). "
+                f"Scores may not be normalized."
+            )
+
+        # Distiller settings
+        if self.distiller.target_word_count <= 0:
+            errors.append("distiller.target_word_count must be positive.")
+
+        # Pipeline settings
+        if self.days_lookback <= 0:
+            errors.append("days_lookback must be positive.")
+
+        # AgentRunner bounds
         if self.agent_runner.score_timeout <= 0:
             errors.append("agent_runner.score_timeout must be positive.")
         if self.agent_runner.distill_timeout <= 0:
             errors.append("agent_runner.distill_timeout must be positive.")
         if self.agent_runner.max_output_bytes <= 0:
             errors.append("agent_runner.max_output_bytes must be positive.")
-        return errors
+        if self.agent_runner.max_retries < 0:
+            errors.append("agent_runner.max_retries must be non-negative.")
+
+        return errors, warnings

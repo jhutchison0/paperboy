@@ -251,7 +251,7 @@ class BriefingDistiller:
                 "BriefingDistiller requires either a Claude API client or an AgentRunner"
             )
 
-    def distill(self, paper: Paper) -> BriefingDocument:
+    def distill(self, paper: Paper) -> Optional[BriefingDocument]:
         """
         Generate a full briefing document from a paper.
 
@@ -259,7 +259,8 @@ class BriefingDistiller:
             paper: The selected Paper to distill.
 
         Returns:
-            BriefingDocument with markdown content ready for NotebookLM.
+            BriefingDocument with markdown content ready for NotebookLM,
+            or None if generation failed (graceful degradation per Pillar 2).
         """
         logger.info(f"Distilling: {paper.title[:80]}...")
 
@@ -268,6 +269,10 @@ class BriefingDistiller:
 
         # Generate the briefing via Claude
         briefing_content = self._generate_briefing(paper, paper_text)
+
+        if briefing_content is None:
+            logger.error("Briefing generation failed — no content returned")
+            return None
 
         # Validate and wrap in document
         doc = BriefingDocument(
@@ -306,8 +311,13 @@ class BriefingDistiller:
 
         return "\n".join(parts)
 
-    def _generate_briefing(self, paper: Paper, paper_text: str) -> str:
-        """Call Claude API or AgentRunner to generate the briefing markdown."""
+    def _generate_briefing(self, paper: Paper, paper_text: str) -> Optional[str]:
+        """
+        Call Claude API or AgentRunner to generate the briefing markdown.
+
+        Returns None on failure instead of raising — the caller handles
+        graceful degradation (Pillar 2: Source Diversity & Resilience).
+        """
         user_prompt = build_user_prompt(
             paper=paper,
             paper_text=paper_text,
@@ -318,20 +328,24 @@ class BriefingDistiller:
         # Path 1: SDK (preferred)
         if self.claude:
             logger.info(f"Calling Claude SDK ({self.config.claude.model})...")
-            response = self.claude.messages.create(
-                model=self.config.claude.model,
-                max_tokens=self.config.claude.max_tokens,
-                temperature=self.config.claude.temperature,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_prompt}],
-            )
-            content = response.content[0].text
-            usage = response.usage
-            logger.info(
-                f"Claude response: {usage.input_tokens} input tokens, "
-                f"{usage.output_tokens} output tokens"
-            )
-            return content
+            try:
+                response = self.claude.messages.create(
+                    model=self.config.claude.model,
+                    max_tokens=self.config.claude.max_tokens,
+                    temperature=self.config.claude.temperature,
+                    system=SYSTEM_PROMPT,
+                    messages=[{"role": "user", "content": user_prompt}],
+                )
+                content = response.content[0].text
+                usage = response.usage
+                logger.info(
+                    f"Claude response: {usage.input_tokens} input tokens, "
+                    f"{usage.output_tokens} output tokens"
+                )
+                return content
+            except Exception as e:
+                logger.error(f"Claude SDK distillation failed: {e}")
+                return None
 
         # Path 2: AgentRunner (CLI fallback)
         if self.agent_runner:
@@ -343,13 +357,13 @@ class BriefingDistiller:
                 user_prompt=user_prompt,
             )
             if result is None:
-                raise RuntimeError(
-                    "AgentRunner distillation returned None — briefing generation failed"
-                )
+                logger.error("AgentRunner distillation returned None — briefing generation failed")
+                return None
             logger.info(f"AgentRunner response: {len(result.split())} words")
             return result
 
-        raise RuntimeError("No Claude backend available for distillation")
+        logger.error("No Claude backend available for distillation")
+        return None
 
     def _generate_title(self, paper: Paper) -> str:
         """Generate a podcast-friendly title from the paper title."""

@@ -75,7 +75,7 @@ for item in items:
 ### Config Loading Pattern
 ```python
 cfg = PipelineConfig.load(config_path=config)
-errors = cfg.validate()
+errors, warnings = cfg.validate()
 if errors:
     # Report and exit
 ```
