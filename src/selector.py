@@ -13,8 +13,12 @@ import logging
 import re
 from typing import Optional
 
-from anthropic import Anthropic
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None  # SDK not required if using AgentRunner
 
+from src.agent_runner import AgentRunner
 from src.config import PipelineConfig
 from src.models import Paper, Article, ScoredPaper
 
@@ -30,9 +34,10 @@ class PaperSelector:
       Phase 2 (Claude): Semantic relevance scoring for top-K candidates.
     """
 
-    def __init__(self, config: PipelineConfig, claude_client: Optional[Anthropic] = None):
+    def __init__(self, config: PipelineConfig, claude_client: Optional[Anthropic] = None, agent_runner: Optional[AgentRunner] = None):
         self.config = config
         self.claude = claude_client
+        self.agent_runner = agent_runner
 
         # Pre-compile keyword patterns for efficiency
         self.keyword_patterns = [
@@ -84,7 +89,7 @@ class PaperSelector:
         logger.info(f"Top keyword scores: {[f'{sp.score:.2f}' for sp in keyword_scored[:5]]}")
 
         # Phase 2: Claude scoring (optional, for top candidates)
-        if self.config.selector.use_claude_scoring and self.claude:
+        if self.config.selector.use_claude_scoring and (self.claude or self.agent_runner):
             top_candidates = keyword_scored[:self.config.selector.top_k_for_claude]
             logger.info(f"Claude-scoring top {len(top_candidates)} candidates...")
 
@@ -92,13 +97,14 @@ class PaperSelector:
                 try:
                     claude_score, reasoning = self._score_with_claude(scored_paper.paper)
                     # Combine scores
+                    kw_score = scored_paper.score
                     combined = (
-                        self.config.selector.keyword_weight * scored_paper.score
+                        self.config.selector.keyword_weight * kw_score
                         + self.config.selector.claude_weight * claude_score
                     )
                     scored_paper.score = combined
                     scored_paper.reasoning = (
-                        f"Keyword: {scored_paper.score:.2f}, "
+                        f"Keyword: {kw_score:.2f}, "
                         f"Claude: {claude_score:.2f} → Combined: {combined:.2f}\n"
                         f"Claude reasoning: {reasoning}"
                     )
@@ -107,8 +113,8 @@ class PaperSelector:
                     # Keep keyword-only score
         else:
             top_candidates = keyword_scored
-            if not self.claude and self.config.selector.use_claude_scoring:
-                logger.info("Claude scoring enabled but no API client — using keywords only")
+            if not self.claude and not self.agent_runner and self.config.selector.use_claude_scoring:
+                logger.info("Claude scoring enabled but no API client or agent runner — using keywords only")
 
         # Re-sort after Claude scoring and filter by threshold
         top_candidates.sort(key=lambda sp: sp.score, reverse=True)
@@ -176,12 +182,14 @@ class PaperSelector:
 
     def _score_with_claude(self, paper: Paper) -> tuple[float, str]:
         """
-        Use Claude to semantically assess paper relevance.
+        Use Claude to semantically assess paper relevance. Falls back to AgentRunner if no SDK client.
 
         Returns:
             Tuple of (score between 0-1, reasoning string).
         """
-        prompt = f"""Score this research paper's relevance on a scale of 0 to 10.
+        # Path 1: SDK (preferred)
+        if self.claude:
+            prompt = f"""Score this research paper's relevance on a scale of 0 to 10.
 
 CONTEXT: The reader is a research scientist at a U.S. national laboratory
 who leads efforts in using LLMs as tools for decision support, knowledge
@@ -201,28 +209,38 @@ Respond in this exact format (nothing else):
 SCORE: [0-10]
 REASONING: [1-2 sentences explaining why this score]"""
 
-        response = self.claude.messages.create(
-            model=self.config.claude.scoring_model,
-            max_tokens=200,
-            temperature=0.0,
-            messages=[{"role": "user", "content": prompt}],
-        )
+            response = self.claude.messages.create(
+                model=self.config.claude.scoring_model,
+                max_tokens=200,
+                temperature=0.0,
+                messages=[{"role": "user", "content": prompt}],
+            )
 
-        text = response.content[0].text.strip()
+            text = response.content[0].text.strip()
 
-        # Parse score
-        score = 5.0  # default
-        reasoning = text
-        for line in text.split("\n"):
-            if line.strip().upper().startswith("SCORE:"):
-                try:
-                    score_str = line.split(":", 1)[1].strip()
-                    score = float(score_str)
-                    score = max(0, min(10, score))  # clamp
-                except (ValueError, IndexError):
-                    pass
-            elif line.strip().upper().startswith("REASONING:"):
-                reasoning = line.split(":", 1)[1].strip()
+            # Parse score
+            score = 5.0  # default
+            reasoning = text
+            for line in text.split("\n"):
+                if line.strip().upper().startswith("SCORE:"):
+                    try:
+                        score_str = line.split(":", 1)[1].strip()
+                        score = float(score_str)
+                        score = max(0, min(10, score))  # clamp
+                    except (ValueError, IndexError):
+                        pass
+                elif line.strip().upper().startswith("REASONING:"):
+                    reasoning = line.split(":", 1)[1].strip()
 
-        # Normalize to 0-1
-        return round(score / 10.0, 3), reasoning
+            # Normalize to 0-1
+            return round(score / 10.0, 3), reasoning
+
+        # Path 2: AgentRunner (CLI fallback)
+        if self.agent_runner:
+            result = self.agent_runner.score_paper(paper, self.config.focus_areas)
+            if result is not None:
+                return result["score"], result["reasoning"]
+            logger.warning(f"AgentRunner scoring returned None for '{paper.title[:50]}' — using default")
+            return 0.5, "AgentRunner scoring failed; default score applied"
+
+        raise RuntimeError("No Claude backend available for scoring")

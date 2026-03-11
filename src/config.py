@@ -68,6 +68,16 @@ class DistillerConfig:
 
 
 @dataclass
+class AgentRunnerConfig:
+    enabled: bool = True
+    score_timeout: int = 30          # seconds per scoring invocation
+    distill_timeout: int = 120       # seconds for briefing generation
+    max_retries: int = 1
+    max_output_bytes: int = 51200    # 50KB output cap
+    batch_size: int = 1              # papers per scoring invocation (target: 5)
+
+
+@dataclass
 class PipelineConfig:
     """Top-level configuration container."""
     output_dir: str = "./output/briefings"
@@ -83,6 +93,7 @@ class PipelineConfig:
     claude: ClaudeConfig = field(default_factory=ClaudeConfig)
     selector: SelectorConfig = field(default_factory=SelectorConfig)
     distiller: DistillerConfig = field(default_factory=DistillerConfig)
+    agent_runner: AgentRunnerConfig = field(default_factory=AgentRunnerConfig)
 
     # Secrets (loaded from environment)
     anthropic_api_key: str = ""
@@ -186,18 +197,45 @@ class PipelineConfig:
             user_context=distiller_raw.get("user_context", config.distiller.user_context),
         )
 
+        # Agent runner settings
+        ar_raw = raw.get("agent_runner", {})
+        config.agent_runner = AgentRunnerConfig(
+            enabled=ar_raw.get("enabled", config.agent_runner.enabled),
+            score_timeout=ar_raw.get("score_timeout", config.agent_runner.score_timeout),
+            distill_timeout=ar_raw.get("distill_timeout", config.agent_runner.distill_timeout),
+            max_retries=ar_raw.get("max_retries", config.agent_runner.max_retries),
+            max_output_bytes=ar_raw.get("max_output_bytes", config.agent_runner.max_output_bytes),
+            batch_size=ar_raw.get("batch_size", config.agent_runner.batch_size),
+        )
+
         # Secrets from environment
         config.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
 
         return config
 
     def validate(self) -> list[str]:
-        """Return a list of validation errors. Empty list means config is valid."""
+        """
+        Return a list of validation errors. Empty list means config is valid.
+
+        Note: ANTHROPIC_API_KEY absence is a warning, not a hard error.
+        If the key is missing, Claude scoring and distillation will use the
+        AgentRunner (Claude Code CLI) backend if available, or fall back to
+        keyword-only scoring.
+        """
         errors = []
         if not self.anthropic_api_key:
-            errors.append("ANTHROPIC_API_KEY not set. Set it in .env or as an environment variable.")
+            errors.append(
+                "ANTHROPIC_API_KEY not set. Claude scoring/distillation will use the "
+                "AgentRunner (Claude Code CLI) backend if available, or keyword-only scoring."
+            )
         if not self.arxiv.categories:
             errors.append("No ArXiv categories configured.")
         if not self.focus_areas.keywords:
             errors.append("No focus area keywords configured.")
+        if self.agent_runner.score_timeout <= 0:
+            errors.append("agent_runner.score_timeout must be positive.")
+        if self.agent_runner.distill_timeout <= 0:
+            errors.append("agent_runner.distill_timeout must be positive.")
+        if self.agent_runner.max_output_bytes <= 0:
+            errors.append("agent_runner.max_output_bytes must be positive.")
         return errors

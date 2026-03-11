@@ -11,9 +11,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from anthropic import Anthropic
 from slugify import slugify
 
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None  # SDK not required if using AgentRunner
+
+from src.agent_runner import AgentRunner
 from src.config import PipelineConfig
 from src.distiller import BriefingDistiller
 from src.models import BriefingDocument, Paper, ScoredPaper
@@ -71,17 +76,73 @@ class DailyPipeline:
         result = pipeline.run()
     """
 
-    def __init__(self, config: PipelineConfig):
+    def __init__(self, config: PipelineConfig, backend: str = "auto"):
         self.config = config
+        self.backend = backend
         self._setup_logging()
 
-        # Initialize Claude client
-        self.claude = Anthropic(api_key=config.anthropic_api_key)
+        # Resolve backend: api, agent, keyword-only, or auto
+        claude_client, agent_runner = self._resolve_backend(backend)
 
         # Initialize pipeline stages
         self.source_manager = SourceManager(config)
-        self.selector = PaperSelector(config, self.claude)
-        self.distiller = BriefingDistiller(config, self.claude)
+        self.selector = PaperSelector(config, claude_client=claude_client, agent_runner=agent_runner)
+
+        # Distiller requires at least one Claude backend; keyword-only mode skips distillation
+        self._has_claude_backend = claude_client is not None or agent_runner is not None
+        if self._has_claude_backend:
+            self.distiller = BriefingDistiller(config, claude_client=claude_client, agent_runner=agent_runner)
+        else:
+            self.distiller = None
+            logger.warning("No Claude backend available — distillation will be skipped")
+
+    def _resolve_backend(self, backend: str) -> tuple[Optional["Anthropic"], Optional[AgentRunner]]:
+        """
+        Resolve which Claude backend to use.
+
+        Fallback chain (auto mode):
+          1. API key available → Anthropic SDK
+          2. Claude CLI available → AgentRunner
+          3. Neither → keyword-only scoring, no distillation
+
+        Args:
+            backend: One of "auto", "api", "agent", "keyword-only".
+
+        Returns:
+            Tuple of (claude_client or None, agent_runner or None).
+        """
+        if backend == "keyword-only":
+            logger.info("Backend: keyword-only (no Claude scoring or distillation)")
+            return None, None
+
+        if backend == "api":
+            if not self.config.anthropic_api_key:
+                raise RuntimeError("--backend api requires ANTHROPIC_API_KEY to be set")
+            logger.info("Backend: Anthropic SDK (API key)")
+            return Anthropic(api_key=self.config.anthropic_api_key), None
+
+        if backend == "agent":
+            if not self.config.agent_runner.enabled:
+                raise RuntimeError("--backend agent requested but agent_runner.enabled is false in config")
+            runner = AgentRunner(self.config)
+            if not runner.is_available():
+                raise RuntimeError("--backend agent requires 'claude' CLI on PATH")
+            logger.info("Backend: AgentRunner (Claude Code CLI)")
+            return None, runner
+
+        # auto: try API first, then agent, then keyword-only
+        if self.config.anthropic_api_key:
+            logger.info("Backend (auto): Anthropic SDK (API key found)")
+            return Anthropic(api_key=self.config.anthropic_api_key), None
+
+        if self.config.agent_runner.enabled:
+            runner = AgentRunner(self.config)
+            if runner.is_available():
+                logger.info("Backend (auto): AgentRunner (Claude Code CLI detected)")
+                return None, runner
+
+        logger.warning("Backend (auto): No Claude backend available — keyword-only mode")
+        return None, None
 
     def run(self, paper_override: Optional[Paper] = None) -> PipelineResult:
         """
@@ -109,11 +170,13 @@ class DailyPipeline:
                 # Stage 1: Source
                 selected, papers_count, articles_count = self._source_and_select()
 
-            # Stage 2: Distill
+            # Stage 2: Distill (skipped in keyword-only mode)
             briefing = self._distill(selected.paper)
 
-            # Stage 3: Save
-            briefing_path = self._save_briefing(briefing)
+            # Stage 3: Save (only if briefing was generated)
+            briefing_path = None
+            if briefing:
+                briefing_path = self._save_briefing(briefing)
 
             result = PipelineResult(
                 status="success",
@@ -151,8 +214,11 @@ class DailyPipeline:
 
         return scored[0], len(papers), len(articles)
 
-    def _distill(self, paper: Paper) -> BriefingDocument:
-        """Generate the briefing document."""
+    def _distill(self, paper: Paper) -> Optional[BriefingDocument]:
+        """Generate the briefing document. Returns None if no Claude backend."""
+        if self.distiller is None:
+            logger.warning("Skipping distillation — no Claude backend available")
+            return None
         logger.info("Stage 3: Distilling briefing document...")
         return self.distiller.distill(paper)
 
@@ -178,17 +244,30 @@ class DailyPipeline:
 
         results = self.source_manager.health_check()
 
-        # Check Claude API
-        try:
-            response = self.claude.messages.create(
-                model=self.config.claude.scoring_model,
-                max_tokens=10,
-                messages=[{"role": "user", "content": "Hello"}],
-            )
-            results["claude_api"] = True
-        except Exception as e:
+        # Check Claude API (only if API key is available)
+        if self.config.anthropic_api_key and Anthropic is not None:
+            try:
+                client = Anthropic(api_key=self.config.anthropic_api_key)
+                client.messages.create(
+                    model=self.config.claude.scoring_model,
+                    max_tokens=10,
+                    messages=[{"role": "user", "content": "Hello"}],
+                )
+                results["claude_api"] = True
+            except Exception as e:
+                results["claude_api"] = False
+                logger.error(f"Claude API health check failed: {e}")
+        else:
             results["claude_api"] = False
-            logger.error(f"Claude API health check failed: {e}")
+            logger.info("Claude API: skipped (no API key)")
+
+        # Check AgentRunner (Claude Code CLI)
+        runner = AgentRunner(self.config)
+        results["claude_cli"] = runner.is_available()
+        if results["claude_cli"]:
+            logger.info("Claude CLI: available")
+        else:
+            logger.info("Claude CLI: not available")
 
         for service, healthy in results.items():
             status = "OK" if healthy else "FAILED"

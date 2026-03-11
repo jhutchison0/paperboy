@@ -32,7 +32,13 @@ def cli():
 @click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
 @click.option("--output-dir", type=click.Path(), default=None, help="Override output directory")
 @click.option("--days-back", type=int, default=None, help="Override days lookback for paper search")
-def run(config, output_dir, days_back):
+@click.option(
+    "--backend",
+    type=click.Choice(["auto", "api", "agent", "keyword-only"], case_sensitive=False),
+    default="auto",
+    help="Claude backend: auto (detect), api (SDK), agent (CLI), keyword-only (no Claude)",
+)
+def run(config, output_dir, days_back, backend):
     """Run the full pipeline: source → select → distill → save."""
     cfg = PipelineConfig.load(config_path=config)
 
@@ -41,15 +47,21 @@ def run(config, output_dir, days_back):
     if days_back:
         cfg.days_lookback = days_back
 
-    # Validate
+    # Validate — warnings are informational, not fatal
     errors = cfg.validate()
     if errors:
-        for err in errors:
-            click.echo(f"Config error: {err}", err=True)
-        click.echo("\nSet ANTHROPIC_API_KEY in your .env file or environment.", err=True)
-        sys.exit(1)
+        # Separate hard errors from informational warnings
+        hard_errors = [e for e in errors if "ANTHROPIC_API_KEY" not in e]
+        warnings = [e for e in errors if "ANTHROPIC_API_KEY" in e]
 
-    pipeline = DailyPipeline(cfg)
+        for warn in warnings:
+            click.echo(f"Note: {warn}", err=True)
+        if hard_errors:
+            for err in hard_errors:
+                click.echo(f"Config error: {err}", err=True)
+            sys.exit(1)
+
+    pipeline = DailyPipeline(cfg, backend=backend)
     result = pipeline.run()
 
     if result.success:
@@ -58,9 +70,12 @@ def run(config, output_dir, days_back):
         click.echo(f"{'=' * 60}")
         click.echo(f"Paper:    {result.selected_paper.paper.title[:80]}")
         click.echo(f"Score:    {result.selected_paper.score:.2f}")
-        click.echo(f"Words:    {result.briefing.word_count}")
-        click.echo(f"Saved to: {result.briefing_path}")
-        click.echo(f"\nUpload this file to NotebookLM to generate your podcast!")
+        if result.briefing:
+            click.echo(f"Words:    {result.briefing.word_count}")
+            click.echo(f"Saved to: {result.briefing_path}")
+            click.echo(f"\nUpload this file to NotebookLM to generate your podcast!")
+        else:
+            click.echo(f"\nNo briefing generated (keyword-only mode).")
     else:
         click.echo(f"\nPipeline failed: {result.error}", err=True)
         sys.exit(1)
@@ -69,13 +84,13 @@ def run(config, output_dir, days_back):
 @cli.command()
 @click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
 def health(config):
-    """Check connectivity to ArXiv, blog feeds, and Claude API."""
+    """Check connectivity to ArXiv, blog feeds, Claude API, and Claude CLI."""
     cfg = PipelineConfig.load(config_path=config)
 
     if not cfg.anthropic_api_key:
-        click.echo("Warning: ANTHROPIC_API_KEY not set. Claude API check will fail.")
+        click.echo("Note: ANTHROPIC_API_KEY not set — Claude API check will be skipped.")
 
-    pipeline = DailyPipeline(cfg)
+    pipeline = DailyPipeline(cfg, backend="keyword-only")
     results = pipeline.health_check()
 
     click.echo(f"\nHealth Check Results:")
@@ -114,6 +129,7 @@ def info(config):
     click.echo(f"Claude scoring: {'enabled' if cfg.selector.use_claude_scoring else 'disabled'}")
     click.echo(f"Target words:   {cfg.distiller.target_word_count}")
     click.echo(f"API key set:    {'yes' if cfg.anthropic_api_key else 'NO'}")
+    click.echo(f"Agent runner:   {'enabled' if cfg.agent_runner.enabled else 'disabled'}")
 
 
 if __name__ == "__main__":

@@ -18,8 +18,12 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from anthropic import Anthropic
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None  # SDK not required if using AgentRunner
 
+from src.agent_runner import AgentRunner
 from src.config import PipelineConfig
 from src.models import Paper, BriefingDocument
 
@@ -233,9 +237,19 @@ class BriefingDistiller:
     Its output quality directly determines podcast quality.
     """
 
-    def __init__(self, config: PipelineConfig, claude_client: Anthropic):
+    def __init__(
+        self,
+        config: PipelineConfig,
+        claude_client: Optional[Anthropic] = None,
+        agent_runner: Optional[AgentRunner] = None,
+    ):
         self.config = config
         self.claude = claude_client
+        self.agent_runner = agent_runner
+        if not self.claude and not self.agent_runner:
+            raise ValueError(
+                "BriefingDistiller requires either a Claude API client or an AgentRunner"
+            )
 
     def distill(self, paper: Paper) -> BriefingDocument:
         """
@@ -293,7 +307,7 @@ class BriefingDistiller:
         return "\n".join(parts)
 
     def _generate_briefing(self, paper: Paper, paper_text: str) -> str:
-        """Call Claude API to generate the briefing markdown."""
+        """Call Claude API or AgentRunner to generate the briefing markdown."""
         user_prompt = build_user_prompt(
             paper=paper,
             paper_text=paper_text,
@@ -301,26 +315,41 @@ class BriefingDistiller:
             target_words=self.config.distiller.target_word_count,
         )
 
-        logger.info(f"Calling Claude ({self.config.claude.model})...")
+        # Path 1: SDK (preferred)
+        if self.claude:
+            logger.info(f"Calling Claude SDK ({self.config.claude.model})...")
+            response = self.claude.messages.create(
+                model=self.config.claude.model,
+                max_tokens=self.config.claude.max_tokens,
+                temperature=self.config.claude.temperature,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            content = response.content[0].text
+            usage = response.usage
+            logger.info(
+                f"Claude response: {usage.input_tokens} input tokens, "
+                f"{usage.output_tokens} output tokens"
+            )
+            return content
 
-        response = self.claude.messages.create(
-            model=self.config.claude.model,
-            max_tokens=self.config.claude.max_tokens,
-            temperature=self.config.claude.temperature,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_prompt}],
-        )
+        # Path 2: AgentRunner (CLI fallback)
+        if self.agent_runner:
+            logger.info("Calling Claude via AgentRunner (CLI backend)...")
+            result = self.agent_runner.distill_paper(
+                paper=paper,
+                distiller_config=self.config.distiller,
+                system_prompt=SYSTEM_PROMPT,
+                user_prompt=user_prompt,
+            )
+            if result is None:
+                raise RuntimeError(
+                    "AgentRunner distillation returned None — briefing generation failed"
+                )
+            logger.info(f"AgentRunner response: {len(result.split())} words")
+            return result
 
-        content = response.content[0].text
-
-        # Log token usage
-        usage = response.usage
-        logger.info(
-            f"Claude response: {usage.input_tokens} input tokens, "
-            f"{usage.output_tokens} output tokens"
-        )
-
-        return content
+        raise RuntimeError("No Claude backend available for distillation")
 
     def _generate_title(self, paper: Paper) -> str:
         """Generate a podcast-friendly title from the paper title."""
