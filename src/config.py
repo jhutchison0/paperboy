@@ -106,7 +106,7 @@ class PipelineConfig:
         Priority: env vars > .env file > YAML config > defaults
 
         Args:
-            config_path: Path to YAML config file. Defaults to config/default_config.yaml.
+            config_path: Path to YAML config file. Defaults to config/paperboy.yaml.
             env_path: Path to .env file. Defaults to .env in project root.
         """
         # Load .env file if it exists
@@ -119,7 +119,7 @@ class PipelineConfig:
         if config_path is None:
             # Look relative to this file's parent's parent (project root)
             project_root = Path(__file__).parent.parent
-            config_path = str(project_root / "config" / "default_config.yaml")
+            config_path = str(project_root / "config" / "paperboy.yaml")
 
         # Load YAML
         raw = {}

@@ -47,7 +47,7 @@ Not every task needs 6 agents. Scale to fit:
 Every file must have exactly one owner. If two agents need to touch the same file, restructure the task. See the team template for ownership splits.
 
 Typical ownership boundaries:
-- `src/sourcer.py`, `src/selector.py`, `config/default_config.yaml` -> content-curator or python-prototyper
+- `src/sourcer.py`, `src/selector.py`, `config/paperboy.yaml` -> content-curator or python-prototyper
 - `src/distiller.py`, `src/models.py` (BriefingDocument) -> distiller-dev or python-prototyper
 - `src/pipeline.py`, `src/config.py`, `main.py` -> python-prototyper
 - `tests/` -> python-prototyper (writes), test-runner (runs)

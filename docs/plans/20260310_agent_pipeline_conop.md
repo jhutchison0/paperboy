@@ -318,7 +318,7 @@ The SDK path remains the primary. The agent path is a fallback for users without
 - [ ] Implement fallback chain
 - [ ] Add `--backend` CLI flag: `api`, `agent`, `keyword-only`, `auto` (default)
 - [ ] End-to-end test: `python main.py run --backend agent` produces a briefing
-- [ ] Update `config/default_config.yaml` with agent runner settings (timeouts, retries)
+- [ ] Update `config/paperboy.yaml` with agent runner settings (timeouts, retries)
 
 ### Phase 5: Hardening
 
@@ -366,7 +366,7 @@ These must be resolved before implementation begins. Each question includes the 
 
 **Recommendation**: Start with 1 paper per invocation, optimize to batch later if latency is a problem.
 
-**Initial Response**: Agreed on starting with 1, but the target is 5 papers per batch and we should build toward it quickly. Critically, batch size must be a **configurable value in `config/`** — not a hardcoded constant. `config/default_config.yaml` is the single source of truth for all pipeline parameters, and batch size is no exception.
+**Initial Response**: Agreed on starting with 1, but the target is 5 papers per batch and we should build toward it quickly. Critically, batch size must be a **configurable value in `config/`** — not a hardcoded constant. `config/paperboy.yaml` is the single source of truth for all pipeline parameters, and batch size is no exception.
 
 ### Q4: Temperature control
 

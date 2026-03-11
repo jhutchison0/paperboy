@@ -32,7 +32,7 @@ The first `run --backend agent` attempt failed at distillation — both attempts
 
 | Bug | Root Cause | Fix |
 |-----|-----------|------|
-| Distill timeout too short | `distill_timeout: 120` insufficient for 4500-word CLI generation | Bumped to 300s in `config/default_config.yaml` |
+| Distill timeout too short | `distill_timeout: 120` insufficient for 4500-word CLI generation | Bumped to 300s in `config/paperboy.yaml` |
 | Misleading success message | `backend == "keyword-only"` string check missed `auto` resolving to keyword-only | Changed to `pipeline.distiller is None` (checks actual state, not CLI arg) |
 
 The second fix was caught during PCI review (dice hook Nat 1). The original code would have told users "Briefing generation failed" when `auto` mode legitimately resolved to keyword-only — confusing but not data-losing.

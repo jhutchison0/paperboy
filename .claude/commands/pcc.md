@@ -73,7 +73,7 @@ PCC Results
 [PASS] No secrets in staged files
 [FAIL] Tests failing
        2 failed, 10 passed
-       - test_pipeline.py::test_selector_scoring - AssertionError
+       - tests/test_pipeline.py::test_selector_scoring - AssertionError
 [PASS] No debug artifacts
 
 PCC Status: NOT READY - 1 failure, resolve before pushing

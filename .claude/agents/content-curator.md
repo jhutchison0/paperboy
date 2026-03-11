@@ -55,7 +55,7 @@ Pre-compiled regex patterns match against title, abstract, and categories:
 | Abstract | 0.35 | Abstract content shows topical depth |
 | Categories | 0.15 | ArXiv category gives broad topic signal |
 
-Keywords are defined in `config/default_config.yaml` under `focus_areas.keywords`.
+Keywords are defined in `config/paperboy.yaml` under `focus_areas.keywords`.
 
 ### Phase 2: Claude Scoring (Semantic)
 
@@ -66,11 +66,11 @@ Final score combines both phases:
 combined = keyword_weight * keyword_score + claude_weight * claude_score
 ```
 
-Weights are configurable in `config/default_config.yaml` under `selector:`.
+Weights are configurable in `config/paperboy.yaml` under `selector:`.
 
 ## Configuration Reference
 
-Key config sections you own (in `config/default_config.yaml`):
+Key config sections you own (in `config/paperboy.yaml`):
 
 ### ArXiv Categories
 ```yaml
@@ -115,7 +115,7 @@ selector:
 
 ### Adding a New ArXiv Category
 1. Identify the ArXiv category code (e.g., `cs.IR` for Information Retrieval)
-2. Add it to `arxiv.categories` in `config/default_config.yaml`
+2. Add it to `arxiv.categories` in `config/paperboy.yaml`
 3. Consider whether `max_results_per_category` needs adjustment (more categories = more API calls)
 4. Run `python main.py health` to verify ArXiv connectivity
 5. Run tests: `pytest -k sourcer`
@@ -140,7 +140,7 @@ selector:
 2. Implement `fetch()` returning `list[Paper]` or `list[Article]`
 3. Implement `health_check()`
 4. Register the new source in `SourceManager.__init__()` and `fetch_all()`
-5. Add configuration section in `config/default_config.yaml`
+5. Add configuration section in `config/paperboy.yaml`
 6. Add config parsing in `src/config.py`
 7. Write tests in `tests/`
 
@@ -152,7 +152,7 @@ selector:
 | `src/selector.py` | PaperSelector with two-phase scoring |
 | `src/models.py` | Paper, Article, ScoredPaper dataclasses |
 | `src/config.py` | PipelineConfig with all config parsing |
-| `config/default_config.yaml` | All tunable parameters |
+| `config/paperboy.yaml` | All tunable parameters |
 
 ## Memory
 

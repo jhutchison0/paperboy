@@ -43,7 +43,7 @@ flowchart TD
 | `src/distiller.py` | Dual SDK/CLI paths in `_generate_briefing()` |
 | `src/config.py` | Added `AgentRunnerConfig` dataclass with 6 tuning knobs |
 | `main.py` | `--backend` CLI flag, non-fatal API key warning handling |
-| `config/default_config.yaml` | `agent_runner:` section |
+| `config/paperboy.yaml` | `agent_runner:` section |
 | `tests/test_agent_runner.py` | **NEW** — 48 tests covering all AgentRunner methods |
 | `tests/test_pipeline_backend.py` | **NEW** — 10 tests for backend resolution |
 

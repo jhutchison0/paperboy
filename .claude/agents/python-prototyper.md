@@ -20,7 +20,7 @@ You are a Python developer building paperboy -- an AI research podcast pipeline 
   - `tts_interface.py` -- Future TTS/export interface
 - `main.py` -- Click-based CLI entry point (run, health, info commands)
 - `config/` -- YAML configuration
-  - `default_config.yaml` -- All tunable parameters (sources, scoring, distiller)
+  - `paperboy.yaml` -- All tunable parameters (sources, scoring, distiller)
   - `project.yaml` -- Project identity and structure
 - `tests/` -- pytest test suites
 - `output/` -- Generated briefing markdown files
@@ -44,7 +44,7 @@ You are a Python developer building paperboy -- an AI research podcast pipeline 
 
 - **Simplicity First**: Make every change as simple as possible. Three similar lines > premature abstraction.
 - **Shift-Left Testing**: Write tests alongside code, not after.
-- **Config-Driven**: Tunable parameters belong in `config/default_config.yaml`, not hardcoded. API keys go in `.env`, never in config files.
+- **Config-Driven**: Tunable parameters belong in `config/paperboy.yaml`, not hardcoded. API keys go in `.env`, never in config files.
 
 ## Your Workflow
 

@@ -103,7 +103,7 @@ main.py (CLI) -> DailyPipeline -> SourceManager -> PaperSelector -> BriefingDist
 - `BriefingDocument` -- Final output: title, content, word_count, metadata
 
 ### Config Structure
-All tunable parameters live in `config/default_config.yaml`:
+All tunable parameters live in `config/paperboy.yaml`:
 - `pipeline:` -- Output dir, lookback days, log level
 - `arxiv:` -- Categories, max results, rate limiting
 - `blogs:` -- Feed URLs, names, categories, timeout

@@ -29,11 +29,11 @@ Established project naming identity, reviewed all primary documentation for miss
 
 ## Pipeline-SME Doc Review
 
-Ran the pipeline-sme agent across all 6 primary docs (CLAUDE.md, README.md, project.yaml, default_config.yaml, pillars.md, roadmap.md). **All aligned.** Key findings:
+Ran the pipeline-sme agent across all 6 primary docs (CLAUDE.md, README.md, project.yaml, paperboy.yaml, pillars.md, roadmap.md). **All aligned.** Key findings:
 
 - Flavor contained to exactly two sections (README "Why Paperboy?" + CLAUDE.md "About the Name"), zero leakage into technical docs
 - `pillars.md` is the strongest doc — consumption context appears once in Pillar 1 as a functional design constraint, not flavor
-- `default_config.yaml` `distiller.style: "3blue1brown"` is a legit style reference, not a tangent
+- `paperboy.yaml` `distiller.style: "3blue1brown"` is a legit style reference, not a tangent
 
 ## API Access Gap
 

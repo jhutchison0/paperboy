@@ -66,7 +66,7 @@ class {SourceName}Sourcer(ContentSourcer):
 - [ ] Network errors caught and logged, never crash the pipeline
 - [ ] Rate limiting respected (sleep between requests if required)
 - [ ] Deduplication: checks for duplicate titles/URLs before returning
-- [ ] Config-driven: URLs, limits, timeouts come from `config/default_config.yaml`
+- [ ] Config-driven: URLs, limits, timeouts come from `config/paperboy.yaml`
 - [ ] No API keys hardcoded — all from environment variables
 
 **Output**: Source class implemented and importable.
@@ -77,7 +77,7 @@ class {SourceName}Sourcer(ContentSourcer):
 
 **Goal**: Prove correctness and resilience.
 
-### Add tests (in `tests/` or `test_pipeline.py`):
+### Add tests (in `tests/` or `tests/test_pipeline.py`):
 
 ```python
 class Test{SourceName}Sourcer:
@@ -134,7 +134,7 @@ pytest                     # Full suite
 
 **Goal**: Wire the source into the pipeline configuration.
 
-- [ ] Add source config section to `config/default_config.yaml`:
+- [ ] Add source config section to `config/paperboy.yaml`:
   ```yaml
   {source_name}:
     enabled: true

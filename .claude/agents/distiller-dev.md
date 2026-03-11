@@ -126,7 +126,7 @@ Contains:
 |------|-----------------|
 | `src/distiller.py` | SYSTEM_PROMPT, build_user_prompt(), BriefingDistiller class |
 | `src/models.py` | BriefingDocument dataclass (title, content, word_count, metadata) |
-| `config/default_config.yaml` | `distiller:` section (target_word_count, style, user_context) |
+| `config/paperboy.yaml` | `distiller:` section (target_word_count, style, user_context) |
 | `output/` | Generated briefing markdown files (when available) |
 
 ## Memory

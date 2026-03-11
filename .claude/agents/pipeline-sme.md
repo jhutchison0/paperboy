@@ -34,7 +34,7 @@ You have authority to search and discover. Your primary sources of truth:
 | Source | What It Tells You |
 |--------|-------------------|
 | `config/project.yaml` | Version, phases, current state |
-| `config/default_config.yaml` | Pipeline configuration, sources, scoring, distiller settings |
+| `config/paperboy.yaml` | Pipeline configuration, sources, scoring, distiller settings |
 | `docs/design/pillars.md` | The 5 design principles |
 | `docs/plans/` | Active and proposed work plans |
 | `docs/sessions/` | What's been built, decisions made, lessons learned |

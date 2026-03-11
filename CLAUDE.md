@@ -114,10 +114,10 @@ paperboy/
 │   ├── pipeline.py            # DailyPipeline orchestrator, PipelineResult
 │   └── tts_interface.py       # TTSProvider ABC, stubs for future TTS
 ├── config/
-│   ├── default_config.yaml    # ArXiv categories, blogs, keywords, Claude settings
+│   ├── paperboy.yaml          # ArXiv categories, blogs, keywords, Claude settings
 │   └── project.yaml           # Project identity, version, phases
 ├── tests/                     # pytest suites
-├── test_pipeline.py           # Integration tests
+│   └── test_pipeline.py       # Integration tests
 ├── docs/
 │   ├── design/
 │   │   ├── pillars.md         # 5 design pillars
@@ -141,7 +141,7 @@ See `config/project.yaml` for all 6 build phases with status tracking.
 YAML files in `config/` are the source of truth. Python reads YAML directly — no JSON sync step needed.
 
 - `config/project.yaml` — Project identity, phases, paths
-- `config/default_config.yaml` — ArXiv categories, blog feeds, focus keywords, Claude API settings, selector weights, distiller preferences
+- `config/paperboy.yaml` — ArXiv categories, blog feeds, focus keywords, Claude API settings, selector weights, distiller preferences
 
 API keys live in `.env` (never committed). See `.env.example` for required variables.
 

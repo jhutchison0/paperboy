@@ -6,6 +6,82 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [0.2.0] - 2026-03-11
+
+**Milestone**: Dual-Backend Architecture & Live End-to-End Validation
+
+The pipeline now supports two Claude backends: the Anthropic SDK (API key) and the Claude Code CLI (Max/Pro subscription). First successful live run against real ArXiv data produced a ~20-minute podcast episode via Google NotebookLM.
+
+### Dual-Backend Architecture
+- **`src/agent_runner.py`** — NEW: Claude Code CLI subprocess backend (`claude -p`)
+  - `score_paper()`: Semantic scoring via CLI with JSON output parsing
+  - `distill_paper()`: Briefing generation via CLI with section validation
+  - `is_available()`: CLI detection for health checks
+  - Preamble stripping for JSON and markdown output
+  - Sensitive env var scrubbing (API keys, CLAUDE* vars)
+  - Configurable timeouts, retries, and output size limits
+- **`src/pipeline.py`** — `_resolve_backend()` with auto-detection fallback chain:
+  - Auto mode: API key → Claude CLI → keyword-only
+  - Explicit: `--backend api|agent|keyword-only`
+- **`src/selector.py`** — AgentRunner as fallback scoring path
+- **`src/distiller.py`** — AgentRunner as fallback distillation path, graceful degradation (returns None instead of raising on failure)
+
+### CLI Improvements
+- **`--backend` flag** on `run`, `select`, `distill` commands
+- **`--date` flag** with strict YYYY-MM-DD parsing (mutually exclusive with `--days-back`)
+- **`source` subcommand** — fetch papers/articles without scoring
+- **`select` subcommand** — source + score + rank top candidates
+- **`distill` subcommand** — full pipeline with distillation focus
+- **`health` command** — checks ArXiv, blogs, Claude API, and Claude CLI
+- **`info` command** — displays current configuration summary
+- Accurate output messaging: distinguishes keyword-only mode from distillation failure
+
+### Config Validation
+- **`src/config.py`** — Structured validation returning `(errors, warnings)` tuple
+  - Range checks: temperature (0-1), max_tokens (>0), min_score_threshold (0-1), top_k_for_claude (>0), weight sum (~1.0), target_word_count (>0), days_lookback (>0), max_retries (>=0)
+  - Agent runner settings: timeout, output bytes, retry validation
+- **`config/paperboy.yaml`** — Agent runner section with tunable timeouts and limits
+
+### Testing
+- **`tests/test_agent_runner.py`** — 48 tests: invocation, preamble stripping, score/briefing validation, env scrubbing, retry logic
+- **`tests/test_config_validation.py`** — 27 tests: all config validation paths and range checks
+- **`tests/test_pipeline_backend.py`** — 10 tests: backend resolution, fallback chain, health checks
+- **`tests/test_cli_output.py`** — 5 tests: CLI output messaging for all run outcome branches
+- Total: 94 tests passing
+
+### Documentation
+- **README.md** — Quickstart with venv, dual-backend docs, NotebookLM tips
+- **CHANGELOG.md** — This entry
+- Session docs for AgentRunner implementation, Phase 2 hardening, and live E2E test
+
+### How to Run
+
+```bash
+# Setup
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # Optional — not needed if using Claude CLI backend
+
+# Run the pipeline
+python main.py run                     # Auto-detect backend
+python main.py run --backend agent     # Force Claude CLI
+python main.py run --date 2026-03-10   # Specific date
+
+# Individual stages
+python main.py source                  # Fetch papers only
+python main.py select --backend agent  # Score and rank
+python main.py distill                 # Full pipeline with distillation
+
+# Utilities
+python main.py health                  # Service connectivity check
+python main.py info                    # Show current config
+
+# Tests
+pytest                                 # All 94 tests
+```
+
+---
+
 ## [0.1.0] - 2026-03-10
 
 **Milestone**: Core Pipeline — End-to-End Working
@@ -33,11 +109,11 @@ The research podcast pipeline is functional: sources papers from ArXiv and blog 
 - **`tts_interface.py`** — `TTSProvider` ABC and stubs for future TTS integration (ElevenLabs, NotebookLM exporter)
 
 ### CLI (`main.py`)
-- Click-based CLI with `run`, `health-check`, and `show-config` commands
+- Click-based CLI with `run`, `health`, and `info` commands
 - Configurable via command-line options, YAML config, and environment variables
 
 ### Configuration
-- **`config/default_config.yaml`** — ArXiv categories, blog feed URLs, focus keywords, Claude model settings, distiller parameters
+- **`config/paperboy.yaml`** — ArXiv categories, blog feed URLs, focus keywords, Claude model settings, distiller parameters
 - **`config/project.yaml`** — Project identity, version, build phases, design pillars
 
 ### Infrastructure
@@ -48,13 +124,13 @@ The research podcast pipeline is functional: sources papers from ArXiv and blog 
 - **`docs/design/roadmap.md`** — 6-phase roadmap through TTS integration and distribution
 
 ### Testing
-- **`test_pipeline.py`** — Integration tests for models, config, scoring, and pipeline flow
+- **`tests/test_pipeline.py`** — Integration tests for models, config, scoring, and pipeline flow
 
 ### How to Run
 
 ```bash
 # Setup
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env  # Add your ANTHROPIC_API_KEY
 
@@ -62,10 +138,10 @@ cp .env.example .env  # Add your ANTHROPIC_API_KEY
 python main.py run
 
 # Health check
-python main.py health-check
+python main.py health
 
 # Show config
-python main.py show-config
+python main.py info
 
 # Tests
 pytest                           # All tests

@@ -4,7 +4,7 @@
 # The single source of truth for project identity and structure.
 #
 # See also:
-#   - config/default_config.yaml         — Pipeline settings (sources, scoring, distillation)
+#   - config/paperboy.yaml               — Pipeline settings (sources, scoring, distillation)
 #   - docs/design/pillars.md             — Design principles
 #   - docs/design/roadmap.md             — Project roadmap
 
@@ -44,7 +44,7 @@ paths:
 
   # Tests
   tests: tests
-  test_integration: test_pipeline.py
+  test_integration: tests/test_pipeline.py
 
   # Documentation
   docs: docs
@@ -132,7 +132,7 @@ python:
 testing:
   framework: "pytest"
   test_directory: tests
-  integration_test: test_pipeline.py
+  integration_test: tests/test_pipeline.py
   key_test_categories:
     - sourcing             # ArXiv + RSS fetching, error handling, deduplication
     - selection            # Keyword scoring, Claude scoring, hybrid ranking

@@ -58,6 +58,7 @@ focus_areas:
     - "Statistical foundations of machine learning"
     - "Retrieval-augmented generation"
     - "AI agents and tool use"
+    - "Graph neural networks"
   keywords:
     - "large language model"
     - "llm"

@@ -54,5 +54,5 @@ These docs exist for deeper dives - reference them when relevant:
 |-------|----------|
 | Design philosophy | `docs/design/pillars.md` |
 | Project roadmap | `docs/design/roadmap.md` |
-| Pipeline config | `config/default_config.yaml` |
+| Pipeline config | `config/paperboy.yaml` |
 | Phase tracking | `config/project.yaml` -> `build_phases:` section |

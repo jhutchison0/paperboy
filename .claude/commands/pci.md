@@ -146,8 +146,8 @@ Changes Analyzed:
 
 Domains Touched:
   [Sources] src/sourcer.py
-  [Config] config/default_config.yaml
-  [Tests] test_pipeline.py
+  [Config] config/paperboy.yaml
+  [Tests] tests/test_pipeline.py
   [Models] src/models.py
 
 Inspection Results:
@@ -230,5 +230,5 @@ Typical workflow:
 |---------|------|
 | Project status & phases | `config/project.yaml` |
 | Design principles | `docs/design/pillars.md` |
-| Pipeline configuration | `config/default_config.yaml` |
+| Pipeline configuration | `config/paperboy.yaml` |
 | Project roadmap | `docs/design/roadmap.md` |
