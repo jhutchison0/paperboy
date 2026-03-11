@@ -6,29 +6,14 @@ added in Phase 2 (Configuration & Polish).
 """
 
 import pytest
-from src.config import (
-    PipelineConfig,
-    ClaudeConfig,
-    SelectorConfig,
-    DistillerConfig,
-    AgentRunnerConfig,
-)
+from src.config import PipelineConfig
 
 
-def _make_valid_config(**overrides):
-    """Create a valid PipelineConfig with optional overrides."""
-    cfg = PipelineConfig(
-        anthropic_api_key="test-key",
-    )
-    # Ensure required content is present
+def _make_valid_config():
+    """Create a valid PipelineConfig with required fields populated."""
+    cfg = PipelineConfig(anthropic_api_key="test-key")
     cfg.arxiv.categories = ["cs.AI"]
     cfg.focus_areas.keywords = ["llm"]
-    for key, value in overrides.items():
-        parts = key.split(".")
-        obj = cfg
-        for part in parts[:-1]:
-            obj = getattr(obj, part)
-        setattr(obj, parts[-1], value)
     return cfg
 
 
@@ -69,13 +54,14 @@ class TestApiKeyIsWarning:
     """Missing API key is a warning, not an error."""
 
     def test_missing_api_key_is_warning(self):
-        cfg = _make_valid_config(anthropic_api_key="")
+        cfg = _make_valid_config()
+        cfg.anthropic_api_key = ""
         errors, warnings = cfg.validate()
         assert not any("ANTHROPIC_API_KEY" in e for e in errors)
         assert any("ANTHROPIC_API_KEY" in w for w in warnings)
 
     def test_present_api_key_no_warning(self):
-        cfg = _make_valid_config(anthropic_api_key="sk-test")
+        cfg = _make_valid_config()
         errors, warnings = cfg.validate()
         assert not any("ANTHROPIC_API_KEY" in w for w in warnings)
 
