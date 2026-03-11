@@ -99,8 +99,11 @@ def run(config, output_dir, days_back, target_date, backend):
             click.echo(f"Words:    {result.briefing.word_count}")
             click.echo(f"Saved to: {result.briefing_path}")
             click.echo(f"\nUpload this file to NotebookLM to generate your podcast!")
-        else:
+        elif pipeline.distiller is None:
             click.echo(f"\nNo briefing generated (keyword-only mode).")
+        else:
+            click.echo(f"\nWarning: Briefing generation failed. Paper was selected but no briefing was produced.")
+            click.echo(f"Try re-running or check logs for details.")
     else:
         click.echo(f"\nPipeline failed: {result.error}", err=True)
         sys.exit(1)
