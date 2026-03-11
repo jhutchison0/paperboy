@@ -4,13 +4,18 @@ Research Podcast Pipeline — CLI Entry Point
 
 Usage:
     python main.py run                          # Run the full pipeline
+    python main.py run --date 2026-03-10        # Run for a specific date
     python main.py run --config my_config.yaml  # Use custom config
     python main.py run --output-dir ./my_output # Override output directory
+    python main.py source                       # Source papers only
+    python main.py select                       # Score and select only
+    python main.py distill                      # Distill briefing only
     python main.py health                       # Check service connectivity
     python main.py info                         # Show current configuration
 """
 
 import sys
+from datetime import date, datetime
 from pathlib import Path
 
 import click
@@ -20,6 +25,40 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.config import PipelineConfig
 from src.pipeline import DailyPipeline
+
+
+def _load_and_validate(config_path):
+    """Load config and handle validation errors/warnings."""
+    cfg = PipelineConfig.load(config_path=config_path)
+    errors, warnings = cfg.validate()
+    for warn in warnings:
+        click.echo(f"Note: {warn}", err=True)
+    if errors:
+        for err in errors:
+            click.echo(f"Config error: {err}", err=True)
+        sys.exit(1)
+    return cfg
+
+
+def _apply_date_overrides(cfg, target_date, days_back):
+    """Apply --date and --days-back overrides to config. Exits on error."""
+    if target_date and days_back:
+        click.echo("Config error: --date and --days-back are mutually exclusive.", err=True)
+        sys.exit(1)
+    if target_date:
+        try:
+            parsed = datetime.strptime(target_date, "%Y-%m-%d").date()
+        except ValueError:
+            click.echo(f"Config error: Invalid date format '{target_date}'. Use YYYY-MM-DD.", err=True)
+            sys.exit(1)
+        delta = (date.today() - parsed).days
+        if delta < 0:
+            click.echo(f"Config error: --date {target_date} is in the future.", err=True)
+            sys.exit(1)
+        cfg.days_lookback = max(delta + 1, 1)  # +1 to include the target date
+        click.echo(f"Targeting papers from {parsed} (days_lookback={cfg.days_lookback})")
+    if days_back:
+        cfg.days_lookback = days_back
 
 
 @click.group()
@@ -32,34 +71,20 @@ def cli():
 @click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
 @click.option("--output-dir", type=click.Path(), default=None, help="Override output directory")
 @click.option("--days-back", type=int, default=None, help="Override days lookback for paper search")
+@click.option("--date", "target_date", type=str, default=None, help="Target date (YYYY-MM-DD). Computes days-back from today.")
 @click.option(
     "--backend",
     type=click.Choice(["auto", "api", "agent", "keyword-only"], case_sensitive=False),
     default="auto",
     help="Claude backend: auto (detect), api (SDK), agent (CLI), keyword-only (no Claude)",
 )
-def run(config, output_dir, days_back, backend):
-    """Run the full pipeline: source → select → distill → save."""
-    cfg = PipelineConfig.load(config_path=config)
+def run(config, output_dir, days_back, target_date, backend):
+    """Run the full pipeline: source -> select -> distill -> save."""
+    cfg = _load_and_validate(config)
 
     if output_dir:
         cfg.output_dir = output_dir
-    if days_back:
-        cfg.days_lookback = days_back
-
-    # Validate — warnings are informational, not fatal
-    errors = cfg.validate()
-    if errors:
-        # Separate hard errors from informational warnings
-        hard_errors = [e for e in errors if "ANTHROPIC_API_KEY" not in e]
-        warnings = [e for e in errors if "ANTHROPIC_API_KEY" in e]
-
-        for warn in warnings:
-            click.echo(f"Note: {warn}", err=True)
-        if hard_errors:
-            for err in hard_errors:
-                click.echo(f"Config error: {err}", err=True)
-            sys.exit(1)
+    _apply_date_overrides(cfg, target_date, days_back)
 
     pipeline = DailyPipeline(cfg, backend=backend)
     result = pipeline.run()
@@ -76,6 +101,101 @@ def run(config, output_dir, days_back, backend):
             click.echo(f"\nUpload this file to NotebookLM to generate your podcast!")
         else:
             click.echo(f"\nNo briefing generated (keyword-only mode).")
+    else:
+        click.echo(f"\nPipeline failed: {result.error}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
+@click.option("--days-back", type=int, default=None, help="Override days lookback")
+@click.option("--date", "target_date", type=str, default=None, help="Target date (YYYY-MM-DD)")
+def source(config, days_back, target_date):
+    """Source papers and articles only (no scoring or distillation)."""
+    cfg = _load_and_validate(config)
+    _apply_date_overrides(cfg, target_date, days_back)
+
+    from src.sourcer import SourceManager
+    sm = SourceManager(cfg)
+    papers, articles = sm.fetch_all()
+
+    click.echo(f"\nSourced {len(papers)} papers and {len(articles)} articles")
+    for p in papers[:10]:
+        click.echo(f"  [{p.source}] {p.title[:80]}")
+    if len(papers) > 10:
+        click.echo(f"  ... and {len(papers) - 10} more")
+    for a in articles[:5]:
+        click.echo(f"  [blog] {a.title[:80]}")
+    if len(articles) > 5:
+        click.echo(f"  ... and {len(articles) - 5} more")
+
+
+@cli.command()
+@click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
+@click.option("--days-back", type=int, default=None, help="Override days lookback")
+@click.option("--date", "target_date", type=str, default=None, help="Target date (YYYY-MM-DD)")
+@click.option(
+    "--backend",
+    type=click.Choice(["auto", "api", "agent", "keyword-only"], case_sensitive=False),
+    default="keyword-only",
+    help="Claude backend for scoring (default: keyword-only)",
+)
+def select(config, days_back, target_date, backend):
+    """Source papers and score/select the best candidate."""
+    cfg = _load_and_validate(config)
+    _apply_date_overrides(cfg, target_date, days_back)
+
+    from src.sourcer import SourceManager
+    from src.pipeline import DailyPipeline
+
+    # Source
+    sm = SourceManager(cfg)
+    papers, articles = sm.fetch_all()
+    if not papers and not articles:
+        click.echo("No papers or articles found. Check your network and config.", err=True)
+        sys.exit(1)
+
+    click.echo(f"Sourced {len(papers)} papers and {len(articles)} articles")
+
+    # Select
+    pipeline = DailyPipeline(cfg, backend=backend)
+    scored = pipeline.selector.select_best(papers, articles, top_k=5)
+
+    click.echo(f"\nTop {len(scored)} candidates:")
+    for i, sp in enumerate(scored, 1):
+        click.echo(f"  {i}. [{sp.score:.3f}] {sp.paper.title[:70]}")
+        click.echo(f"     {sp.reasoning[:100]}")
+
+
+@cli.command()
+@click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
+@click.option(
+    "--backend",
+    type=click.Choice(["auto", "api", "agent"], case_sensitive=False),
+    default="auto",
+    help="Claude backend for distillation (required — no keyword-only mode)",
+)
+@click.option("--output-dir", type=click.Path(), default=None, help="Override output directory")
+def distill(config, backend, output_dir):
+    """Source, select, and distill a briefing (full pipeline, explicit distillation focus)."""
+    cfg = _load_and_validate(config)
+
+    if output_dir:
+        cfg.output_dir = output_dir
+
+    pipeline = DailyPipeline(cfg, backend=backend)
+    if pipeline.distiller is None:
+        click.echo("Distillation requires a Claude backend (api or agent). Set ANTHROPIC_API_KEY or install Claude CLI.", err=True)
+        sys.exit(1)
+
+    result = pipeline.run()
+
+    if result.success and result.briefing:
+        click.echo(f"\nBriefing distilled: {result.briefing.word_count} words")
+        click.echo(f"Saved to: {result.briefing_path}")
+    elif result.success:
+        click.echo("\nPaper selected but briefing generation failed.", err=True)
+        sys.exit(1)
     else:
         click.echo(f"\nPipeline failed: {result.error}", err=True)
         sys.exit(1)
