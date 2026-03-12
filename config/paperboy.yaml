@@ -7,6 +7,7 @@
 
 pipeline:
   output_dir: "./output/briefings"
+  date_format: "%y%m%d"              # Output filename date format (e.g., 260312_paper-slug.md)
   max_papers_to_fetch: 50
   max_papers_to_score: 20
   days_lookback: 7

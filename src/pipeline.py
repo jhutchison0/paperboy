@@ -227,8 +227,8 @@ class DailyPipeline:
         output_dir = Path(self.config.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Filename: YYYY-MM-DD_paper-slug.md
-        date_str = briefing.generated_at.strftime("%Y-%m-%d")
+        # Filename: YYMMDD_paper-slug.md (format configurable via pipeline.date_format)
+        date_str = briefing.generated_at.strftime(self.config.date_format)
         title_slug = slugify(briefing.source_paper.title[:60])
         filename = f"{date_str}_{title_slug}.md"
 

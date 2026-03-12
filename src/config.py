@@ -81,6 +81,7 @@ class AgentRunnerConfig:
 class PipelineConfig:
     """Top-level configuration container."""
     output_dir: str = "./output/briefings"
+    date_format: str = "%y%m%d"
     max_papers_to_fetch: int = 50
     max_papers_to_score: int = 20
     days_lookback: int = 7
@@ -134,6 +135,7 @@ class PipelineConfig:
         # Pipeline settings
         pipeline_raw = raw.get("pipeline", {})
         config.output_dir = pipeline_raw.get("output_dir", config.output_dir)
+        config.date_format = pipeline_raw.get("date_format", config.date_format)
         config.max_papers_to_fetch = pipeline_raw.get("max_papers_to_fetch", config.max_papers_to_fetch)
         config.max_papers_to_score = pipeline_raw.get("max_papers_to_score", config.max_papers_to_score)
         config.days_lookback = pipeline_raw.get("days_lookback", config.days_lookback)

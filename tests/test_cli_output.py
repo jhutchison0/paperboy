@@ -59,7 +59,7 @@ class TestRunOutputBranches:
             status="success",
             selected_paper=_make_scored(),
             briefing=_make_briefing(),
-            briefing_path=Path("output/briefings/2026-03-11_test.md"),
+            briefing_path=Path("output/briefings/260311_test.md"),
             papers_fetched=50,
             articles_fetched=10,
         )
