@@ -1,6 +1,6 @@
 # Paperboy — Task List
 
-**Last Updated**: 2026-03-12
+**Last Updated**: 2026-03-17
 
 ---
 
@@ -18,6 +18,7 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-03-17: Add `--paper-id` flag to `distill` command; `ArxivSourcer.fetch_by_id()`; full test coverage
 - [x] 2026-03-12: Make output filename date format configurable (`pipeline.date_format`), default YYMMDD
 - [x] 2026-03-11: Integrate `/task` command into session workflows and framework docs
 - [x] 2026-03-11: Adapt `/task` command from elephant-graveyard to paperboy domain (agents, teams, examples)
