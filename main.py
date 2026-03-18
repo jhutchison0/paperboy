@@ -179,7 +179,8 @@ def select(config, days_back, target_date, backend):
     help="Claude backend for distillation (required — no keyword-only mode)",
 )
 @click.option("--output-dir", type=click.Path(), default=None, help="Override output directory")
-def distill(config, backend, output_dir):
+@click.option("--paper-id", type=str, default=None, help="ArXiv paper ID to distill directly (e.g., 1904.12787)")
+def distill(config, backend, output_dir, paper_id):
     """Source, select, and distill a briefing (full pipeline, explicit distillation focus)."""
     cfg = _load_and_validate(config)
 
@@ -191,7 +192,20 @@ def distill(config, backend, output_dir):
         click.echo("Distillation requires a Claude backend (api or agent). Set ANTHROPIC_API_KEY or install Claude CLI.", err=True)
         sys.exit(1)
 
-    result = pipeline.run()
+    # Fetch specific paper by ArXiv ID if provided
+    paper_override = None
+    if paper_id:
+        from src.sourcer import ArxivSourcer
+        click.echo(f"Fetching ArXiv paper: {paper_id}")
+        try:
+            sourcer = ArxivSourcer(cfg)
+            paper_override = sourcer.fetch_by_id(paper_id)
+            click.echo(f"Found: {paper_override.title[:80]}")
+        except Exception as e:
+            click.echo(f"Error fetching paper {paper_id}: {e}", err=True)
+            sys.exit(1)
+
+    result = pipeline.run(paper_override=paper_override)
 
     if result.success and result.briefing:
         click.echo(f"\nBriefing distilled: {result.briefing.word_count} words")

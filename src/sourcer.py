@@ -120,6 +120,34 @@ class ArxivSourcer(ContentSourcer):
 
         return papers
 
+    def fetch_by_id(self, arxiv_id: str) -> Paper:
+        """
+        Fetch a single paper by its ArXiv ID (e.g., '1904.12787').
+
+        Raises ValueError if the paper is not found.
+        """
+        search = arxiv.Search(id_list=[arxiv_id])
+        results = list(self.client.results(search))
+        if not results:
+            raise ValueError(f"ArXiv paper not found: {arxiv_id}")
+
+        r = results[0]
+        pub_date = r.published.replace(tzinfo=timezone.utc) if r.published.tzinfo is None else r.published
+
+        return Paper(
+            id=r.entry_id,
+            title=r.title.strip().replace("\n", " "),
+            authors=[str(a) for a in r.authors],
+            abstract=r.summary.strip().replace("\n", " "),
+            published_date=pub_date,
+            url=r.entry_id,
+            categories=[cat.term if hasattr(cat, 'term') else str(cat) for cat in r.categories]
+                       if hasattr(r, 'categories') and r.categories
+                       else [],
+            pdf_url=r.pdf_url or "",
+            source="arxiv",
+        )
+
     def health_check(self) -> bool:
         """Quick test query to verify ArXiv API is responding."""
         try:

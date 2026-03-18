@@ -163,3 +163,66 @@ class TestRunOutputBranches:
 
         assert result.exit_code != 0
         assert "Pipeline failed" in result.output
+
+
+class TestDistillPaperId:
+    """Tests for distill --paper-id CLI option."""
+
+    @patch("src.sourcer.ArxivSourcer")
+    @patch("main.DailyPipeline")
+    @patch("main._load_and_validate")
+    def test_paper_id_success(self, mock_load, MockPipeline, MockSourcer):
+        mock_load.return_value = MagicMock()
+        mock_sourcer = MagicMock()
+        mock_sourcer.fetch_by_id.return_value = _make_paper()
+        MockSourcer.return_value = mock_sourcer
+        pipeline = MagicMock()
+        pipeline.distiller = MagicMock()
+        pipeline.run.return_value = PipelineResult(
+            status="success",
+            selected_paper=_make_scored(),
+            briefing=_make_briefing(),
+            briefing_path=Path("output/briefings/260311_test.md"),
+        )
+        MockPipeline.return_value = pipeline
+
+        from main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["distill", "--backend", "api", "--paper-id", "1904.12787"])
+
+        assert result.exit_code == 0
+        mock_sourcer.fetch_by_id.assert_called_once_with("1904.12787")
+        _, kwargs = pipeline.run.call_args
+        assert kwargs["paper_override"] is not None
+
+    @patch("src.sourcer.ArxivSourcer")
+    @patch("main.DailyPipeline")
+    @patch("main._load_and_validate")
+    def test_paper_id_not_found_exits_nonzero(self, mock_load, MockPipeline, MockSourcer):
+        mock_load.return_value = MagicMock()
+        mock_sourcer = MagicMock()
+        mock_sourcer.fetch_by_id.side_effect = ValueError("ArXiv paper not found: 0000.00000")
+        MockSourcer.return_value = mock_sourcer
+        MockPipeline.return_value = MagicMock(distiller=MagicMock())
+
+        from main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["distill", "--backend", "api", "--paper-id", "0000.00000"])
+
+        assert result.exit_code != 0
+
+    @patch("src.sourcer.ArxivSourcer")
+    @patch("main.DailyPipeline")
+    @patch("main._load_and_validate")
+    def test_paper_id_network_error_exits_nonzero(self, mock_load, MockPipeline, MockSourcer):
+        mock_load.return_value = MagicMock()
+        mock_sourcer = MagicMock()
+        mock_sourcer.fetch_by_id.side_effect = ConnectionError("ArXiv unreachable")
+        MockSourcer.return_value = mock_sourcer
+        MockPipeline.return_value = MagicMock(distiller=MagicMock())
+
+        from main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["distill", "--backend", "api", "--paper-id", "1904.12787"])
+
+        assert result.exit_code != 0

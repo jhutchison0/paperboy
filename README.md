@@ -84,6 +84,7 @@ python main.py run --date 2026-03-10   # Run for a specific date
 python main.py source                  # Fetch papers and blog posts only
 python main.py select                  # Source + score and rank top candidates
 python main.py distill                 # Source + select + generate briefing
+python main.py distill --paper-id 1904.12787  # Distill a specific ArXiv paper by ID
 python main.py health                  # Check connectivity to all services
 python main.py info                    # Show current configuration
 ```
