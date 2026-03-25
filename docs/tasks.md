@@ -1,12 +1,11 @@
 # Paperboy — Task List
 
-**Last Updated**: 2026-03-17
+**Last Updated**: 2026-03-25
 
 ---
 
 ## Active
 
-- [ ] [P2] Create team template files in `.claude/teams/` (source-development, pipeline-feature, briefing-quality) — owner: unassigned
 - [ ] [P3] Agent backend: no temperature control on CLI path (Pillar 4 — idempotency gap) — owner: unassigned
 - [ ] [P3] Distiller raises RuntimeError on agent failure instead of graceful degradation (Pillar 2) — owner: unassigned
 - [ ] [P3] Batch scoring: batch_size=1, target is 5 per invocation — owner: unassigned
@@ -18,6 +17,7 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-03-25: Apply upstream doctrine update — proposer agent, wave terminology, 5 team templates, /sitrep command, session-start doctrine propagation
 - [x] 2026-03-17: Add `--paper-id` flag to `distill` command; `ArxivSourcer.fetch_by_id()`; full test coverage
 - [x] 2026-03-12: Make output filename date format configurable (`pipeline.date_format`), default YYMMDD
 - [x] 2026-03-11: Integrate `/task` command into session workflows and framework docs
