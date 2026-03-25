@@ -30,6 +30,13 @@ Read `docs/tasks.md` and report:
 - Any stale tasks (no update in 3+ sessions)
 - Suggest which active tasks align with today's work
 
+## Step 3.6: Check Upstream Doctrine Updates
+
+Check if `.claude/upstream-update.md` exists. If it does:
+- Read and surface the contents to the user
+- Flag it prominently: **"Upstream doctrine update available — review before proceeding"**
+- Do NOT delete the file — the user decides when to act on it
+
 ## Step 4: Verify Health
 
 Run these commands:

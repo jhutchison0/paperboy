@@ -119,6 +119,7 @@ The project uses military-inspired slash commands for structured development wor
 | `/task` | Manage task list, escalate work items | Track and plan work |
 | `/pcc` | Pre-Code Check — fast pass/fail checklist | Before every push |
 | `/pci` | Pre-Code Inspection — context-aware review | Before merge/PR or when PCC passes but confidence is low |
+| `/sitrep` | Status report — narrative outbrief with concrete details | Team updates, progress summaries, scope-filtered status |
 | `/implement-source` | Guided workflow for adding a new content source | Adding ArXiv categories, RSS feeds, API sources |
 
 ### Planning Escalation
@@ -126,9 +127,11 @@ The project uses military-inspired slash commands for structured development wor
 Work scales through four levels. Use `/task promote` or `/task plan` to evaluate:
 
 1. **Task** — One person, one session, clear action (`docs/tasks.md`)
-2. **TCS** — Multi-step with pass/fail criteria (Task, Condition, Standard)
-3. **CONOP** — Multi-phase with design decisions and parallel tracks (`docs/plans/`)
-4. **OPORD** — Sequential execution of a decided strategy (`docs/plans/`)
+2. **TCS** — Multi-step with pass/fail criteria (Task, Condition, Standard) — also the universal task detail unit within all plan types
+3. **CONOP** — Multi-wave with design decisions and parallel tracks (`docs/plans/`)
+4. **OPORD** — Sequential execution of a decided strategy in waves (`docs/plans/`)
+
+**Terminology**: *Phases* are strategic roadmap milestones (`project.yaml`). *Waves* are tactical parallel execution units within CONOPs/OPORDs where agent teams deploy.
 
 ## Project Structure
 
@@ -186,12 +189,13 @@ Defined in `.claude/agents/`. See `.claude/agents/README.md` for detailed usage 
 
 | Agent | Model | Writes Code? | Primary Domain |
 |---|---|---|---|
-| `test-runner` | haiku | No | All — runs pytest, reports results |
-| `code-reviewer` | inherit | No | All — reviews against pillars |
-| `python-prototyper` | sonnet | Yes | Pipeline implementation |
+| `pipeline-sme` | inherit | No | Mission alignment, roadmap, pillars |
+| `proposer` | sonnet | No | Solution space exploration, pre-implementation proposals and debate |
 | `content-curator` | sonnet | Yes | Sources, selection, scoring |
 | `distiller-dev` | sonnet | Yes | Briefing quality, prompts |
-| `pipeline-sme` | inherit | No | Mission alignment, roadmap, pillars |
+| `test-runner` | haiku | No | All — runs pytest, reports results |
+| `python-prototyper` | sonnet | Yes | Pipeline implementation |
+| `code-reviewer` | inherit | No | All — reviews against pillars |
 
 All have persistent memory in `.claude/agent-memory/`. Manage with `/agents`.
 
@@ -201,9 +205,11 @@ Defined in `.claude/teams/`. Choose the template that matches the work domain:
 
 | Template | Domain | Agents |
 |---|---|---|
-| `source-development.md` | ArXiv/RSS sourcing | content-curator + test-runner + code-reviewer |
-| `pipeline-feature.md` | Pipeline features | python-prototyper + test-runner + code-reviewer |
-| `briefing-quality.md` | Distillation & output | distiller-dev + test-runner + pipeline-sme |
+| `source-development.md` | ArXiv/RSS sourcing | proposer + content-curator + test-runner + code-reviewer |
+| `pipeline-feature.md` | Pipeline features | proposer + python-prototyper + test-runner + code-reviewer |
+| `briefing-quality.md` | Distillation & output | proposer + distiller-dev + test-runner + pipeline-sme |
+| `bug-fix.md` | Regression-first bug fixes | python-prototyper + test-runner |
+| `code-review.md` | Quality audits (no code changes) | code-reviewer + test-runner |
 
 **File ownership is critical**: structure tasks so each teammate owns distinct files. See the team template for recommended ownership splits.
 

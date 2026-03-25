@@ -83,6 +83,8 @@ Use this to determine when work should be promoted from one level to the next:
 - "Implement HuggingFace Daily Papers sourcer with error handling, deduplication, and rate limit tests"
 - "Add --backend flag to CLI with backward compatibility"
 
+TCS is also the **universal task specification unit** — every task within a CONOP or OPORD is written at TCS detail level. The document type escalates the frame; the task granularity stays consistent.
+
 **Promote from Task when**:
 - Needs explicit pass/fail criteria (not just "done")
 - Multiple files across 2+ directories
@@ -101,22 +103,24 @@ Use this to determine when work should be promoted from one level to the next:
 **Team**: Usually 1-2 agents (e.g., `python-prototyper` + `test-runner`)
 
 ### Level 3: CONOP — Concept of Operations
-**When**: Multi-phase plan with design decisions, parallel tracks, or multiple agents.
+**When**: Multi-wave plan with design decisions, parallel tracks, or multiple agents.
 - "Dual-backend architecture — AgentRunner + SDK fallback + CLI integration + validation"
 - "Multi-paper briefing — selection, thematic grouping, comparative prompts"
 
 **Promote from TCS when**:
-- Multiple phases that could run in parallel
+- Multiple parallel waves of work
 - Design decisions that need to be made before coding
 - Touches 4+ components or introduces new architecture
 - Needs a team of 3+ agents
 - Has open questions that affect implementation
 - Will span multiple sessions
 
+Every task within the CONOP is specified at TCS detail level.
+
 **Format**: `docs/plans/conop_NNN_descriptive_name.md` following the template:
 1. SITUATION (background, terrain, constraints, assumptions)
 2. MISSION (requirements, TCS table, acceptable risk)
-3. EXECUTION (phases, phase details, concept diagram)
+3. EXECUTION (waves, wave details, concept diagram)
 4. LOGISTICS (file ownership, data flow)
 5. COMMAND AND SIGNAL (decision points, open questions)
 
@@ -126,22 +130,31 @@ Use this to determine when work should be promoted from one level to the next:
 - `briefing-quality.md` for distillation and output quality
 
 ### Level 4: OPORD — Operations Order
-**When**: Strategy is decided (CONOP approved), now executing a sequential multi-phase operation.
-- "Execute Phase 3 automation: cron setup → deduplication → output rotation → notification → backfill"
+**When**: Strategy is decided (CONOP approved), now executing a sequential multi-wave operation.
+- "Execute Wave 3 automation: cron setup → deduplication → output rotation → notification → backfill"
 
 **Promote from CONOP when**:
 - CONOP's design decisions are resolved
-- Phases must run in strict sequence (not parallel)
+- Waves must run in defined sequence
 - External dependencies exist (hardware, data, human input)
 - Resource costs are significant (GPU time, manual review)
-- Need to track phase-by-phase completion with checkpoints
+- Need to track wave-by-wave completion with checkpoints
+
+Every task within the OPORD is specified at TCS detail level.
 
 **Format**: `docs/plans/opord_NNN_descriptive_name.md` — tighter execution focus:
-- Phases run sequentially: Phase 1 → Phase 2 → Phase 3
-- Each phase has a checkpoint/gate before proceeding
+- Waves run sequentially: Wave 1 → Wave 2 → Wave 3
+- Each wave has a checkpoint/gate before proceeding
 - Explicit resource requirements and timelines
 
-**Team**: Full team from the relevant template, with lead coordinating phase transitions.
+**Team**: Full team from the relevant template, with lead coordinating wave transitions.
+
+## Terminology: Phases vs Waves
+
+- **Phase** — Strategic roadmap milestone (e.g., `build_phases` in `project.yaml`). Phases live outside CONOPs and OPORDs.
+- **Wave** — Tactical parallel execution unit within a CONOP or OPORD. Agent teams deploy in waves.
+
+A campaign-level OPORD may contain phases of waves, but this is deliberate and infrequent. Default to waves within orders; reserve phases for the roadmap.
 
 ## Decision Point Guidance
 
@@ -163,18 +176,20 @@ When promoting or planning, recommend teams from the roster:
 
 | Work Domain | Recommended Template | Core Agents |
 |---|---|---|
-| New content source | `source-development` | content-curator + test-runner + code-reviewer |
+| New content source | `source-development` | content-curator + test-runner + code-reviewer (+ proposer for design-heavy sources) |
 | Scoring/selection tuning | `source-development` | content-curator + test-runner + code-reviewer |
 | Pipeline feature / CLI | `pipeline-feature` | python-prototyper + test-runner + code-reviewer |
 | Briefing quality / prompts | `briefing-quality` | distiller-dev + test-runner + pipeline-sme |
-| New pipeline stage | `pipeline-feature` | python-prototyper + test-runner + code-reviewer + pipeline-sme |
-| Cross-cutting (multi-domain) | `pipeline-feature` + `source-development` | python-prototyper + content-curator + test-runner + code-reviewer |
+| New pipeline stage | `pipeline-feature` | python-prototyper + test-runner + code-reviewer + pipeline-sme + proposer |
+| Cross-cutting (multi-domain) | `pipeline-feature` + `source-development` | python-prototyper + content-curator + test-runner + code-reviewer + proposer |
+| Bug fix (any domain) | `bug-fix` | python-prototyper + test-runner |
+| Quality audit (no code changes) | `code-review` | code-reviewer + test-runner |
 
 **Scaling rule**:
 - Mechanical fix (3 files or fewer): 2 agents (developer + tester)
 - Schema/API change: 3 agents (+ reviewer)
-- New subsystem: 4 agents (+ pipeline-sme)
-- Full CONOP: 5 agents (+ pipeline-sme for mission alignment)
+- New subsystem: 4 agents (+ pipeline-sme + proposer for design exploration)
+- Full CONOP: 5+ agents (+ pipeline-sme for mission alignment + proposer for design decisions)
 
 ## Backbrief Format
 

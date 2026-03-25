@@ -9,6 +9,7 @@ Each agent's `.md` file is the authoritative definition of its role, boundaries,
 | Agent | Model | Writes Code? | Primary Domain |
 |-------|-------|-------------|----------------|
 | `pipeline-sme` | inherit | No | Mission alignment, roadmap, pillars, design direction |
+| `proposer` | sonnet | No | Solution space exploration, proposal writing, pre-implementation debate |
 | `content-curator` | sonnet | Yes | Source configuration, selection tuning, keyword/scoring weights |
 | `distiller-dev` | sonnet | Yes | Briefing quality, prompt engineering, NotebookLM optimization |
 | `test-runner` | haiku | No | All -- runs pytest, reports results |
@@ -19,19 +20,36 @@ For detailed usage, boundaries, and workflow for each agent, read its `.md` file
 
 ## How to Compose a Team
 
+### Scope Matrix
+
+| Path | test-runner | code-reviewer | proposer | pipeline-sme | python-prototyper | content-curator | distiller-dev |
+|------|:-----------:|:-------------:|:--------:|:------------:|:-----------------:|:---------------:|:-------------:|
+| `src/sourcer.py`, `src/selector.py` | Read/Run | Read | Read | Read | Write | **Write** | — |
+| `src/distiller.py` | Read/Run | Read | Read | Read | Write | — | **Write** |
+| `src/pipeline.py`, `src/config.py`, `main.py` | Read/Run | Read | Read | Read | **Write** | — | — |
+| `src/agent_runner.py`, `src/models.py` | Read/Run | Read | Read | Read | **Write** | Write | Write |
+| `config/paperboy.yaml` | Read | Read | Read | Read | Write | **Write** | Write |
+| `config/project.yaml` | Read | Read | Read | Read | Write | — | — |
+| `tests/` | **Read/Run** | Read | Read | — | **Write** | Write | — |
+| `docs/` | — | **Write** (reports) | **Write** (proposals) | **Write** (analysis) | Write | — | — |
+| `.claude/` | — | Read | Read | Read | — | — | — |
+
+**Bold** = primary owner. Regular "Write" = secondary. Dash = no access needed.
+
 ### Step 1: Match the template
 
 Check `.claude/teams/` for a template that fits:
-- **New content source** -> source development template
-- **Scoring/selection tuning** -> selection optimization template
-- **Briefing quality work** -> distillation template
-- **General feature** -> feature development template
+- **New content source** -> `source-development.md`
+- **Pipeline feature / CLI** -> `pipeline-feature.md`
+- **Briefing quality work** -> `briefing-quality.md`
+- **Bug fix** -> `bug-fix.md`
+- **Quality audit** -> `code-review.md`
 
 Each template documents its own task ordering, scaling options, and tips.
 
 ### Step 2: Scale to the work
 
-Not every task needs 6 agents. Scale to fit:
+Not every task needs 7 agents. Scale to fit:
 
 | Work Size | Example | Agents |
 |-----------|---------|--------|
@@ -40,7 +58,7 @@ Not every task needs 6 agents. Scale to fit:
 | New source type | Add a new ContentSourcer implementation | python-prototyper + test-runner + code-reviewer (3) |
 | Prompt rewrite | Overhaul distillation prompt sections | distiller-dev + test-runner + code-reviewer (3) |
 | New pipeline stage | Add PDF extraction or TTS export | python-prototyper + test-runner + code-reviewer + pipeline-sme (4) |
-| Full CONOP | New output format or major architecture change | python-prototyper + test-runner + code-reviewer + pipeline-sme + content-curator or distiller-dev (5) |
+| Full CONOP | New output format or major architecture change | proposer + code-reviewer + pipeline-sme (design phase), then python-prototyper + test-runner + code-reviewer (build phase) |
 
 ### Step 3: Assign file ownership
 
