@@ -49,7 +49,7 @@
 ## Scaling Notes
 
 - This is the smallest team. Keep it lean — the task is investigative, not implementation-heavy.
-- Neither agent writes production code. If the review reveals issues that need fixing, escalate to the appropriate team: `bug-fix` for defects, `pipeline-feature` for structural improvements, `source-development` for source resilience gaps, `briefing-quality` for distillation issues.
+- Neither agent writes production code. If the review reveals issues that need fixing, escalate to the appropriate team: `bug-fix` for defects, `feature-development` for structural improvements, `source-development` for source resilience gaps, `briefing-quality` for distillation issues.
 - `code-reviewer` is read-only by design. If it identifies a Critical finding, it reports and stops — it does not attempt to fix.
 - For pre-merge reviews on a specific set of changes, scope `code-reviewer` to the changed files only (`git diff main...HEAD`). For periodic audits, scope it to the full `src/` tree.
 - For post-incident review (pipeline produced wrong output, missed papers), add `pipeline-sme` to assess mission impact alongside `code-reviewer`'s technical findings.

@@ -126,7 +126,7 @@ Every task within the CONOP is specified at TCS detail level.
 
 **Team**: 3-5 agents. Use team templates from `.claude/teams/`:
 - `source-development.md` for ArXiv/RSS sourcing work
-- `pipeline-feature.md` for pipeline features and CLI
+- `feature-development.md` for pipeline features and CLI
 - `briefing-quality.md` for distillation and output quality
 
 ### Level 4: OPORD — Operations Order
@@ -178,10 +178,10 @@ When promoting or planning, recommend teams from the roster:
 |---|---|---|
 | New content source | `source-development` | content-curator + test-runner + code-reviewer (+ proposer for design-heavy sources) |
 | Scoring/selection tuning | `source-development` | content-curator + test-runner + code-reviewer |
-| Pipeline feature / CLI | `pipeline-feature` | python-prototyper + test-runner + code-reviewer |
+| Pipeline feature / CLI | `feature-development` | python-prototyper + test-runner + code-reviewer |
 | Briefing quality / prompts | `briefing-quality` | distiller-dev + test-runner + pipeline-sme |
-| New pipeline stage | `pipeline-feature` | python-prototyper + test-runner + code-reviewer + pipeline-sme + proposer |
-| Cross-cutting (multi-domain) | `pipeline-feature` + `source-development` | python-prototyper + content-curator + test-runner + code-reviewer + proposer |
+| New pipeline stage | `feature-development` | python-prototyper + test-runner + code-reviewer + pipeline-sme + proposer |
+| Cross-cutting (multi-domain) | `feature-development` + `source-development` | python-prototyper + content-curator + test-runner + code-reviewer + proposer |
 | Bug fix (any domain) | `bug-fix` | python-prototyper + test-runner |
 | Quality audit (no code changes) | `code-review` | code-reviewer + test-runner |
 

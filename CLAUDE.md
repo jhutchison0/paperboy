@@ -206,7 +206,7 @@ Defined in `.claude/teams/`. Choose the template that matches the work domain:
 | Template | Domain | Agents |
 |---|---|---|
 | `source-development.md` | ArXiv/RSS sourcing | proposer + content-curator + test-runner + code-reviewer |
-| `pipeline-feature.md` | Pipeline features | proposer + python-prototyper + test-runner + code-reviewer |
+| `feature-development.md` | Pipeline features | proposer + python-prototyper + test-runner + code-reviewer |
 | `briefing-quality.md` | Distillation & output | proposer + distiller-dev + test-runner + pipeline-sme |
 | `bug-fix.md` | Regression-first bug fixes | python-prototyper + test-runner |
 | `code-review.md` | Quality audits (no code changes) | code-reviewer + test-runner |

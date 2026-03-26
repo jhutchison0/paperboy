@@ -40,7 +40,7 @@ For detailed usage, boundaries, and workflow for each agent, read its `.md` file
 
 Check `.claude/teams/` for a template that fits:
 - **New content source** -> `source-development.md`
-- **Pipeline feature / CLI** -> `pipeline-feature.md`
+- **Pipeline feature / CLI** -> `feature-development.md`
 - **Briefing quality work** -> `briefing-quality.md`
 - **Bug fix** -> `bug-fix.md`
 - **Quality audit** -> `code-review.md`

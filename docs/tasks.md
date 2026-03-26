@@ -1,6 +1,6 @@
 # Paperboy — Task List
 
-**Last Updated**: 2026-03-25
+**Last Updated**: 2026-03-26
 
 ---
 
@@ -17,6 +17,7 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-03-26: Fix pipeline-feature → feature-development rename to align with utils upstream naming
 - [x] 2026-03-25: Apply upstream doctrine update — proposer agent, wave terminology, 5 team templates, /sitrep command, session-start doctrine propagation
 - [x] 2026-03-17: Add `--paper-id` flag to `distill` command; `ArxivSourcer.fetch_by_id()`; full test coverage
 - [x] 2026-03-12: Make output filename date format configurable (`pipeline.date_format`), default YYMMDD
