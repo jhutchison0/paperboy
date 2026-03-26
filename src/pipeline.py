@@ -230,7 +230,7 @@ class DailyPipeline:
         # Filename: YYMMDD_paper-slug.md (format configurable via pipeline.date_format)
         date_str = briefing.generated_at.strftime(self.config.date_format)
         title_slug = slugify(briefing.source_paper.title[:60])
-        filename = f"{date_str}_{title_slug}.md"
+        filename = f"{date_str}_{title_slug}_briefing.md"
 
         filepath = output_dir / filename
         filepath.write_text(briefing.content, encoding="utf-8")
