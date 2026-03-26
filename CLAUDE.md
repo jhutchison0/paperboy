@@ -181,11 +181,11 @@ API keys live in `.env` (never committed). See `.env.example` for required varia
 
 ## Agents and Teams
 
-**IMPORTANT**: Before deploying any agent team or multi-agent plan, read `.claude/agents/README.md` for the current roster and usage guide. Match agents to the work — don't invent ad-hoc roles when a prepositioned agent already covers the need.
+**IMPORTANT**: Before deploying any agent team or multi-agent plan, read `.claude/README.md` for the current roster and usage guide. Match agents to the work — don't invent ad-hoc roles when a prepositioned agent already covers the need.
 
 ### Agent Roster
 
-Defined in `.claude/agents/`. See `.claude/agents/README.md` for detailed usage guidance.
+Defined in `.claude/agents/`. See `.claude/README.md` for detailed usage guidance.
 
 | Agent | Model | Writes Code? | Primary Domain |
 |---|---|---|---|

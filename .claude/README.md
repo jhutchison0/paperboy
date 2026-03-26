@@ -1,8 +1,8 @@
-# Agent Roster
+# Claude Code Infrastructure
 
-This directory contains the project's prepositioned agents. **Read this before deploying any multi-agent plan or CONOP.**
+Agents, team templates, and slash commands for the paperboy pipeline. **Read this before deploying any multi-agent plan.**
 
-Each agent's `.md` file is the authoritative definition of its role, boundaries, and workflow. This README is the index and composition guide -- it tells you which agents to pick and how to wire them into teams.
+Agent definitions live in `agents/`. Team templates live in `teams/`. Each `.md` file is the authoritative definition of its role and workflow.
 
 ## The Roster
 
@@ -83,6 +83,6 @@ Typical ownership boundaries:
 ## Updating the Roster
 
 When the project's needs evolve, update:
-1. The agent file in this directory (authoritative source)
+1. The agent file in `agents/` (authoritative source)
 2. This README's roster table
 3. The agent table in `CLAUDE.md`
