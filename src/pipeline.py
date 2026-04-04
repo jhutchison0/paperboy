@@ -7,10 +7,13 @@ Handles errors gracefully so the pipeline degrades rather than crashes.
 
 import json
 import logging
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
+
+import yaml
 
 from slugify import slugify
 
@@ -29,6 +32,9 @@ from src.sourcer import SourceManager
 logger = logging.getLogger(__name__)
 
 
+_ARXIV_ID_RE = re.compile(r"arXiv:(\d{4}\.\d{4,5}(?:v\d+)?)", re.IGNORECASE)
+
+
 class SelectionHistory:
     """Tracks previously selected papers to prevent cross-run duplicates."""
 
@@ -36,6 +42,7 @@ class SelectionHistory:
         self.path = history_path
         self.cooldown_days = cooldown_days
         self._history: dict = self._load()
+        self._seed_from_briefings()
 
     def _load(self) -> dict:
         if self.path.exists():
@@ -45,6 +52,91 @@ class SelectionHistory:
                 logger.warning(f"Could not read selection history ({e}), starting fresh")
                 return {}
         return {}
+
+    def _seed_from_briefings(self) -> None:
+        """Back-fill history from existing briefing files on disk.
+
+        Scans YAML frontmatter for paper IDs so that briefings generated
+        before dedup was implemented are still tracked.
+        """
+        briefing_dir = self.path.parent
+        if not briefing_dir.exists():
+            return
+
+        seeded = 0
+        for md_file in briefing_dir.glob("*_briefing.md"):
+            try:
+                paper_id = self._extract_id_from_briefing(md_file)
+                if paper_id and paper_id not in self._history:
+                    # Use file modification time as the selection date
+                    mtime = datetime.fromtimestamp(md_file.stat().st_mtime, tz=timezone.utc)
+                    title = self._extract_title_from_briefing(md_file)
+                    self._history[paper_id] = {
+                        "title": title,
+                        "selected_at": mtime.isoformat(),
+                        "seeded_from": md_file.name,
+                    }
+                    seeded += 1
+            except Exception as e:
+                logger.debug(f"Could not seed from {md_file.name}: {e}")
+
+        if seeded:
+            logger.info(f"Seeded {seeded} paper(s) into selection history from existing briefings")
+            self._save()
+
+    @staticmethod
+    def _extract_id_from_briefing(md_file: Path) -> str | None:
+        """Extract a normalized paper ID from briefing YAML frontmatter."""
+        text = md_file.read_text(encoding="utf-8")
+        if not text.startswith("---"):
+            return None
+
+        end = text.find("---", 3)
+        if end == -1:
+            return None
+
+        try:
+            front = yaml.safe_load(text[3:end])
+        except yaml.YAMLError:
+            return None
+
+        if not isinstance(front, dict):
+            return None
+
+        # Try 'source' field first (e.g., "arXiv:2604.02091v1" or "Li et al., arXiv:2603.24579v1")
+        source = front.get("source", "")
+        if source:
+            m = _ARXIV_ID_RE.search(source)
+            if m:
+                return m.group(1)
+            normalized = normalize_paper_id(source)
+            if normalized != source:
+                return normalized
+
+        # Try 'paper_url' field (e.g., "http://arxiv.org/abs/2603.10764v1")
+        paper_url = front.get("paper_url", "")
+        if paper_url:
+            normalized = normalize_paper_id(paper_url)
+            if normalized != paper_url:
+                return normalized
+
+        return None
+
+    @staticmethod
+    def _extract_title_from_briefing(md_file: Path) -> str:
+        """Extract title from briefing YAML frontmatter."""
+        text = md_file.read_text(encoding="utf-8")
+        end = text.find("---", 3)
+        if end == -1:
+            return md_file.stem
+
+        try:
+            front = yaml.safe_load(text[3:end])
+            if isinstance(front, dict):
+                return front.get("title", md_file.stem)
+        except yaml.YAMLError:
+            pass
+        return md_file.stem
 
     def _save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

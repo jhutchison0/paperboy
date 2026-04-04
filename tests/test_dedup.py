@@ -204,6 +204,106 @@ class TestSelectionHistory:
         assert len(excluded) == 3
 
 
+# ── Seeding from existing briefings ──────────────────────────────
+
+
+class TestSeedFromBriefings:
+
+    def _write_briefing(self, directory, filename, frontmatter):
+        """Helper to write a mock briefing with YAML frontmatter."""
+        lines = ["---"]
+        for k, v in frontmatter.items():
+            lines.append(f'{k}: "{v}"' if isinstance(v, str) else f"{k}: {v}")
+        lines.append("---")
+        lines.append("\n## Content\nSome briefing text.")
+        path = directory / filename
+        path.write_text("\n".join(lines), encoding="utf-8")
+        return path
+
+    def test_seeds_from_arxiv_source_field(self, tmp_path):
+        """Seeds history from briefing with source: arXiv:XXXX format."""
+        self._write_briefing(tmp_path, "260403_test_briefing.md", {
+            "title": "Test Paper",
+            "source": "arXiv:2604.02091v1",
+        })
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        assert "2604.02091v1" in h.get_excluded_ids()
+
+    def test_seeds_from_source_with_author_prefix(self, tmp_path):
+        """Seeds from source field that has author names before arXiv ID."""
+        self._write_briefing(tmp_path, "260326_test_briefing.md", {
+            "title": "MARCH Paper",
+            "source": "Li et al., arXiv:2603.24579v1",
+        })
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        assert "2603.24579v1" in h.get_excluded_ids()
+
+    def test_seeds_from_paper_url_field(self, tmp_path):
+        """Seeds from paper_url field with ArXiv URL."""
+        self._write_briefing(tmp_path, "260312_test_briefing.md", {
+            "title": "HeartAgent",
+            "paper_url": "http://arxiv.org/abs/2603.10764v1",
+        })
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        assert "2603.10764v1" in h.get_excluded_ids()
+
+    def test_does_not_overwrite_existing_entries(self, tmp_path):
+        """Seeding doesn't overwrite entries already in history."""
+        self._write_briefing(tmp_path, "260403_test_briefing.md", {
+            "title": "Test Paper",
+            "source": "arXiv:2604.02091v1",
+        })
+        # Pre-populate history with a known timestamp
+        history_file = tmp_path / ".selection_history.json"
+        existing = {"2604.02091v1": {"title": "Original", "selected_at": "2026-04-03T10:00:00+00:00"}}
+        history_file.write_text(json.dumps(existing), encoding="utf-8")
+
+        h = SelectionHistory(history_file)
+        assert h._history["2604.02091v1"]["title"] == "Original"  # Not overwritten
+
+    def test_seeds_multiple_briefings(self, tmp_path):
+        """Seeds all briefing files in the directory."""
+        self._write_briefing(tmp_path, "260403_paper-a_briefing.md", {
+            "title": "Paper A", "source": "arXiv:2604.00001v1",
+        })
+        self._write_briefing(tmp_path, "260404_paper-b_briefing.md", {
+            "title": "Paper B", "source": "arXiv:2604.00002v1",
+        })
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        excluded = h.get_excluded_ids()
+        assert "2604.00001v1" in excluded
+        assert "2604.00002v1" in excluded
+
+    def test_ignores_non_briefing_files(self, tmp_path):
+        """Only files matching *_briefing.md are scanned."""
+        # This file has no _briefing suffix
+        self._write_briefing(tmp_path, "260403_notes.md", {
+            "title": "Notes", "source": "arXiv:9999.99999v1",
+        })
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        assert "9999.99999v1" not in h.get_excluded_ids()
+
+    def test_handles_no_frontmatter_gracefully(self, tmp_path):
+        """Briefing files without YAML frontmatter are silently skipped."""
+        (tmp_path / "260403_broken_briefing.md").write_text(
+            "# No frontmatter here\nJust text.", encoding="utf-8"
+        )
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        assert h.get_excluded_ids() == set()
+
+    def test_persists_seeded_history(self, tmp_path):
+        """Seeded entries are saved to disk so they survive reload."""
+        self._write_briefing(tmp_path, "260403_test_briefing.md", {
+            "title": "Test", "source": "arXiv:2604.02091v1",
+        })
+        h1 = SelectionHistory(tmp_path / ".selection_history.json")
+        assert "2604.02091v1" in h1.get_excluded_ids()
+
+        # Reload — should find it without re-scanning
+        h2 = SelectionHistory(tmp_path / ".selection_history.json")
+        assert "2604.02091v1" in h2.get_excluded_ids()
+
+
 # ── Selector with exclude_ids ────────────────────────────────────
 
 
