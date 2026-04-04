@@ -165,6 +165,54 @@ class TestRunOutputBranches:
         assert "Pipeline failed" in result.output
 
 
+class TestRunNoDedupFlag:
+    """Tests for --no-dedup CLI flag."""
+
+    @patch("main.DailyPipeline")
+    @patch("main._load_and_validate")
+    def test_no_dedup_passes_false_to_pipeline(self, mock_load, MockPipeline):
+        mock_load.return_value = MagicMock()
+        pipeline = MagicMock()
+        pipeline.distiller = None
+        pipeline.run.return_value = PipelineResult(
+            status="success",
+            selected_paper=_make_scored(),
+            briefing=None,
+            papers_fetched=50,
+        )
+        MockPipeline.return_value = pipeline
+
+        from main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["run", "--backend", "keyword-only", "--no-dedup"])
+
+        assert result.exit_code == 0
+        _, kwargs = pipeline.run.call_args
+        assert kwargs["dedup"] is False
+
+    @patch("main.DailyPipeline")
+    @patch("main._load_and_validate")
+    def test_default_dedup_is_true(self, mock_load, MockPipeline):
+        mock_load.return_value = MagicMock()
+        pipeline = MagicMock()
+        pipeline.distiller = None
+        pipeline.run.return_value = PipelineResult(
+            status="success",
+            selected_paper=_make_scored(),
+            briefing=None,
+            papers_fetched=50,
+        )
+        MockPipeline.return_value = pipeline
+
+        from main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["run", "--backend", "keyword-only"])
+
+        assert result.exit_code == 0
+        _, kwargs = pipeline.run.call_args
+        assert kwargs["dedup"] is True
+
+
 class TestDistillPaperId:
     """Tests for distill --paper-id CLI option."""
 

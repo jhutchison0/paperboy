@@ -152,6 +152,16 @@ class TestPipelineRangeChecks:
         errors, _ = cfg.validate()
         assert any("days_lookback" in e for e in errors)
 
+    def test_dedup_cooldown_days_loaded_from_yaml(self):
+        """dedup_cooldown_days is loaded from config YAML."""
+        cfg = PipelineConfig.load()
+        assert cfg.dedup_cooldown_days == 30
+
+    def test_dedup_cooldown_days_default(self):
+        """Default dedup_cooldown_days is 30."""
+        cfg = PipelineConfig()
+        assert cfg.dedup_cooldown_days == 30
+
 
 class TestAgentRunnerRangeChecks:
     """AgentRunner config validation."""
