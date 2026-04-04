@@ -1,6 +1,6 @@
 # Paperboy — Task List
 
-**Last Updated**: 2026-03-26
+**Last Updated**: 2026-04-04
 
 ---
 
@@ -17,6 +17,9 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-04-04: Cross-run paper deduplication — SelectionHistory, normalize_paper_id, 30-day cooldown, --no-dedup flag
+- [x] 2026-04-04: Adopt decision-scientist agent from upstream (ADAPT), skip MAUT module and team (SKIP)
+- [x] 2026-04-04: Apply upstream session-start git sync update
 - [x] 2026-03-26: Fix pipeline-feature → feature-development rename to align with utils upstream naming
 - [x] 2026-03-25: Apply upstream doctrine update — proposer agent, wave terminology, 5 team templates, /sitrep command, session-start doctrine propagation
 - [x] 2026-03-17: Add `--paper-id` flag to `distill` command; `ArxivSourcer.fetch_by_id()`; full test coverage
