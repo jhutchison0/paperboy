@@ -9,7 +9,7 @@ import json
 import logging
 import re
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -66,14 +66,17 @@ class SelectionHistory:
         seeded = 0
         for md_file in briefing_dir.glob("*_briefing.md"):
             try:
-                paper_id = self._extract_id_from_briefing(md_file)
+                meta = self._parse_briefing_frontmatter(md_file)
+                if not meta:
+                    continue
+                paper_id = meta.get("paper_id")
                 if paper_id and paper_id not in self._history:
-                    # Use file modification time as the selection date
-                    mtime = datetime.fromtimestamp(md_file.stat().st_mtime, tz=timezone.utc)
-                    title = self._extract_title_from_briefing(md_file)
+                    selected_at = meta.get("date") or datetime.fromtimestamp(
+                        md_file.stat().st_mtime, tz=timezone.utc
+                    )
                     self._history[paper_id] = {
-                        "title": title,
-                        "selected_at": mtime.isoformat(),
+                        "title": meta.get("title", md_file.stem),
+                        "selected_at": selected_at.isoformat(),
                         "seeded_from": md_file.name,
                     }
                     seeded += 1
@@ -85,8 +88,11 @@ class SelectionHistory:
             self._save()
 
     @staticmethod
-    def _extract_id_from_briefing(md_file: Path) -> str | None:
-        """Extract a normalized paper ID from briefing YAML frontmatter."""
+    def _parse_briefing_frontmatter(md_file: Path) -> dict | None:
+        """Parse YAML frontmatter from a briefing file, returning paper_id, title, and date.
+
+        Returns None if the file has no valid frontmatter or no extractable paper ID.
+        """
         text = md_file.read_text(encoding="utf-8")
         if not text.startswith("---"):
             return None
@@ -103,40 +109,49 @@ class SelectionHistory:
         if not isinstance(front, dict):
             return None
 
-        # Try 'source' field first (e.g., "arXiv:2604.02091v1" or "Li et al., arXiv:2603.24579v1")
+        # Extract paper ID from 'source' or 'paper_url' field
+        paper_id = None
         source = front.get("source", "")
         if source:
             m = _ARXIV_ID_RE.search(source)
             if m:
-                return m.group(1)
-            normalized = normalize_paper_id(source)
-            if normalized != source:
-                return normalized
+                paper_id = m.group(1)
+            else:
+                normalized = normalize_paper_id(source)
+                if normalized != source:
+                    paper_id = normalized
 
-        # Try 'paper_url' field (e.g., "http://arxiv.org/abs/2603.10764v1")
-        paper_url = front.get("paper_url", "")
-        if paper_url:
-            normalized = normalize_paper_id(paper_url)
-            if normalized != paper_url:
-                return normalized
+        if not paper_id:
+            paper_url = front.get("paper_url", "")
+            if paper_url:
+                normalized = normalize_paper_id(paper_url)
+                if normalized != paper_url:
+                    paper_id = normalized
 
-        return None
+        if not paper_id:
+            return None
 
-    @staticmethod
-    def _extract_title_from_briefing(md_file: Path) -> str:
-        """Extract title from briefing YAML frontmatter."""
-        text = md_file.read_text(encoding="utf-8")
-        end = text.find("---", 3)
-        if end == -1:
-            return md_file.stem
+        # Extract date — prefer briefing_date, then date, then None (caller uses mtime)
+        selected_date = None
+        for date_field in ("briefing_date", "date"):
+            raw = front.get(date_field)
+            if raw:
+                try:
+                    if isinstance(raw, datetime):
+                        selected_date = raw.replace(tzinfo=timezone.utc)
+                    elif isinstance(raw, date):
+                        selected_date = datetime(raw.year, raw.month, raw.day, tzinfo=timezone.utc)
+                    else:
+                        selected_date = datetime.fromisoformat(str(raw)).replace(tzinfo=timezone.utc)
+                    break
+                except (ValueError, TypeError):
+                    continue
 
-        try:
-            front = yaml.safe_load(text[3:end])
-            if isinstance(front, dict):
-                return front.get("title", md_file.stem)
-        except yaml.YAMLError:
-            pass
-        return md_file.stem
+        return {
+            "paper_id": paper_id,
+            "title": front.get("title", md_file.stem),
+            "date": selected_date,
+        }
 
     def _save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

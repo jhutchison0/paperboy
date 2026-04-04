@@ -303,6 +303,41 @@ class TestSeedFromBriefings:
         h2 = SelectionHistory(tmp_path / ".selection_history.json")
         assert "2604.02091v1" in h2.get_excluded_ids()
 
+    def test_uses_frontmatter_date_not_mtime(self, tmp_path):
+        """Seeded selected_at comes from frontmatter date, not file mtime."""
+        self._write_briefing(tmp_path, "260403_test_briefing.md", {
+            "title": "Test",
+            "source": "arXiv:2604.02091v1",
+            "date": "2026-04-03",
+        })
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        entry = h._history["2604.02091v1"]
+        assert "2026-04-03" in entry["selected_at"]
+
+    def test_prefers_briefing_date_over_date(self, tmp_path):
+        """briefing_date field takes precedence over date field."""
+        self._write_briefing(tmp_path, "260404_test_briefing.md", {
+            "title": "Test",
+            "source": "arXiv:2604.02091v1",
+            "date": "2026-04-02",
+            "briefing_date": "2026-04-04",
+        })
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        entry = h._history["2604.02091v1"]
+        assert "2026-04-04" in entry["selected_at"]
+
+    def test_falls_back_to_mtime_without_date(self, tmp_path):
+        """Falls back to file mtime when frontmatter has no date field."""
+        self._write_briefing(tmp_path, "260403_test_briefing.md", {
+            "title": "Test",
+            "source": "arXiv:2604.02091v1",
+        })
+        h = SelectionHistory(tmp_path / ".selection_history.json")
+        entry = h._history["2604.02091v1"]
+        # Should have a valid ISO timestamp (from mtime fallback)
+        assert "selected_at" in entry
+        datetime.fromisoformat(entry["selected_at"])  # Should not raise
+
 
 # ── Selector with exclude_ids ────────────────────────────────────
 
