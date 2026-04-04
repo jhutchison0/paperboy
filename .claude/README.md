@@ -15,6 +15,7 @@ Agent definitions live in `agents/`. Team templates live in `teams/`. Each `.md`
 | `test-runner` | haiku | No | All -- runs pytest, reports results |
 | `python-prototyper` | sonnet | Yes | Full Python implementation across pipeline, CLI, config |
 | `code-reviewer` | inherit | No | Reviews against 5 pillars, code quality, security |
+| `decision-scientist` | inherit | No | Audits weights, scoring fairness, bias, statistical soundness |
 
 For detailed usage, boundaries, and workflow for each agent, read its `.md` file in this directory.
 
@@ -22,17 +23,17 @@ For detailed usage, boundaries, and workflow for each agent, read its `.md` file
 
 ### Scope Matrix
 
-| Path | test-runner | code-reviewer | proposer | pipeline-sme | python-prototyper | content-curator | distiller-dev |
-|------|:-----------:|:-------------:|:--------:|:------------:|:-----------------:|:---------------:|:-------------:|
-| `src/sourcer.py`, `src/selector.py` | Read/Run | Read | Read | Read | Write | **Write** | — |
-| `src/distiller.py` | Read/Run | Read | Read | Read | Write | — | **Write** |
-| `src/pipeline.py`, `src/config.py`, `main.py` | Read/Run | Read | Read | Read | **Write** | — | — |
-| `src/agent_runner.py`, `src/models.py` | Read/Run | Read | Read | Read | **Write** | Write | Write |
-| `config/paperboy.yaml` | Read | Read | Read | Read | Write | **Write** | Write |
-| `config/project.yaml` | Read | Read | Read | Read | Write | — | — |
-| `tests/` | **Read/Run** | Read | Read | — | **Write** | Write | — |
-| `docs/` | — | **Write** (reports) | **Write** (proposals) | **Write** (analysis) | Write | — | — |
-| `.claude/` | — | Read | Read | Read | — | — | — |
+| Path | test-runner | code-reviewer | proposer | pipeline-sme | python-prototyper | content-curator | distiller-dev | decision-scientist |
+|------|:-----------:|:-------------:|:--------:|:------------:|:-----------------:|:---------------:|:-------------:|:------------------:|
+| `src/sourcer.py`, `src/selector.py` | Read/Run | Read | Read | Read | Write | **Write** | — | Read |
+| `src/distiller.py` | Read/Run | Read | Read | Read | Write | — | **Write** | — |
+| `src/pipeline.py`, `src/config.py`, `main.py` | Read/Run | Read | Read | Read | **Write** | — | — | Read |
+| `src/agent_runner.py`, `src/models.py` | Read/Run | Read | Read | Read | **Write** | Write | Write | — |
+| `config/paperboy.yaml` | Read | Read | Read | Read | Write | **Write** | Write | Read |
+| `config/project.yaml` | Read | Read | Read | Read | Write | — | — | — |
+| `tests/` | **Read/Run** | Read | Read | — | **Write** | Write | — | — |
+| `docs/` | — | **Write** (reports) | **Write** (proposals) | **Write** (analysis) | Write | — | — | **Write** (audits) |
+| `.claude/` | — | Read | Read | Read | — | — | — | — |
 
 **Bold** = primary owner. Regular "Write" = secondary. Dash = no access needed.
 

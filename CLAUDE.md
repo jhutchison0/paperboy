@@ -196,6 +196,7 @@ Defined in `.claude/agents/`. See `.claude/README.md` for detailed usage guidanc
 | `test-runner` | haiku | No | All — runs pytest, reports results |
 | `python-prototyper` | sonnet | Yes | Pipeline implementation |
 | `code-reviewer` | inherit | No | All — reviews against pillars |
+| `decision-scientist` | inherit | No | Weights, scoring fairness, bias, stats |
 
 All have persistent memory in `.claude/agent-memory/`. Manage with `/agents`.
 
