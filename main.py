@@ -78,7 +78,8 @@ def cli():
     default="auto",
     help="Claude backend: auto (detect), api (SDK), agent (CLI), keyword-only (no Claude)",
 )
-def run(config, output_dir, days_back, target_date, backend):
+@click.option("--no-dedup", is_flag=True, default=False, help="Disable deduplication (allow re-selecting recent papers)")
+def run(config, output_dir, days_back, target_date, backend, no_dedup):
     """Run the full pipeline: source -> select -> distill -> save."""
     cfg = _load_and_validate(config)
 
@@ -87,7 +88,7 @@ def run(config, output_dir, days_back, target_date, backend):
     _apply_date_overrides(cfg, target_date, days_back)
 
     pipeline = DailyPipeline(cfg, backend=backend)
-    result = pipeline.run()
+    result = pipeline.run(dedup=not no_dedup)
 
     if result.success:
         click.echo(f"\n{'=' * 60}")

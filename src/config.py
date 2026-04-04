@@ -85,6 +85,7 @@ class PipelineConfig:
     max_papers_to_fetch: int = 50
     max_papers_to_score: int = 20
     days_lookback: int = 7
+    dedup_cooldown_days: int = 30
     log_level: str = "INFO"
 
     # Sub-configs
@@ -139,6 +140,7 @@ class PipelineConfig:
         config.max_papers_to_fetch = pipeline_raw.get("max_papers_to_fetch", config.max_papers_to_fetch)
         config.max_papers_to_score = pipeline_raw.get("max_papers_to_score", config.max_papers_to_score)
         config.days_lookback = pipeline_raw.get("days_lookback", config.days_lookback)
+        config.dedup_cooldown_days = pipeline_raw.get("dedup_cooldown_days", config.dedup_cooldown_days)
         config.log_level = pipeline_raw.get("log_level", config.log_level)
 
         # ArXiv settings

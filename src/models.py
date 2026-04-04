@@ -5,9 +5,28 @@ Standardized dataclasses used across all pipeline stages:
 sourcing, selection, distillation, and output.
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
+
+# Pattern to extract bare ArXiv ID from URLs like http://arxiv.org/abs/2604.02091v1
+_ARXIV_URL_RE = re.compile(r"https?://arxiv\.org/abs/(.+)")
+
+
+def normalize_paper_id(paper_id: str) -> str:
+    """Normalize paper IDs for consistent dedup matching.
+
+    ArXiv IDs appear as URLs (http://arxiv.org/abs/2604.02091v1),
+    prefixed (arXiv:2604.02091v1), or bare (2604.02091v1).
+    Blog articles use their URL as ID — returned unchanged.
+    """
+    m = _ARXIV_URL_RE.match(paper_id)
+    if m:
+        return m.group(1)
+    if paper_id.startswith("arXiv:"):
+        return paper_id[6:]
+    return paper_id
 
 
 @dataclass

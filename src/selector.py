@@ -20,7 +20,7 @@ except ImportError:
 
 from src.agent_runner import AgentRunner
 from src.config import PipelineConfig
-from src.models import Paper, Article, ScoredPaper
+from src.models import Paper, Article, ScoredPaper, normalize_paper_id
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,7 @@ class PaperSelector:
         papers: list[Paper],
         articles: list[Article] | None = None,
         top_k: int = 1,
+        exclude_ids: set[str] | None = None,
     ) -> list[ScoredPaper]:
         """
         Score all candidates and return the top-K most relevant.
@@ -59,6 +60,7 @@ class PaperSelector:
             papers: ArXiv papers to consider.
             articles: Blog articles (converted to Papers internally).
             top_k: Number of papers to return.
+            exclude_ids: Normalized paper IDs to skip (previously selected).
 
         Returns:
             Top-K ScoredPapers, sorted by score descending.
@@ -67,6 +69,17 @@ class PaperSelector:
         all_candidates = list(papers)
         if articles:
             all_candidates.extend(a.to_paper() for a in articles)
+
+        # Filter out previously selected papers
+        if exclude_ids:
+            before = len(all_candidates)
+            all_candidates = [
+                p for p in all_candidates
+                if normalize_paper_id(p.id) not in exclude_ids
+            ]
+            excluded_count = before - len(all_candidates)
+            if excluded_count:
+                logger.info(f"Excluded {excluded_count} previously selected paper(s)")
 
         if not all_candidates:
             logger.warning("No candidates to score!")

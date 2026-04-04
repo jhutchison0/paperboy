@@ -41,6 +41,7 @@ Check if `.claude/upstream-update.md` exists. If it does:
 
 Run these commands:
 ```bash
+git fetch && git pull # Sync with remote before anything else
 pytest                # Verify all tests pass
 git status            # Check for uncommitted changes
 git branch -v         # Current branch state

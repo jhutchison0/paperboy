@@ -5,9 +5,10 @@ Chains together sourcing → selection → distillation → output.
 Handles errors gracefully so the pipeline degrades rather than crashes.
 """
 
+import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -21,11 +22,58 @@ except ImportError:
 from src.agent_runner import AgentRunner
 from src.config import PipelineConfig
 from src.distiller import BriefingDistiller
-from src.models import BriefingDocument, Paper, ScoredPaper
+from src.models import BriefingDocument, Paper, ScoredPaper, normalize_paper_id
 from src.selector import PaperSelector
 from src.sourcer import SourceManager
 
 logger = logging.getLogger(__name__)
+
+
+class SelectionHistory:
+    """Tracks previously selected papers to prevent cross-run duplicates."""
+
+    def __init__(self, history_path: Path, cooldown_days: int = 30):
+        self.path = history_path
+        self.cooldown_days = cooldown_days
+        self._history: dict = self._load()
+
+    def _load(self) -> dict:
+        if self.path.exists():
+            try:
+                return json.loads(self.path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning(f"Could not read selection history ({e}), starting fresh")
+                return {}
+        return {}
+
+    def _save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self._history, indent=2, sort_keys=True), encoding="utf-8")
+
+    def get_excluded_ids(self) -> set[str]:
+        """Return normalized IDs of papers selected within the cooldown window."""
+        if self.cooldown_days <= 0:
+            return set()
+        cutoff = datetime.now(timezone.utc) - timedelta(days=self.cooldown_days)
+        excluded = set()
+        for paper_id, entry in self._history.items():
+            try:
+                selected_at = datetime.fromisoformat(entry["selected_at"])
+                if selected_at > cutoff:
+                    excluded.add(paper_id)
+            except (KeyError, ValueError):
+                excluded.add(paper_id)  # Malformed entry — exclude conservatively
+        return excluded
+
+    def record(self, paper: "Paper") -> None:
+        """Record a paper as selected."""
+        normalized = normalize_paper_id(paper.id)
+        self._history[normalized] = {
+            "title": paper.title,
+            "selected_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._save()
+        logger.info(f"Recorded selection: {normalized}")
 
 
 class PipelineResult:
@@ -144,13 +192,14 @@ class DailyPipeline:
         logger.warning("Backend (auto): No Claude backend available — keyword-only mode")
         return None, None
 
-    def run(self, paper_override: Optional[Paper] = None) -> PipelineResult:
+    def run(self, paper_override: Optional[Paper] = None, dedup: bool = True) -> PipelineResult:
         """
         Execute the full pipeline.
 
         Args:
             paper_override: Skip sourcing/selection and distill this paper directly.
                            Useful for testing or manually choosing a paper.
+            dedup: If True, skip papers that were selected in recent runs.
 
         Returns:
             PipelineResult with status, outputs, and any errors.
@@ -160,6 +209,10 @@ class DailyPipeline:
         logger.info(f"Time: {datetime.now(timezone.utc).isoformat()}")
         logger.info("=" * 60)
 
+        # Load selection history for dedup
+        history_path = Path(self.config.output_dir) / ".selection_history.json"
+        history = SelectionHistory(history_path, self.config.dedup_cooldown_days)
+
         try:
             if paper_override:
                 # Skip sourcing and selection
@@ -167,8 +220,9 @@ class DailyPipeline:
                 selected = ScoredPaper(paper=paper_override, score=1.0, reasoning="Manual override")
                 papers_count, articles_count = 0, 0
             else:
-                # Stage 1: Source
-                selected, papers_count, articles_count = self._source_and_select()
+                # Stage 1: Source and select
+                exclude_ids = history.get_excluded_ids() if dedup else set()
+                selected, papers_count, articles_count = self._source_and_select(exclude_ids)
 
             # Stage 2: Distill (skipped in keyword-only mode)
             briefing = self._distill(selected.paper)
@@ -177,6 +231,9 @@ class DailyPipeline:
             briefing_path = None
             if briefing:
                 briefing_path = self._save_briefing(briefing)
+
+            # Record selection for future dedup
+            history.record(selected.paper)
 
             result = PipelineResult(
                 status="success",
@@ -196,7 +253,7 @@ class DailyPipeline:
             logger.error(f"Pipeline failed: {e}", exc_info=True)
             return PipelineResult(status="error", error=str(e))
 
-    def _source_and_select(self) -> tuple[ScoredPaper, int, int]:
+    def _source_and_select(self, exclude_ids: set[str] | None = None) -> tuple[ScoredPaper, int, int]:
         """Source papers and select the best one."""
         logger.info("Stage 1: Sourcing papers and articles...")
         papers, articles = self.source_manager.fetch_all()
@@ -207,7 +264,7 @@ class DailyPipeline:
         logger.info(f"Sourced {len(papers)} papers and {len(articles)} articles")
 
         logger.info("Stage 2: Selecting best paper...")
-        scored = self.selector.select_best(papers, articles, top_k=1)
+        scored = self.selector.select_best(papers, articles, top_k=1, exclude_ids=exclude_ids)
 
         if not scored:
             raise RuntimeError("No papers scored above threshold. Try broadening focus keywords.")

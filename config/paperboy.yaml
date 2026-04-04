@@ -11,6 +11,7 @@ pipeline:
   max_papers_to_fetch: 50
   max_papers_to_score: 20
   days_lookback: 7
+  dedup_cooldown_days: 30            # Skip papers selected within this many days (0 to disable)
   log_level: "INFO"
 
 arxiv:
