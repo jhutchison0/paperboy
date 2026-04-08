@@ -54,7 +54,7 @@ The briefing's voice is inspired by 3Blue1Brown's approach to explanation:
 - **Intuition FIRST, then technical depth** -- "I'm not here to tell you how to calculate; I want to give you a sense of what this means."
 - **Analogies relentlessly** -- Physical, everyday, and historical analogies for every core concept.
 - **Build progressions** -- Start simple, add nuance. "Think of it this way... Now here's where it gets interesting..."
-- **Make the reader feel smarter, not intimidated** -- Conversational tone, "we" and "you", rhetorical questions.
+- **Prioritize clarity over completeness** -- Conversational tone, "we" and "you", rhetorical questions. One idea understood deeply beats five skimmed.
 - **Designed for listening** -- Someone on an exercise bike should nod and think "oh, THAT'S what they mean" -- not reach for a pen.
 
 ## NotebookLM Optimization

@@ -112,7 +112,7 @@ Before generating, click **Customize** on the Audio Overview to tune the output:
 
 | Goal | Prompt |
 |------|--------|
-| **Intuition-first** (default recommendation) | "Focus on building intuition rather than showing how processes work. Explain the 'why' before the 'how', like a 3Blue1Brown video. Make the listener feel smarter, not lectured at." |
+| **Intuition-first** (default recommendation) | "Focus on building intuition rather than showing how processes work. Explain the 'why' before the 'how', like a 3Blue1Brown video. Prioritize clarity — one idea understood deeply is worth more than five skimmed." |
 | **Debate-heavy** | "Spend extra time on the counterarguments and limitations. Really dig into the Challengers' Corner — don't let the authors off easy. Play devil's advocate." |
 | **Practical focus** | "Emphasize the real-world applications and what this means for practitioners. Less theory, more 'what would I actually do with this on Monday morning?'" |
 | **Accessible** | "Assume the listener is smart but not a specialist. Explain jargon when it first appears. Use the analogies from the briefing and add your own." |
