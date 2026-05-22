@@ -19,12 +19,25 @@ import json
 import logging
 import os
 import subprocess
+from dataclasses import dataclass
 from typing import Optional
 
 from src.config import FocusAreas, PipelineConfig
 from src.models import Paper
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class _InvocationOutcome:
+    """Result of a single CLI invocation.
+
+    `text` is the stdout on success, `None` on any failure.
+    `timed_out` lets callers distinguish hard timeouts (where bumping the
+    timeout on retry might help) from other failures (where it won't).
+    """
+    text: Optional[str]
+    timed_out: bool = False
 
 # Sections that must be present in a valid briefing (matches distiller.py checks)
 _REQUIRED_BRIEFING_SECTIONS = [
@@ -59,6 +72,9 @@ class AgentRunner:
         self.distill_timeout = ar.distill_timeout
         self.max_retries = ar.max_retries
         self.max_output_bytes = ar.max_output_bytes
+        # Populated by score_paper / distill_paper when they return None, so
+        # callers can surface a specific reason in their own error reporting.
+        self.last_error: Optional[str] = None
 
     # ------------------------------------------------------------------
     # Public interface
@@ -76,31 +92,42 @@ class AgentRunner:
             Dict with keys "score" (float 0.0-1.0) and "reasoning" (str),
             or None if the invocation fails or returns malformed output.
         """
+        self.last_error = None
         prompt = self._build_scoring_prompt(paper, focus_areas)
+        last_kind = "unknown"
         attempts = 0
         while attempts <= self.max_retries:
             attempts += 1
-            raw = self._invoke(prompt, timeout=self.score_timeout)
-            if raw is None:
+            # Scoring uses a fixed timeout across attempts. A 30-second scoring
+            # timeout is much more likely to indicate a CLI/auth hang than a
+            # budget shortfall — extending the timeout would slow failure
+            # detection without buying real headroom.
+            outcome = self._invoke(prompt, timeout=self.score_timeout)
+            if outcome.text is None:
+                last_kind = "timeout" if outcome.timed_out else "subprocess"
                 logger.warning(
                     f"AgentRunner: score_paper invocation returned None "
                     f"(attempt {attempts}/{self.max_retries + 1})"
                 )
                 continue
 
-            cleaned = self._strip_preamble_json(raw)
+            cleaned = self._strip_preamble_json(outcome.text)
             result = self._validate_score(cleaned)
             if result is not None:
                 return result
 
+            last_kind = "validation"
             logger.warning(
                 f"AgentRunner: score_paper output invalid "
                 f"(attempt {attempts}/{self.max_retries + 1}): {cleaned[:200]!r}"
             )
 
+        self.last_error = self._format_failure(
+            op="score_paper", kind=last_kind, attempts=attempts, final_timeout=self.score_timeout
+        )
         logger.warning(
             f"AgentRunner: score_paper failed after {attempts} attempt(s) "
-            f"for '{paper.title[:60]}' — returning None"
+            f"for '{paper.title[:60]}' — {self.last_error}"
         )
         return None
 
@@ -126,33 +153,52 @@ class AgentRunner:
         Returns:
             Validated markdown string, or None on failure.
         """
+        self.last_error = None
         # Combine system + user prompt for CLI invocation (no separate system arg in CLI)
         combined_prompt = f"{system_prompt}\n\n---\n\n{user_prompt}"
 
+        current_timeout = self.distill_timeout
+        last_kind = "unknown"
+        last_validation_errors: list[str] = []
         attempts = 0
         while attempts <= self.max_retries:
             attempts += 1
-            raw = self._invoke(combined_prompt, timeout=self.distill_timeout)
-            if raw is None:
+            outcome = self._invoke(combined_prompt, timeout=current_timeout)
+            if outcome.text is None:
+                last_kind = "timeout" if outcome.timed_out else "subprocess"
                 logger.warning(
                     f"AgentRunner: distill_paper invocation returned None "
                     f"(attempt {attempts}/{self.max_retries + 1})"
                 )
+                if outcome.timed_out and attempts <= self.max_retries:
+                    current_timeout = self._extend_timeout(current_timeout)
+                    logger.info(
+                        f"AgentRunner: distill_paper retry will use extended timeout {current_timeout}s"
+                    )
                 continue
 
-            cleaned = self._strip_preamble_markdown(raw)
+            cleaned = self._strip_preamble_markdown(outcome.text)
             errors = self._validate_briefing(cleaned, distiller_config)
             if not errors:
                 return cleaned
 
+            last_kind = "validation"
+            last_validation_errors = errors
             logger.warning(
                 f"AgentRunner: distill_paper output has validation issues "
                 f"(attempt {attempts}/{self.max_retries + 1}): {errors}"
             )
 
+        self.last_error = self._format_failure(
+            op="distill_paper",
+            kind=last_kind,
+            attempts=attempts,
+            final_timeout=current_timeout,
+            validation_errors=last_validation_errors,
+        )
         logger.warning(
             f"AgentRunner: distill_paper failed after {attempts} attempt(s) "
-            f"for '{paper.title[:60]}' — returning None"
+            f"for '{paper.title[:60]}' — {self.last_error}"
         )
         return None
 
@@ -179,14 +225,16 @@ class AgentRunner:
     # Low-level invocation
     # ------------------------------------------------------------------
 
-    def _invoke(self, prompt: str, timeout: int, max_output_bytes: int = 0) -> Optional[str]:
+    def _invoke(
+        self, prompt: str, timeout: int, max_output_bytes: int = 0
+    ) -> _InvocationOutcome:
         """
         Run `claude -p <prompt>` as a subprocess with guardrails.
 
         Guardrails:
           - Sensitive env vars stripped (API keys, CLAUDE* vars)
           - stdin routed to /dev/null (non-interactive)
-          - Hard timeout via subprocess.run(..., timeout=N)
+          - Hard timeout (process killed + partial stdout captured for diagnostics)
           - stdout truncated at max_output_bytes
 
         Args:
@@ -195,7 +243,7 @@ class AgentRunner:
             max_output_bytes: Output size cap. Defaults to self.max_output_bytes.
 
         Returns:
-            stdout as a string, or None on any failure.
+            _InvocationOutcome with stdout (or None on failure) and a timed_out flag.
         """
         if max_output_bytes == 0:
             max_output_bytes = self.max_output_bytes
@@ -203,39 +251,68 @@ class AgentRunner:
         clean_env = self._build_clean_env()
 
         try:
-            result = subprocess.run(
+            proc = subprocess.Popen(
                 ["claude", "-p", prompt],
-                capture_output=True,
-                timeout=timeout,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 env=clean_env,
                 stdin=subprocess.DEVNULL,
             )
         except FileNotFoundError:
             logger.error("AgentRunner: 'claude' not found on PATH — install Claude Code CLI")
-            return None
-        except subprocess.TimeoutExpired:
-            logger.warning(f"AgentRunner: invocation timed out after {timeout}s")
-            return None
+            return _InvocationOutcome(text=None, timed_out=False)
         except OSError as exc:
             logger.error(f"AgentRunner: OS error during invocation: {exc}")
-            return None
+            return _InvocationOutcome(text=None, timed_out=False)
 
-        if result.returncode != 0:
-            stderr_snippet = result.stderr[:500].decode("utf-8", errors="replace") if result.stderr else ""
+        try:
+            stdout_bytes, stderr_bytes = proc.communicate(timeout=timeout)
+            timed_out = False
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            # communicate() after kill() returns whatever stdout was buffered
+            # before the kill — that's our diagnostic signal.
+            stdout_bytes, stderr_bytes = proc.communicate()
+            timed_out = True
+
+        if timed_out:
+            partial_text = stdout_bytes.decode("utf-8", errors="replace") if stdout_bytes else ""
+            partial_bytes = len(stdout_bytes) if stdout_bytes else 0
+            partial_words = len(partial_text.split())
+            stderr_snippet = (
+                stderr_bytes[:500].decode("utf-8", errors="replace") if stderr_bytes else ""
+            )
             logger.warning(
-                f"AgentRunner: claude exited with code {result.returncode}. "
+                f"AgentRunner: invocation timed out after {timeout}s "
+                f"(captured {partial_bytes} bytes / ~{partial_words} words of partial stdout)"
+            )
+            if stderr_snippet:
+                logger.warning(f"AgentRunner: timeout stderr: {stderr_snippet!r}")
+            if partial_text:
+                # First 200 chars so we can see whether real generation was underway
+                logger.warning(f"AgentRunner: partial stdout head: {partial_text[:200]!r}")
+            return _InvocationOutcome(text=None, timed_out=True)
+
+        if proc.returncode != 0:
+            stderr_snippet = (
+                stderr_bytes[:500].decode("utf-8", errors="replace") if stderr_bytes else ""
+            )
+            logger.warning(
+                f"AgentRunner: claude exited with code {proc.returncode}. "
                 f"stderr: {stderr_snippet!r}"
             )
-            return None
+            return _InvocationOutcome(text=None, timed_out=False)
 
-        raw_bytes = result.stdout
+        raw_bytes = stdout_bytes
         if len(raw_bytes) > max_output_bytes:
             logger.warning(
                 f"AgentRunner: output truncated from {len(raw_bytes)} to {max_output_bytes} bytes"
             )
             raw_bytes = raw_bytes[:max_output_bytes]
 
-        return raw_bytes.decode("utf-8", errors="replace")
+        return _InvocationOutcome(
+            text=raw_bytes.decode("utf-8", errors="replace"), timed_out=False
+        )
 
     # ------------------------------------------------------------------
     # Output cleaning
@@ -374,6 +451,49 @@ Research interests:
 
 Output format (JSON only):
 {{"score": <float 0.0-1.0>, "reasoning": "<1-3 sentence explanation>"}}"""
+
+    # ------------------------------------------------------------------
+    # Retry helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extend_timeout(current: int) -> int:
+        """Extend a timeout for retry after a TimeoutExpired.
+
+        Retrying with the same timeout that just failed is theater — we know
+        the work didn't fit. Bump by 1.5x so the next attempt has real headroom.
+        """
+        return int(current * 1.5)
+
+    @staticmethod
+    def _format_failure(
+        op: str,
+        kind: str,
+        attempts: int,
+        final_timeout: int,
+        validation_errors: Optional[list[str]] = None,
+    ) -> str:
+        """Build a user-facing failure reason string for `last_error`.
+
+        Kinds:
+          - timeout:    every attempt hit the timeout
+          - subprocess: claude exited non-zero, OS error, or CLI missing
+          - validation: output parsed but failed required checks
+        """
+        if kind == "timeout":
+            return (
+                f"{op} timed out after {attempts} attempt(s); "
+                f"final timeout was {final_timeout}s"
+            )
+        if kind == "validation":
+            sample = (validation_errors or ["no detail"])[0]
+            return (
+                f"{op} output failed validation after {attempts} attempt(s); "
+                f"first issue: {sample}"
+            )
+        if kind == "subprocess":
+            return f"{op} subprocess error after {attempts} attempt(s) (see logs)"
+        return f"{op} failed after {attempts} attempt(s)"
 
     # ------------------------------------------------------------------
     # Environment helpers

@@ -124,16 +124,21 @@ class TestRunOutputBranches:
 
     @patch("main.DailyPipeline")
     @patch("main._load_and_validate")
-    def test_distillation_failure_shows_warning(self, mock_load, MockPipeline):
-        """When distiller exists but returns no briefing, show failure warning."""
+    def test_distillation_failure_reports_partial_and_exits_nonzero(self, mock_load, MockPipeline):
+        """When distiller exists but returns no briefing, report PARTIAL and exit nonzero.
+
+        Distillation failure is a real failure for automation — the pipeline must not
+        masquerade as success when no briefing was produced.
+        """
         mock_load.return_value = MagicMock()
         pipeline = MagicMock()
         pipeline.distiller = MagicMock()  # distiller exists (not keyword-only)
         pipeline.run.return_value = PipelineResult(
-            status="success",
+            status="partial",
             selected_paper=_make_scored(),
             briefing=None,  # distillation failed
             papers_fetched=50,
+            error="distillation returned no content",
         )
         MockPipeline.return_value = pipeline
 
@@ -141,9 +146,10 @@ class TestRunOutputBranches:
         runner = CliRunner()
         result = runner.invoke(cli, ["run", "--backend", "agent"])
 
-        assert result.exit_code == 0
-        assert "SUCCESS" in result.output
-        assert "Briefing generation failed" in result.output
+        assert result.exit_code == 2
+        assert "PARTIAL" in result.output
+        assert "SUCCESS!" not in result.output
+        assert "NOT recorded for dedup" in result.output
         assert "keyword-only" not in result.output
 
     @patch("main.DailyPipeline")

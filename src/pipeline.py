@@ -208,6 +208,10 @@ class PipelineResult:
     def success(self) -> bool:
         return self.status == "success"
 
+    @property
+    def partial(self) -> bool:
+        return self.status == "partial"
+
     def __str__(self) -> str:
         if self.success:
             return (
@@ -217,6 +221,15 @@ class PipelineResult:
                 f"  Selected: {self.selected_paper}\n"
                 f"  Briefing: {self.briefing}\n"
                 f"  Saved to: {self.briefing_path}"
+            )
+        if self.partial:
+            return (
+                f"Pipeline PARTIAL — paper selected but briefing failed\n"
+                f"  Papers fetched: {self.papers_fetched}\n"
+                f"  Articles fetched: {self.articles_fetched}\n"
+                f"  Selected: {self.selected_paper}\n"
+                f"  Briefing: None (not recorded for dedup — paper remains available for retry)\n"
+                f"  Reason: {self.error or 'distillation returned no content'}"
             )
         return f"Pipeline FAILED: {self.error}"
 
@@ -339,16 +352,35 @@ class DailyPipeline:
             if briefing:
                 briefing_path = self._save_briefing(briefing)
 
-            # Record selection for future dedup
-            history.record(selected.paper)
+            # Determine outcome:
+            #   - briefing produced → success, record for dedup
+            #   - no distiller configured (keyword-only) → success, record for dedup
+            #     (selection was intentional even though no briefing was expected)
+            #   - distiller configured but no briefing → partial, do NOT record
+            #     (paper stays available for retry on the next run)
+            briefing_expected = self.distiller is not None
+            if briefing is not None or not briefing_expected:
+                history.record(selected.paper)
+                status = "success"
+                error_reason = None
+            else:
+                status = "partial"
+                # Surface the specific reason the distiller captured (timeout,
+                # validation failure, SDK error) instead of a generic message.
+                error_reason = (
+                    self.distiller.last_error
+                    if self.distiller and self.distiller.last_error
+                    else "distillation returned no content"
+                )
 
             result = PipelineResult(
-                status="success",
+                status=status,
                 selected_paper=selected,
                 briefing=briefing,
                 briefing_path=briefing_path,
                 papers_fetched=papers_count,
                 articles_fetched=articles_count,
+                error=error_reason,
             )
 
             logger.info("=" * 60)

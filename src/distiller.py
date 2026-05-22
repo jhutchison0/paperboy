@@ -251,6 +251,10 @@ class BriefingDistiller:
             raise ValueError(
                 "BriefingDistiller requires either a Claude API client or an AgentRunner"
             )
+        # Populated by distill() when it returns None — lets the pipeline
+        # surface a specific reason in PipelineResult.error instead of a
+        # generic "no content" message.
+        self.last_error: Optional[str] = None
 
     def distill(self, paper: Paper) -> Optional[BriefingDocument]:
         """
@@ -263,6 +267,7 @@ class BriefingDistiller:
             BriefingDocument with markdown content ready for NotebookLM,
             or None if generation failed (graceful degradation per Pillar 2).
         """
+        self.last_error = None
         logger.info(f"Distilling: {paper.title[:80]}...")
 
         # Get paper text (abstract as primary source — PDF extraction is future work)
@@ -272,7 +277,9 @@ class BriefingDistiller:
         briefing_content = self._generate_briefing(paper, paper_text)
 
         if briefing_content is None:
-            logger.error("Briefing generation failed — no content returned")
+            if self.last_error is None:
+                self.last_error = "briefing generation returned no content"
+            logger.error(f"Briefing generation failed — {self.last_error}")
             return None
 
         # Validate and wrap in document
@@ -345,6 +352,7 @@ class BriefingDistiller:
                 )
                 return content
             except Exception as e:
+                self.last_error = f"Claude SDK error: {e}"
                 logger.error(f"Claude SDK distillation failed: {e}")
                 return None
 
@@ -358,11 +366,15 @@ class BriefingDistiller:
                 user_prompt=user_prompt,
             )
             if result is None:
-                logger.error("AgentRunner distillation returned None — briefing generation failed")
+                # AgentRunner records a specific reason (timeout / validation / subprocess);
+                # forward it so the pipeline can surface it to the user.
+                self.last_error = self.agent_runner.last_error or "AgentRunner returned no content"
+                logger.error(f"AgentRunner distillation failed — {self.last_error}")
                 return None
             logger.info(f"AgentRunner response: {len(result.split())} words")
             return result
 
+        self.last_error = "no Claude backend available"
         logger.error("No Claude backend available for distillation")
         return None
 

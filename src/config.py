@@ -74,7 +74,7 @@ class DistillerConfig:
 class AgentRunnerConfig:
     enabled: bool = True
     score_timeout: int = 30          # seconds per scoring invocation
-    distill_timeout: int = 120       # seconds for briefing generation
+    distill_timeout: int = 600       # seconds for briefing generation (4500-word target needs headroom)
     max_retries: int = 1
     max_output_bytes: int = 51200    # 50KB output cap
     batch_size: int = 1              # papers per scoring invocation (target: 5)

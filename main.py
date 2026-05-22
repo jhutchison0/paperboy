@@ -100,11 +100,17 @@ def run(config, output_dir, days_back, target_date, backend, no_dedup):
             click.echo(f"Words:    {result.briefing.word_count}")
             click.echo(f"Saved to: {result.briefing_path}")
             click.echo(f"\nUpload this file to NotebookLM to generate your podcast!")
-        elif pipeline.distiller is None:
-            click.echo(f"\nNo briefing generated (keyword-only mode).")
         else:
-            click.echo(f"\nWarning: Briefing generation failed. Paper was selected but no briefing was produced.")
-            click.echo(f"Try re-running or check logs for details.")
+            click.echo(f"\nNo briefing generated (keyword-only mode).")
+    elif result.partial:
+        click.echo(f"\n{'=' * 60}", err=True)
+        click.echo(f"PARTIAL — paper selected but briefing failed", err=True)
+        click.echo(f"{'=' * 60}", err=True)
+        click.echo(f"Paper:    {result.selected_paper.paper.title[:80]}", err=True)
+        click.echo(f"Score:    {result.selected_paper.score:.2f}", err=True)
+        click.echo(f"Reason:   {result.error}", err=True)
+        click.echo(f"\nPaper was NOT recorded for dedup — re-run to retry.", err=True)
+        sys.exit(2)
     else:
         click.echo(f"\nPipeline failed: {result.error}", err=True)
         sys.exit(1)
@@ -211,9 +217,10 @@ def distill(config, backend, output_dir, paper_id):
     if result.success and result.briefing:
         click.echo(f"\nBriefing distilled: {result.briefing.word_count} words")
         click.echo(f"Saved to: {result.briefing_path}")
-    elif result.success:
-        click.echo("\nPaper selected but briefing generation failed.", err=True)
-        sys.exit(1)
+    elif result.partial:
+        click.echo(f"\nPaper selected but briefing generation failed: {result.error}", err=True)
+        click.echo("Paper was NOT recorded for dedup — re-run to retry.", err=True)
+        sys.exit(2)
     else:
         click.echo(f"\nPipeline failed: {result.error}", err=True)
         sys.exit(1)

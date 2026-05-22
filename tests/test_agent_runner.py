@@ -25,7 +25,7 @@ import pytest
 # Ensure project root is on sys.path so src.* imports resolve
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.agent_runner import AgentRunner
+from src.agent_runner import AgentRunner, _InvocationOutcome
 from src.config import AgentRunnerConfig, FocusAreas, PipelineConfig
 from src.models import Paper
 
@@ -41,7 +41,7 @@ def config():
     cfg.agent_runner = AgentRunnerConfig(
         enabled=True,
         score_timeout=30,
-        distill_timeout=120,
+        distill_timeout=600,
         max_retries=0,        # no retries in most tests — keeps them deterministic
         max_output_bytes=51200,
         batch_size=1,
@@ -84,12 +84,39 @@ def focus_areas():
 
 
 def _make_completed_process(stdout: str = "", returncode: int = 0, stderr: str = "") -> MagicMock:
-    """Build a mock subprocess.CompletedProcess-like object."""
+    """Build a mock subprocess.CompletedProcess-like object (used by is_available)."""
     mock = MagicMock()
     mock.returncode = returncode
     mock.stdout = stdout.encode("utf-8")
     mock.stderr = stderr.encode("utf-8")
     return mock
+
+
+def _make_popen_mock(
+    stdout: str = "",
+    stderr: str = "",
+    returncode: int = 0,
+    timeout_partial_stdout: str | None = None,
+    timeout_partial_stderr: str = "",
+):
+    """Build a mock subprocess.Popen factory.
+
+    If timeout_partial_stdout is not None, the first communicate(timeout=...)
+    call raises TimeoutExpired and the second (post-kill) call returns the
+    partial bytes — matching the real Popen contract on Linux.
+    """
+    proc = MagicMock()
+    proc.returncode = returncode
+
+    if timeout_partial_stdout is not None:
+        proc.communicate.side_effect = [
+            subprocess.TimeoutExpired(cmd="claude", timeout=30),
+            (timeout_partial_stdout.encode("utf-8"), timeout_partial_stderr.encode("utf-8")),
+        ]
+    else:
+        proc.communicate.return_value = (stdout.encode("utf-8"), stderr.encode("utf-8"))
+
+    return proc
 
 
 # ---------------------------------------------------------------------------
@@ -98,69 +125,92 @@ def _make_completed_process(stdout: str = "", returncode: int = 0, stderr: str =
 
 class TestInvoke:
     def test_invoke_returns_stdout_on_success(self, runner):
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = _make_completed_process(stdout="hello world")
-            result = runner._invoke("some prompt", timeout=30)
-        assert result == "hello world"
+        with patch("subprocess.Popen", return_value=_make_popen_mock(stdout="hello world")):
+            outcome = runner._invoke("some prompt", timeout=30)
+        assert outcome.text == "hello world"
+        assert outcome.timed_out is False
 
     def test_invoke_returns_none_on_nonzero_exit(self, runner):
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = _make_completed_process(returncode=1, stderr="error msg")
-            result = runner._invoke("some prompt", timeout=30)
-        assert result is None
+        with patch(
+            "subprocess.Popen",
+            return_value=_make_popen_mock(returncode=1, stderr="error msg"),
+        ):
+            outcome = runner._invoke("some prompt", timeout=30)
+        assert outcome.text is None
+        assert outcome.timed_out is False
 
-    def test_invoke_returns_none_on_timeout(self, runner):
-        with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="claude", timeout=30)):
-            result = runner._invoke("some prompt", timeout=30)
-        assert result is None
+    def test_invoke_returns_timed_out_outcome_on_timeout(self, runner):
+        with patch(
+            "subprocess.Popen",
+            return_value=_make_popen_mock(timeout_partial_stdout=""),
+        ):
+            outcome = runner._invoke("some prompt", timeout=30)
+        assert outcome.text is None
+        assert outcome.timed_out is True
+
+    def test_invoke_captures_partial_output_on_timeout(self, runner, caplog):
+        """When the CLI times out, partial stdout should be captured and logged
+        for diagnostics — so we can tell 'was actively generating' from 'stuck'."""
+        partial = "# Briefing\n\n## Why Should You Care\n\nThis paper introduces..."
+        proc = _make_popen_mock(timeout_partial_stdout=partial)
+        with patch("subprocess.Popen", return_value=proc), caplog.at_level("WARNING"):
+            outcome = runner._invoke("some prompt", timeout=30)
+        assert outcome.timed_out is True
+        # The kill must happen and partial output must be re-collected
+        proc.kill.assert_called_once()
+        assert proc.communicate.call_count == 2
+        # Diagnostic logging includes byte count and head snippet
+        log_text = "\n".join(r.message for r in caplog.records)
+        assert "timed out" in log_text
+        assert "bytes" in log_text
+        assert "Briefing" in log_text  # partial head snippet
 
     def test_invoke_returns_none_when_claude_not_found(self, runner):
-        with patch("subprocess.run", side_effect=FileNotFoundError("claude not found")):
-            result = runner._invoke("some prompt", timeout=30)
-        assert result is None
+        with patch("subprocess.Popen", side_effect=FileNotFoundError("claude not found")):
+            outcome = runner._invoke("some prompt", timeout=30)
+        assert outcome.text is None
+        assert outcome.timed_out is False
 
     def test_invoke_truncates_output_at_max_bytes(self, runner):
         long_output = "x" * 1000
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = _make_completed_process(stdout=long_output)
-            result = runner._invoke("some prompt", timeout=30, max_output_bytes=100)
-        assert result is not None
-        assert len(result) == 100
+        with patch("subprocess.Popen", return_value=_make_popen_mock(stdout=long_output)):
+            outcome = runner._invoke("some prompt", timeout=30, max_output_bytes=100)
+        assert outcome.text is not None
+        assert len(outcome.text) == 100
 
     def test_invoke_uses_devnull_stdin(self, runner):
-        """subprocess.run must be called with stdin=subprocess.DEVNULL."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = _make_completed_process(stdout="ok")
+        """subprocess.Popen must be called with stdin=subprocess.DEVNULL."""
+        with patch("subprocess.Popen", return_value=_make_popen_mock(stdout="ok")) as mock_popen:
             runner._invoke("some prompt", timeout=30)
-        call_kwargs = mock_run.call_args.kwargs
+        call_kwargs = mock_popen.call_args.kwargs
         assert call_kwargs.get("stdin") == subprocess.DEVNULL
 
-    def test_invoke_passes_timeout_to_subprocess(self, runner):
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = _make_completed_process(stdout="ok")
+    def test_invoke_passes_timeout_to_communicate(self, runner):
+        proc = _make_popen_mock(stdout="ok")
+        with patch("subprocess.Popen", return_value=proc):
             runner._invoke("some prompt", timeout=42)
-        call_kwargs = mock_run.call_args.kwargs
+        # First (and only) communicate call should have timeout=42
+        call_kwargs = proc.communicate.call_args.kwargs
         assert call_kwargs.get("timeout") == 42
 
     def test_invoke_passes_clean_env_to_subprocess(self, runner):
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = _make_completed_process(stdout="ok")
+        with patch("subprocess.Popen", return_value=_make_popen_mock(stdout="ok")) as mock_popen:
             runner._invoke("some prompt", timeout=30)
-        call_kwargs = mock_run.call_args.kwargs
+        call_kwargs = mock_popen.call_args.kwargs
         env = call_kwargs.get("env", {})
         assert "ANTHROPIC_API_KEY" not in env
 
     def test_invoke_builds_correct_command(self, runner):
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = _make_completed_process(stdout="ok")
+        with patch("subprocess.Popen", return_value=_make_popen_mock(stdout="ok")) as mock_popen:
             runner._invoke("my test prompt", timeout=30)
-        call_args = mock_run.call_args.args[0]
+        call_args = mock_popen.call_args.args[0]
         assert call_args == ["claude", "-p", "my test prompt"]
 
     def test_invoke_handles_os_error(self, runner):
-        with patch("subprocess.run", side_effect=OSError("permission denied")):
-            result = runner._invoke("some prompt", timeout=30)
-        assert result is None
+        with patch("subprocess.Popen", side_effect=OSError("permission denied")):
+            outcome = runner._invoke("some prompt", timeout=30)
+        assert outcome.text is None
+        assert outcome.timed_out is False
 
 
 # ---------------------------------------------------------------------------
@@ -230,10 +280,25 @@ class TestStripPreambleMarkdown:
 # 4. score_paper()
 # ---------------------------------------------------------------------------
 
+def _ok(text: str) -> _InvocationOutcome:
+    """Shortcut: build a successful invocation outcome."""
+    return _InvocationOutcome(text=text, timed_out=False)
+
+
+def _fail() -> _InvocationOutcome:
+    """Shortcut: build a non-timeout failure outcome."""
+    return _InvocationOutcome(text=None, timed_out=False)
+
+
+def _timeout() -> _InvocationOutcome:
+    """Shortcut: build a timeout outcome."""
+    return _InvocationOutcome(text=None, timed_out=True)
+
+
 class TestScorePaper:
     def test_valid_json_response_returns_dict(self, runner, sample_paper, focus_areas):
         payload = json.dumps({"score": 0.85, "reasoning": "Highly relevant to LLM reasoning."})
-        with patch.object(runner, "_invoke", return_value=payload):
+        with patch.object(runner, "_invoke", return_value=_ok(payload)):
             result = runner.score_paper(sample_paper, focus_areas)
         assert result is not None
         assert result["score"] == pytest.approx(0.85)
@@ -241,36 +306,36 @@ class TestScorePaper:
 
     def test_valid_json_with_preamble_returns_dict(self, runner, sample_paper, focus_areas):
         payload = 'Claude says:\n{"score": 0.72, "reasoning": "Good match."}'
-        with patch.object(runner, "_invoke", return_value=payload):
+        with patch.object(runner, "_invoke", return_value=_ok(payload)):
             result = runner.score_paper(sample_paper, focus_areas)
         assert result is not None
         assert result["score"] == pytest.approx(0.72)
 
     def test_malformed_json_returns_none(self, runner, sample_paper, focus_areas):
-        with patch.object(runner, "_invoke", return_value="not valid json at all"):
+        with patch.object(runner, "_invoke", return_value=_ok("not valid json at all")):
             result = runner.score_paper(sample_paper, focus_areas)
         assert result is None
 
     def test_score_out_of_range_returns_none(self, runner, sample_paper, focus_areas):
         payload = json.dumps({"score": 1.5, "reasoning": "Too high."})
-        with patch.object(runner, "_invoke", return_value=payload):
+        with patch.object(runner, "_invoke", return_value=_ok(payload)):
             result = runner.score_paper(sample_paper, focus_areas)
         assert result is None
 
     def test_missing_reasoning_key_returns_none(self, runner, sample_paper, focus_areas):
         payload = json.dumps({"score": 0.5})
-        with patch.object(runner, "_invoke", return_value=payload):
+        with patch.object(runner, "_invoke", return_value=_ok(payload)):
             result = runner.score_paper(sample_paper, focus_areas)
         assert result is None
 
     def test_invoke_failure_returns_none(self, runner, sample_paper, focus_areas):
-        with patch.object(runner, "_invoke", return_value=None):
+        with patch.object(runner, "_invoke", return_value=_fail()):
             result = runner.score_paper(sample_paper, focus_areas)
         assert result is None
 
     def test_score_rounded_to_three_decimals(self, runner, sample_paper, focus_areas):
         payload = json.dumps({"score": 0.123456789, "reasoning": "ok"})
-        with patch.object(runner, "_invoke", return_value=payload):
+        with patch.object(runner, "_invoke", return_value=_ok(payload)):
             result = runner.score_paper(sample_paper, focus_areas)
         assert result is not None
         assert result["score"] == pytest.approx(0.123, abs=1e-3)
@@ -281,7 +346,7 @@ class TestScorePaper:
         runner = AgentRunner(config)
 
         good_payload = json.dumps({"score": 0.9, "reasoning": "great"})
-        responses = [None, good_payload]  # first fails, second succeeds
+        responses = [_fail(), _ok(good_payload)]  # first fails, second succeeds
 
         with patch.object(runner, "_invoke", side_effect=responses):
             result = runner.score_paper(sample_paper, focus_areas)
@@ -320,7 +385,7 @@ def _make_valid_briefing(distiller_config) -> str:
 class TestDistillPaper:
     def test_valid_markdown_returns_string(self, runner, config, sample_paper):
         valid_md = _make_valid_briefing(config.distiller)
-        with patch.object(runner, "_invoke", return_value=valid_md):
+        with patch.object(runner, "_invoke", return_value=_ok(valid_md)):
             result = runner.distill_paper(
                 paper=sample_paper,
                 distiller_config=config.distiller,
@@ -334,7 +399,7 @@ class TestDistillPaper:
     def test_preamble_stripped_before_validation(self, runner, config, sample_paper):
         valid_md = _make_valid_briefing(config.distiller)
         output_with_preamble = "Sure, here is the briefing:\n\n" + valid_md
-        with patch.object(runner, "_invoke", return_value=output_with_preamble):
+        with patch.object(runner, "_invoke", return_value=_ok(output_with_preamble)):
             result = runner.distill_paper(
                 paper=sample_paper,
                 distiller_config=config.distiller,
@@ -346,7 +411,7 @@ class TestDistillPaper:
     def test_missing_sections_returns_none(self, runner, config, sample_paper):
         # A briefing missing most required sections
         bad_md = "# Research Briefing\n\nThis is a very short and incomplete document." + " word" * 1000
-        with patch.object(runner, "_invoke", return_value=bad_md):
+        with patch.object(runner, "_invoke", return_value=_ok(bad_md)):
             result = runner.distill_paper(
                 paper=sample_paper,
                 distiller_config=config.distiller,
@@ -368,7 +433,7 @@ class TestDistillPaper:
             "## Open Questions\n\n"
             "## Key Takeaways\n\n"
         )
-        with patch.object(runner, "_invoke", return_value=sections_text):
+        with patch.object(runner, "_invoke", return_value=_ok(sections_text)):
             result = runner.distill_paper(
                 paper=sample_paper,
                 distiller_config=config.distiller,
@@ -378,7 +443,7 @@ class TestDistillPaper:
         assert result is None
 
     def test_invoke_failure_returns_none(self, runner, config, sample_paper):
-        with patch.object(runner, "_invoke", return_value=None):
+        with patch.object(runner, "_invoke", return_value=_fail()):
             result = runner.distill_paper(
                 paper=sample_paper,
                 distiller_config=config.distiller,
@@ -394,7 +459,7 @@ class TestDistillPaper:
 
         def capture_invoke(prompt, timeout, **kwargs):
             captured["prompt"] = prompt
-            return valid_md
+            return _ok(valid_md)
 
         with patch.object(runner, "_invoke", side_effect=capture_invoke):
             runner.distill_paper(
@@ -406,6 +471,185 @@ class TestDistillPaper:
 
         assert "SYSTEM_CONTEXT" in captured["prompt"]
         assert "USER_TASK" in captured["prompt"]
+
+
+class TestTimeoutRetryBackoff:
+    """A timeout on attempt N must extend the timeout for attempt N+1.
+
+    Retrying with the same timeout that just failed is theater. The retry
+    only has a real chance of succeeding if the budget grows.
+    """
+
+    def test_distill_retry_uses_extended_timeout_after_timeout(self, config, sample_paper):
+        config.agent_runner.max_retries = 1
+        config.agent_runner.distill_timeout = 600
+        runner = AgentRunner(config)
+
+        valid_md = _make_valid_briefing(config.distiller)
+        timeouts_seen: list[int] = []
+
+        def capture_invoke(prompt, timeout, **kwargs):
+            timeouts_seen.append(timeout)
+            if len(timeouts_seen) == 1:
+                return _timeout()  # first attempt times out
+            return _ok(valid_md)   # second attempt succeeds
+
+        with patch.object(runner, "_invoke", side_effect=capture_invoke):
+            result = runner.distill_paper(
+                paper=sample_paper,
+                distiller_config=config.distiller,
+                system_prompt="sys",
+                user_prompt="usr",
+            )
+
+        assert result is not None
+        assert timeouts_seen[0] == 600
+        # Second attempt must use an extended timeout — strictly greater
+        assert timeouts_seen[1] > timeouts_seen[0]
+        # 1.5x by current policy
+        assert timeouts_seen[1] == 900
+
+    def test_score_does_not_extend_timeout_on_retry(self, config, sample_paper, focus_areas):
+        """Scoring uses a fixed timeout across attempts.
+
+        A 30s scoring timeout signals a sick CLI more often than a budget
+        shortfall, so extending it would only slow failure detection.
+        """
+        config.agent_runner.max_retries = 1
+        config.agent_runner.score_timeout = 30
+        runner = AgentRunner(config)
+
+        good_payload = json.dumps({"score": 0.8, "reasoning": "ok"})
+        timeouts_seen: list[int] = []
+
+        def capture_invoke(prompt, timeout, **kwargs):
+            timeouts_seen.append(timeout)
+            if len(timeouts_seen) == 1:
+                return _timeout()
+            return _ok(good_payload)
+
+        with patch.object(runner, "_invoke", side_effect=capture_invoke):
+            result = runner.score_paper(sample_paper, focus_areas)
+
+        assert result is not None
+        assert timeouts_seen == [30, 30]
+
+    def test_non_timeout_failure_does_not_extend_timeout(self, config, sample_paper):
+        """Validation/parse failure → retry with SAME timeout (only timeouts trigger backoff)."""
+        config.agent_runner.max_retries = 1
+        config.agent_runner.distill_timeout = 600
+        runner = AgentRunner(config)
+
+        valid_md = _make_valid_briefing(config.distiller)
+        timeouts_seen: list[int] = []
+
+        def capture_invoke(prompt, timeout, **kwargs):
+            timeouts_seen.append(timeout)
+            if len(timeouts_seen) == 1:
+                return _ok("garbage output without required sections")
+            return _ok(valid_md)
+
+        with patch.object(runner, "_invoke", side_effect=capture_invoke):
+            runner.distill_paper(
+                paper=sample_paper,
+                distiller_config=config.distiller,
+                system_prompt="sys",
+                user_prompt="usr",
+            )
+
+        # Both attempts use the same timeout — no backoff on non-timeout failures
+        assert timeouts_seen == [600, 600]
+
+
+class TestLastErrorReporting:
+    """After a failed call, last_error must explain WHY — timeout vs validation
+    vs subprocess — so the pipeline can surface a specific reason to the user
+    instead of a generic 'no content' message.
+    """
+
+    def test_last_error_on_distill_timeout(self, config, sample_paper):
+        config.agent_runner.max_retries = 0
+        config.agent_runner.distill_timeout = 600
+        runner = AgentRunner(config)
+
+        with patch.object(runner, "_invoke", return_value=_timeout()):
+            result = runner.distill_paper(
+                paper=sample_paper,
+                distiller_config=config.distiller,
+                system_prompt="sys",
+                user_prompt="usr",
+            )
+
+        assert result is None
+        assert runner.last_error is not None
+        assert "timed out" in runner.last_error
+        assert "600s" in runner.last_error
+
+    def test_last_error_on_distill_validation_failure(self, config, sample_paper):
+        config.agent_runner.max_retries = 0
+        runner = AgentRunner(config)
+
+        # Output that fails section validation
+        bad_md = "# Some Briefing\n\nThis briefing is missing all required sections." + " word" * 1000
+        with patch.object(runner, "_invoke", return_value=_ok(bad_md)):
+            runner.distill_paper(
+                paper=sample_paper,
+                distiller_config=config.distiller,
+                system_prompt="sys",
+                user_prompt="usr",
+            )
+
+        assert runner.last_error is not None
+        assert "validation" in runner.last_error.lower()
+        assert "Missing section" in runner.last_error  # first issue propagates
+
+    def test_last_error_on_distill_subprocess_failure(self, config, sample_paper):
+        config.agent_runner.max_retries = 0
+        runner = AgentRunner(config)
+
+        with patch.object(runner, "_invoke", return_value=_fail()):
+            runner.distill_paper(
+                paper=sample_paper,
+                distiller_config=config.distiller,
+                system_prompt="sys",
+                user_prompt="usr",
+            )
+
+        assert runner.last_error is not None
+        assert "subprocess" in runner.last_error.lower()
+
+    def test_last_error_reset_at_start_of_each_call(self, config, sample_paper):
+        """A successful call must clear any stale error from a prior failure."""
+        config.agent_runner.max_retries = 0
+        runner = AgentRunner(config)
+
+        valid_md = _make_valid_briefing(config.distiller)
+        with patch.object(runner, "_invoke", return_value=_timeout()):
+            runner.distill_paper(
+                paper=sample_paper,
+                distiller_config=config.distiller,
+                system_prompt="sys", user_prompt="usr",
+            )
+        assert runner.last_error is not None  # captured the timeout
+
+        with patch.object(runner, "_invoke", return_value=_ok(valid_md)):
+            result = runner.distill_paper(
+                paper=sample_paper,
+                distiller_config=config.distiller,
+                system_prompt="sys", user_prompt="usr",
+            )
+        assert result is not None
+        assert runner.last_error is None  # cleared by the successful call
+
+    def test_last_error_on_score_timeout(self, config, sample_paper, focus_areas):
+        config.agent_runner.max_retries = 0
+        runner = AgentRunner(config)
+
+        with patch.object(runner, "_invoke", return_value=_timeout()):
+            runner.score_paper(sample_paper, focus_areas)
+
+        assert runner.last_error is not None
+        assert "timed out" in runner.last_error
 
 
 # ---------------------------------------------------------------------------
@@ -481,7 +725,7 @@ class TestConfigLoading:
         ar = cfg.agent_runner
         assert ar.enabled is True
         assert ar.score_timeout == 30
-        assert ar.distill_timeout == 120
+        assert ar.distill_timeout == 600
         assert ar.max_retries == 1
         assert ar.max_output_bytes == 51200
         assert ar.batch_size == 1
@@ -546,7 +790,7 @@ focus_areas:
 
         assert ar.enabled is True
         assert ar.score_timeout == 30
-        assert ar.distill_timeout == 120
+        assert ar.distill_timeout == 600
 
     def test_validate_no_api_key_is_warning_not_hard_error(self, tmp_path):
         """
