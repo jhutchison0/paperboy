@@ -232,3 +232,18 @@ class TestDistillerForwardsAgentRunnerError:
         result = distiller.distill(paper)
         assert result is not None
         assert distiller.last_error is None
+
+    def test_distiller_captures_sdk_exception_as_last_error(self, config):
+        """When the Anthropic SDK raises, the exception text must surface in
+        last_error so the pipeline can show the user what went wrong."""
+        paper = _make_paper()
+        claude_client = MagicMock()
+        claude_client.messages.create.side_effect = RuntimeError("rate limited (429)")
+
+        distiller = BriefingDistiller(config, claude_client=claude_client, agent_runner=None)
+        result = distiller.distill(paper)
+
+        assert result is None
+        assert distiller.last_error is not None
+        assert "Claude SDK error" in distiller.last_error
+        assert "rate limited (429)" in distiller.last_error

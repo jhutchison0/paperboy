@@ -280,3 +280,26 @@ class TestDistillPaperId:
         result = runner.invoke(cli, ["distill", "--backend", "api", "--paper-id", "1904.12787"])
 
         assert result.exit_code != 0
+
+    @patch("main.DailyPipeline")
+    @patch("main._load_and_validate")
+    def test_distill_partial_exits_with_code_2(self, mock_load, MockPipeline):
+        """distill command: partial outcome must exit 2 with the specific reason."""
+        mock_load.return_value = MagicMock()
+        pipeline = MagicMock()
+        pipeline.distiller = MagicMock()
+        pipeline.run.return_value = PipelineResult(
+            status="partial",
+            selected_paper=_make_scored(),
+            briefing=None,
+            error="distill_paper timed out after 2 attempt(s); final timeout was 900s",
+        )
+        MockPipeline.return_value = pipeline
+
+        from main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["distill", "--backend", "api"])
+
+        assert result.exit_code == 2
+        assert "timed out" in result.output
+        assert "NOT recorded for dedup" in result.output
