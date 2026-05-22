@@ -15,6 +15,9 @@ import yaml
 from dotenv import load_dotenv
 
 
+_PLACEHOLDER_API_KEY = "sk-ant-your-key-here"
+
+
 @dataclass
 class ArxivConfig:
     categories: list[str] = field(default_factory=lambda: ["cs.AI", "cs.LG", "cs.CL", "stat.ML"])
@@ -230,7 +233,13 @@ class PipelineConfig:
         errors = []
         warnings = []
 
-        if not self.anthropic_api_key:
+        if self.anthropic_api_key == _PLACEHOLDER_API_KEY:
+            warnings.append(
+                "ANTHROPIC_API_KEY is the placeholder from .env.example — treating as unset. "
+                "Replace it with your real key in .env, or delete .env to use the Claude CLI subscription."
+            )
+            self.anthropic_api_key = ""
+        elif not self.anthropic_api_key:
             warnings.append(
                 "ANTHROPIC_API_KEY not set. Claude scoring/distillation will use the "
                 "AgentRunner (Claude Code CLI) backend if available, or keyword-only scoring."

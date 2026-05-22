@@ -66,6 +66,28 @@ class TestApiKeyIsWarning:
         assert not any("ANTHROPIC_API_KEY" in w for w in warnings)
 
 
+class TestPlaceholderApiKey:
+    """Placeholder key from .env.example is caught and treated as unset."""
+
+    def test_placeholder_emits_warning(self):
+        cfg = _make_valid_config()
+        cfg.anthropic_api_key = "sk-ant-your-key-here"
+        _, warnings = cfg.validate()
+        assert any("placeholder" in w.lower() for w in warnings)
+
+    def test_placeholder_blanked_after_validate(self):
+        cfg = _make_valid_config()
+        cfg.anthropic_api_key = "sk-ant-your-key-here"
+        cfg.validate()
+        assert cfg.anthropic_api_key == ""
+
+    def test_real_key_passes_through(self):
+        cfg = _make_valid_config()
+        cfg.anthropic_api_key = "sk-ant-real-key-abcdef"
+        cfg.validate()
+        assert cfg.anthropic_api_key == "sk-ant-real-key-abcdef"
+
+
 class TestClaudeRangeChecks:
     """Claude config range validation."""
 

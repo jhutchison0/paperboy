@@ -89,6 +89,26 @@ class TestResolveBackend:
         assert pipeline._has_claude_backend is False
         assert pipeline.distiller is None
 
+    @patch("src.pipeline.AgentRunner")
+    def test_placeholder_key_falls_through_to_agent(self, MockRunner):
+        """Regression: .env.example placeholder must not trigger the SDK path.
+
+        Mirrors the real user flow: cp .env.example .env leaves the key as
+        sk-ant-your-key-here. validate() blanks it, auto-mode picks AgentRunner.
+        """
+        cfg = PipelineConfig.load()
+        cfg.anthropic_api_key = "sk-ant-your-key-here"
+        cfg.validate()
+
+        mock_instance = MagicMock()
+        mock_instance.is_available.return_value = True
+        MockRunner.return_value = mock_instance
+
+        pipeline = DailyPipeline(cfg, backend="auto")
+        assert pipeline._has_claude_backend is True
+        assert pipeline.selector.claude is None
+        assert pipeline.selector.agent_runner is not None
+
 
 class TestHealthCheck:
     @patch("src.pipeline.AgentRunner")

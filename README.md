@@ -35,6 +35,7 @@ git clone https://github.com/jhutchison0/paperboy.git
 cd paperboy
 python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 
 # Configure (pick one)
