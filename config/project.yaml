@@ -156,5 +156,5 @@ commands:
 # =============================================================================
 # LAST UPDATED
 # =============================================================================
-last_updated: "2026-03-11"
-updated_by: "v0.2.0: Phase 2 polish — error handling, config validation, CLI subcommands"
+last_updated: "2026-05-21"
+updated_by: "Phase 2 polish — honest pipeline status reporting, AgentRunner timeout diagnostics, failure-reason propagation, placeholder API key detection"

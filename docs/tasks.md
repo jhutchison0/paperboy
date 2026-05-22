@@ -1,15 +1,15 @@
 # Paperboy — Task List
 
-**Last Updated**: 2026-04-04
+**Last Updated**: 2026-05-21
 
 ---
 
 ## Active
 
 - [ ] [P3] Agent backend: no temperature control on CLI path (Pillar 4 — idempotency gap) — owner: unassigned
-- [ ] [P3] Distiller raises RuntimeError on agent failure instead of graceful degradation (Pillar 2) — owner: unassigned
 - [ ] [P3] Batch scoring: batch_size=1, target is 5 per invocation — owner: unassigned
 - [ ] [P3] Update CONOP checklist phases with completion status — owner: unassigned
+- [ ] [P3] Blog feed audit: 5 of 6 feeds returned 0 articles on 2026-05-19 (Anthropic Research parse error; Google/Lilian Weng/The Gradient/Distill.pub empty) — owner: unassigned
 
 ## Blocked
 
@@ -17,6 +17,10 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-05-21: Honest success/failure reporting — PipelineResult.partial status, no dedup poisoning on distill failure, CLI exits 2 on partial
+- [x] 2026-05-21: AgentRunner timeout diagnostics — Popen+communicate captures partial stdout, 1.5x backoff on distill timeout retry, distill_timeout default 300→600
+- [x] 2026-05-21: Failure-reason propagation — AgentRunner.last_error (timeout/validation/subprocess) flows through distiller into PipelineResult.error
+- [x] 2026-05-21: Closed P3 distiller-raises-on-agent-failure task — verified distiller already returns None gracefully (no longer raises RuntimeError)
 - [x] 2026-04-04: Cross-run paper deduplication — SelectionHistory, normalize_paper_id, 30-day cooldown, --no-dedup flag
 - [x] 2026-04-04: Adopt decision-scientist agent from upstream (ADAPT), skip MAUT module and team (SKIP)
 - [x] 2026-04-04: Apply upstream session-start git sync update
