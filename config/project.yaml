@@ -112,7 +112,7 @@ build_phases:
 #   .venv/bin/pytest                    # Tests
 #   .venv/bin/python main.py run        # Pipeline
 python:
-  min_version: "3.10"
+  min_version: "3.11"
   venv: ".venv"
   requirements: requirements.txt
   dependencies:
@@ -156,5 +156,5 @@ commands:
 # =============================================================================
 # LAST UPDATED
 # =============================================================================
-last_updated: "2026-05-21"
-updated_by: "Phase 2 polish — honest pipeline status reporting, AgentRunner timeout diagnostics, failure-reason propagation, placeholder API key detection"
+last_updated: "2026-05-22"
+updated_by: "Doctrine adoption from upstream utils 2026-05-19 cycle: LANGUAGE.md, CONTEXT.md, ADR system, SKILLS_FRAMEWORK v2 (5 legacy single-file skills → directory form), PostToolUse shift-left audit hook, Python 3.11 minimum, test-first python-prototyper agent"

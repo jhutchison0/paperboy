@@ -4,8 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Principles
 
-### Shift-Left Testing
-Every new component must include a test plan. Tests are written alongside code, not as an afterthought.
+### Shift-Left Testing (test-first, vertical-slice)
+Every new behavior in `src/` is driven by a **failing test written first**, followed by the **minimum implementation** that makes it pass, then the next slice. This is vertical-slice (tracer-bullet) TDD; see [`.claude/skills/shift-left-testing/VERTICAL-SLICING.md`](.claude/skills/shift-left-testing/VERTICAL-SLICING.md).
+
+Do not write a horizontal slice (all tests first, then all impl). Do not write production code without a failing test driving it.
+
+A `PostToolUse` audit hook (`.claude/hooks/post-tool-shift-left-audit.sh`) fires after every `Write`/`Edit` to `src/**/*.py` and logs evidence to `.claude/audits/shift-left-violations.log`. The hook does not block; it produces an audit trail. See [`.claude/skills/shift-left-testing/ENFORCEMENT.md`](.claude/skills/shift-left-testing/ENFORCEMENT.md) for the full enforcement gradient.
+
 - **Python** (`tests/`) — pytest suites for sourcing, selection, distillation, pipeline, config
 
 ### Simplicity First
@@ -77,7 +82,7 @@ The name "Paperboy" is a lighthearted nod to the 1985 arcade game — the image 
 
 ## Tech Stack
 
-- **Language**: Python (3.10+)
+- **Language**: Python (3.11+)
 - **Dependencies**: arxiv, feedparser, anthropic, click, pyyaml, python-slugify, python-dotenv, python-dateutil
 
 ## Architecture

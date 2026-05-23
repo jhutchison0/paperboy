@@ -209,3 +209,5 @@ __marimo__/
 # Paperboy
 output/
 .claude/agent-memory/
+.claude/audits/
+docs/design/hold/
