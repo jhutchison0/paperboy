@@ -183,7 +183,7 @@ class TestSelectionHistory:
         )
         h = SelectionHistory(history_file)
         h.record(paper)
-        assert "2604.99999v1" in h._history
+        assert h.contains("2604.99999v1")
 
     def test_multiple_papers(self, history_file):
         """Multiple papers tracked independently."""
@@ -202,6 +202,39 @@ class TestSelectionHistory:
             h.record(paper)
         excluded = h.get_excluded_ids()
         assert len(excluded) == 3
+
+    # ── Public contains() membership API ───────────────────────────
+    # Replaces direct access to the private _history dict so tests stay
+    # decoupled from the in-memory representation.
+
+    def test_contains_returns_true_for_recorded_paper(self, history_file, sample_paper):
+        h = SelectionHistory(history_file)
+        h.record(sample_paper)
+        assert h.contains("2604.02091v1") is True
+
+    def test_contains_returns_false_for_unrecorded_paper(self, history_file):
+        h = SelectionHistory(history_file)
+        assert h.contains("9999.99999v1") is False
+
+    def test_contains_normalizes_input(self, history_file, sample_paper):
+        """contains() accepts raw ArXiv URLs, prefixed IDs, or bare IDs."""
+        h = SelectionHistory(history_file)
+        h.record(sample_paper)
+        assert h.contains("http://arxiv.org/abs/2604.02091v1") is True
+        assert h.contains("arXiv:2604.02091v1") is True
+        assert h.contains("2604.02091v1") is True
+
+    def test_contains_returns_true_outside_cooldown_window(self, history_file, sample_paper):
+        """Membership is independent of cooldown — only excluded_ids is cooldown-aware."""
+        h = SelectionHistory(history_file, cooldown_days=7)
+        h.record(sample_paper)
+        h._history["2604.02091v1"]["selected_at"] = (
+            datetime.now(timezone.utc) - timedelta(days=30)
+        ).isoformat()
+        # Outside cooldown — not excluded
+        assert "2604.02091v1" not in h.get_excluded_ids()
+        # ... but still recorded
+        assert h.contains("2604.02091v1") is True
 
 
 # ── Seeding from existing briefings ──────────────────────────────

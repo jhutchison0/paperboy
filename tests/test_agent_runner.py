@@ -213,67 +213,11 @@ class TestInvoke:
         assert outcome.timed_out is False
 
 
-# ---------------------------------------------------------------------------
-# 2. _strip_preamble_json()
-# ---------------------------------------------------------------------------
-
-class TestStripPreambleJson:
-    def test_clean_json_unchanged(self, runner):
-        payload = '{"score": 0.8, "reasoning": "Highly relevant."}'
-        assert runner._strip_preamble_json(payload) == payload
-
-    def test_strips_leading_text(self, runner):
-        output = 'Here is my response:\n\n{"score": 0.7, "reasoning": "relevant"}'
-        result = runner._strip_preamble_json(output)
-        assert result == '{"score": 0.7, "reasoning": "relevant"}'
-
-    def test_strips_trailing_text(self, runner):
-        output = '{"score": 0.5, "reasoning": "ok"}\n\nLet me know if you need more.'
-        result = runner._strip_preamble_json(output)
-        assert result == '{"score": 0.5, "reasoning": "ok"}'
-
-    def test_strips_both_preamble_and_postamble(self, runner):
-        output = 'Some preamble.\n{"score": 0.9, "reasoning": "great"}\nSome postamble.'
-        result = runner._strip_preamble_json(output)
-        assert result == '{"score": 0.9, "reasoning": "great"}'
-
-    def test_no_braces_returns_original(self, runner):
-        output = "No JSON here at all."
-        assert runner._strip_preamble_json(output) == output
-
-    def test_nested_json_preserved(self, runner):
-        output = 'preamble {"score": 0.6, "meta": {"k": "v"}} postamble'
-        result = runner._strip_preamble_json(output)
-        # Should find first { and last }
-        assert result == '{"score": 0.6, "meta": {"k": "v"}}'
-
-
-# ---------------------------------------------------------------------------
-# 3. _strip_preamble_markdown()
-# ---------------------------------------------------------------------------
-
-class TestStripPreambleMarkdown:
-    def test_clean_markdown_unchanged(self, runner):
-        md = "# My Title\n\nSome content."
-        assert runner._strip_preamble_markdown(md) == md
-
-    def test_strips_preamble_before_heading(self, runner):
-        output = "Sure, here is the briefing:\n\n# My Title\n\nContent."
-        result = runner._strip_preamble_markdown(output)
-        assert result == "# My Title\n\nContent."
-
-    def test_strips_preamble_before_yaml_frontmatter(self, runner):
-        output = "Here you go:\n---\ntitle: Test\n---\n\n# Section"
-        result = runner._strip_preamble_markdown(output)
-        assert result == "---\ntitle: Test\n---\n\n# Section"
-
-    def test_no_marker_returns_original(self, runner):
-        output = "This has no heading or frontmatter."
-        assert runner._strip_preamble_markdown(output) == output
-
-    def test_heading_at_first_line(self, runner):
-        output = "# Already starts with heading\n\nContent."
-        assert runner._strip_preamble_markdown(output) == output
+# Note: the private helpers `_strip_preamble_json` and `_strip_preamble_markdown`
+# are exercised through the public surface in TestScorePaper (preamble + postamble,
+# nested-object cases) and TestDistillPaper (markdown preamble stripping).
+# Their direct-call tests were removed on 2026-05-22 to decouple from the
+# implementation seam — the public-surface tests catch any regression.
 
 
 # ---------------------------------------------------------------------------
@@ -310,6 +254,33 @@ class TestScorePaper:
             result = runner.score_paper(sample_paper, focus_areas)
         assert result is not None
         assert result["score"] == pytest.approx(0.72)
+
+    def test_valid_json_with_preamble_and_postamble_returns_dict(self, runner, sample_paper, focus_areas):
+        """Claude sometimes wraps JSON in both a leading explanation and a
+        trailing 'let me know if you need more' — score_paper must extract
+        the JSON object regardless of where it sits in the output."""
+        payload = (
+            'Here is my analysis:\n'
+            '{"score": 0.9, "reasoning": "great"}\n'
+            'Let me know if you need more detail.'
+        )
+        with patch.object(runner, "_invoke", return_value=_ok(payload)):
+            result = runner.score_paper(sample_paper, focus_areas)
+        assert result is not None
+        assert result["score"] == pytest.approx(0.9)
+
+    def test_valid_json_with_nested_object_in_reasoning_returns_dict(self, runner, sample_paper, focus_areas):
+        """Reasoning fields can contain JSON-looking substrings; the JSON
+        extraction must find the outermost { ... }, not the first inner one."""
+        payload = (
+            'preamble '
+            '{"score": 0.6, "reasoning": "matches", "meta": {"nested": "value"}}'
+            ' postamble'
+        )
+        with patch.object(runner, "_invoke", return_value=_ok(payload)):
+            result = runner.score_paper(sample_paper, focus_areas)
+        assert result is not None
+        assert result["score"] == pytest.approx(0.6)
 
     def test_malformed_json_returns_none(self, runner, sample_paper, focus_areas):
         with patch.object(runner, "_invoke", return_value=_ok("not valid json at all")):
@@ -680,39 +651,10 @@ class TestIsAvailable:
 # 7. _build_clean_env()
 # ---------------------------------------------------------------------------
 
-class TestBuildCleanEnv:
-    def test_anthropic_api_key_stripped(self):
-        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-secret-key", "PATH": "/usr/bin"}):
-            env = AgentRunner._build_clean_env()
-        assert "ANTHROPIC_API_KEY" not in env
-
-    def test_claude_vars_stripped(self):
-        with patch.dict("os.environ", {
-            "CLAUDE_API_KEY": "some-key",
-            "CLAUDECODE_SESSION": "abc123",
-            "PATH": "/usr/bin",
-        }):
-            env = AgentRunner._build_clean_env()
-        assert "CLAUDE_API_KEY" not in env
-        assert "CLAUDECODE_SESSION" not in env
-
-    def test_path_preserved(self):
-        with patch.dict("os.environ", {"PATH": "/usr/local/bin:/usr/bin", "ANTHROPIC_API_KEY": "key"}):
-            env = AgentRunner._build_clean_env()
-        assert env["PATH"] == "/usr/local/bin:/usr/bin"
-
-    def test_other_vars_preserved(self):
-        with patch.dict("os.environ", {"HOME": "/home/user", "LANG": "en_US.UTF-8"}):
-            env = AgentRunner._build_clean_env()
-        assert env.get("HOME") == "/home/user"
-        assert env.get("LANG") == "en_US.UTF-8"
-
-    def test_returns_copy_not_original(self):
-        """Modifications to the returned dict must not affect os.environ."""
-        env = AgentRunner._build_clean_env()
-        env["INJECTED_KEY"] = "injected"
-        import os
-        assert "INJECTED_KEY" not in os.environ
+# Note: the private `_build_clean_env` helper is exercised through the public
+# surface in TestInvoke::test_invoke_passes_clean_env_to_subprocess, which is
+# the seam that actually matters (subprocess.Popen receives the cleaned env).
+# Its direct-call tests were removed on 2026-05-22.
 
 
 # ---------------------------------------------------------------------------

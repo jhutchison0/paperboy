@@ -182,6 +182,15 @@ class SelectionHistory:
         self._save()
         logger.info(f"Recorded selection: {normalized}")
 
+    def contains(self, paper_id: str) -> bool:
+        """Return True if a paper with this ID has ever been recorded.
+
+        Normalizes the input so callers can pass raw ArXiv URLs, prefixed IDs,
+        or bare IDs interchangeably. Membership is independent of the cooldown
+        window — for cooldown-aware filtering use `get_excluded_ids()`.
+        """
+        return normalize_paper_id(paper_id) in self._history
+
 
 class PipelineResult:
     """Encapsulates the outcome of a pipeline run."""

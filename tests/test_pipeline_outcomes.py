@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.config import PipelineConfig
 from src.distiller import BriefingDistiller
-from src.models import BriefingDocument, Paper, ScoredPaper, normalize_paper_id
+from src.models import BriefingDocument, Paper, ScoredPaper
 from src.pipeline import DailyPipeline, PipelineResult, SelectionHistory
 
 
@@ -101,7 +101,7 @@ class TestPipelineRunOutcomes:
         assert result.briefing is not None
         # Selection should be recorded
         history_path = Path(config.output_dir) / ".selection_history.json"
-        assert normalize_paper_id(paper.id) in SelectionHistory(history_path, 30)._history
+        assert SelectionHistory(history_path, 30).contains(paper.id)
 
     def test_partial_when_distiller_returns_none(self, config):
         paper = _make_paper()
@@ -129,7 +129,7 @@ class TestPipelineRunOutcomes:
         history_path = Path(config.output_dir) / ".selection_history.json"
         if history_path.exists():
             history = SelectionHistory(history_path, 30)
-            assert normalize_paper_id(paper.id) not in history._history, (
+            assert not history.contains(paper.id), (
                 "Failed distillation must NOT be recorded — paper should remain "
                 "available for retry on the next run."
             )
@@ -145,7 +145,7 @@ class TestPipelineRunOutcomes:
         assert result.briefing is None
         history_path = Path(config.output_dir) / ".selection_history.json"
         assert history_path.exists()
-        assert normalize_paper_id(paper.id) in SelectionHistory(history_path, 30)._history
+        assert SelectionHistory(history_path, 30).contains(paper.id)
 
     def test_partial_error_surfaces_distiller_last_error(self, config):
         """PipelineResult.error must carry the distiller's specific failure
