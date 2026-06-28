@@ -16,6 +16,9 @@ A `PostToolUse` audit hook (`.claude/hooks/post-tool-shift-left-audit.sh`) fires
 ### Simplicity First
 Make every change as simple as possible. Avoid massive or complex changes. Every change should impact as little code as necessary. When in doubt, prefer the simpler solution.
 
+### Branching (short-lived topic branches by work shape)
+Branch on the shape of the work, not on a permanent partition of the codebase. Lead-only doc/ADR/small-refactor work lands directly on `main`. Team-deployed or multi-agent code work with an audit gate uses a short-lived `topic/<scope>-<slug>` branch, merged via merge-commit at the gate and **deleted (local + origin) immediately after merge**. No permanent domain branches. See [`.claude/skills/using-topic-branches/SKILL.md`](.claude/skills/using-topic-branches/SKILL.md), which also covers auditing standing branches.
+
 ### Session Documentation
 Document work in `docs/sessions/YYYYMMDD_*.md`. See `config/project.yaml` for phase tracking.
 
