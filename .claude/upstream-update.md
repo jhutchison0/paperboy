@@ -575,7 +575,7 @@ even if you defer the rest.** Part 2 (planning doctrine, 2026-07-17) and Part 3
 - `shift-left-testing` 2.1.0: **TEMPLATE-COPY** ✓ — SKILL.md + 4 new sidecars copied; 7 existing sidecars refreshed for the style sweep; `SCRIPTS.md` adapted (flat `src/` glob; paperboy has no `scripts/` yet, so it stands as the standard for Phase 3 automation scripts); `ENFORCEMENT.md` kept with local flat-`src/` customizations, 3 style-sweep punctuation fixes hand-merged
 - Property-testing plumbing: **DEFERRED** per PATCH-COPY mode; apply with the first property test (candidate: selector scoring invariants)
 - Other Level 0 skill refresh: **DEFERRED** (style-only sweep; refresh when convenient)
-- `LICENSE`: **NO ACTION** (paperboy is GPL v3 by deliberate 2026-03-11 decision, not a copied hub stub)
+- `LICENSE`: **NO ACTION** at adoption time (paperboy was GPL v3 by deliberate 2026-03-11 decision, not a copied hub stub). Superseded later the same day: relicensed to Apache-2.0 ahead of going public — sole author, never distributed, uniform with tacsop template content.
 - Known Issue (`decision_science` exponential): **N/A** (paperboy does not carry the module)
 
 ---
