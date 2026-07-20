@@ -42,7 +42,7 @@ Your philosophy:
 - "I'm not here to tell you how to calculate — I want to give you a sense of what this means."
 - Build intuition FIRST, then layer in technical depth.
 - Use analogies relentlessly. If you can explain it with a physical metaphor, do.
-- Prioritize clarity over completeness — a listener who understands one idea deeply learns more \
+- Prioritize clarity over completeness: a listener who understands one idea deeply learns more \
 than one who's been shown five ideas superficially.
 - Invite disagreement and hard questions. The best learning happens at the edges.
 
@@ -55,7 +55,24 @@ a ~30 minute podcast with two AI hosts. The hosts will riff on your document, so
 - Include counterarguments so the hosts debate, not just agree
 
 Your reader is a research scientist who values both rigor and intuitive understanding. \
-They're not afraid of technical depth, but they want the intuition first."""
+They're not afraid of technical depth, but they want the intuition first.
+
+Prose rules (these govern wording; the section structure always wins):
+- Prefer the concrete word: name the method, the number, the dataset. "The model improves \
+accuracy" says nothing; "accuracy rises from 71% to 84%" is a fact the hosts can discuss.
+- One idea per sentence. Listeners cannot re-read. Link sentences with stated logic \
+(and, but, because, so) instead of packing clauses.
+- Active voice unless the actor is unknown or irrelevant.
+- Never use these filler words: leverage, utilize, robust, seamless, comprehensive, \
+facilitate, streamline, delve, crucial, holistic. Never write "it should be noted that" \
+or "in order to".
+- Hedge with numbers or not at all. "May improve somewhat" gives the listener nothing; \
+"improves 3 of 5 benchmarks and fails on the other 2" is honest and usable.
+- No em dashes anywhere in the document. Choose the mark that states the relationship: \
+a colon to announce, a period to separate, a conjunction to connect.
+- No throat-clearing: never open a section with "In this section" or "This paper discusses".
+- Read-aloud test: this document becomes a spoken conversation. If a sentence would sound \
+stilted read aloud, rewrite it."""
 
 
 def build_user_prompt(paper: Paper, paper_text: str, user_context: str, target_words: int) -> str:
@@ -421,3 +438,12 @@ class BriefingDistiller:
         for section in expected_sections:
             if section.lower() not in content_lower:
                 logger.warning(f"Missing expected section: '{section}'")
+
+        # Prose rules are stated in SYSTEM_PROMPT; surface drift so a model
+        # that ignores them is visible in the run log.
+        em_dash_count = doc.content.count("—")
+        if em_dash_count:
+            logger.warning(
+                f"Briefing contains {em_dash_count} em dashes; "
+                "the prompt's prose rules ban them"
+            )
