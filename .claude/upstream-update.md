@@ -567,7 +567,7 @@ even if you defer the rest.** Part 2 (planning doctrine, 2026-07-17) and Part 3
 - `CONOP-FORMAT.md` + `OPORD-FORMAT.md`: **TEMPLATE-COPY** ✓ into `docs/plans/`; the existing `20260310_agent_pipeline_conop.md` is grandfathered
 - `task.md` merge: **CUSTOMIZE** ✓ (promote wiring + approval/owner bullets; Level 3/4 Format lines rewritten to the proword scheme with a paperboy example; Prowords section copied; the inline 5-paragraph CONOP listing was superseded by the pointer to `CONOP-FORMAT.md`)
 - Deep-modules sentence: **CUSTOMIZE** ✓ appended to CLAUDE.md Simplicity First
-- `python-prototyper` Step 4d: **ALREADY PRESENT** verbatim since c61b79d; no edit needed
+- `python-prototyper` Step 4d: **ALREADY PRESENT** verbatim since c06e8ba; no edit needed
 - Retrospective: skimmed elephant-graveyard report; failure shapes noted (unfalsified assumptions, risks without falsifiable exit criteria)
 
 *Part 3 (writing & testing doctrine)*:
