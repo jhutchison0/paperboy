@@ -17,6 +17,7 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-07-20: Public-repo prose sweep — README, CONTEXT, LANGUAGE, CLAUDE, CHANGELOG, docs/adr, docs/design, config swept per writing-simple-and-direct on topic/docs-public-prose-sweep; code-reviewer audit gate APPROVE WITH FIXES (4 Minor, applied); factual corrections verified against code/config (Eight-Section Structure, BlogSourcer feeds, episode length); merged 2bd8d62, branch deleted
 - [x] 2026-07-20: Adopt upstream tacsop 2026-07-20 doctrine cycle — Part 1 hub rename verified (utils → tacsop); Part 2 planning doctrine (CONOP/OPORD format templates, task.md proword + promote wiring, deep-modules sentence); Part 3 writing-simple-and-direct skill + ADOPTION.md run, shift-left-testing 2.1.0 (4 new sidecars). Property-test plumbing deferred to first property test. 156 tests pass.
 - [x] 2026-05-22: Adopt upstream utils 2026-05-19 doctrine cycle — LANGUAGE.md, CONTEXT.md, ADR system, SKILLS_FRAMEWORK v2 (5 legacy single-file skills → directory form), PostToolUse shift-left audit hook (glob adapted for flat src/), Python 3.11 min, test-first python-prototyper. Audited by pipeline-sme + code-reviewer; 7 fixes applied. Commit c61b79d.
 - [x] 2026-05-21: Honest success/failure reporting — PipelineResult.partial status, no dedup poisoning on distill failure, CLI exits 2 on partial
