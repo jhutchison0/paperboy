@@ -1,6 +1,6 @@
 # Upstream Doctrine Update
 
-**Source**: [utils](/home/jhutchison/projects/github/utils) — shared workflow template
+**Source**: `tacsop` (GitHub `jhutchison0/tacsop`, named `utils` until 2026-07-20) — shared workflow template
 **Action**: Review changes below and selectively merge into your project's command files.
 **Cleanup**: Delete this file after reviewing.
 

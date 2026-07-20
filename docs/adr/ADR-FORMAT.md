@@ -2,7 +2,7 @@
 
 This is the template for Architecture Decision Records in this repo. ADRs live in `docs/adr/NNNN-slug.md`. See the [`recording-architecture-decisions`](../../.claude/skills/recording-architecture-decisions/SKILL.md) skill for when to write one.
 
-The triple filter at the top of every ADR is the **gate**, not a formality. If any of the three boxes is unchecked, the decision does not warrant an ADR — document it elsewhere (commit message, session doc, design doc, inline comment).
+The triple filter at the top of every ADR is the **gate**, not a formality. If any of the three boxes is unchecked, the decision does not warrant an ADR; document it elsewhere (commit message, session doc, design doc, inline comment).
 
 ---
 
@@ -47,13 +47,13 @@ If any box is unchecked, this is not an ADR-worthy decision. Document it elsewhe
 
 ## Context
 
-What forces are at play? What constraints? What was being optimized? What problem brought us here? Be specific — a future reader needs to understand the situation that made this decision necessary.
+What forces are at play? What constraints? What was being optimized? What problem brought us here? Be specific: a future reader needs to understand the situation that made this decision necessary.
 
 ---
 
 ## Decision
 
-What was chosen. Be specific — name files, commands, configurations, or behaviors. Avoid vague phrasing.
+What was chosen. Be specific: name files, commands, configurations, or behaviors. Avoid vague phrasing.
 
 ---
 
@@ -67,7 +67,7 @@ The real options that were on the table. For each, one paragraph: what it was, w
 ### Alternative B: <Name>
 <Description. Why considered. Why rejected.>
 
-(Add as many as were real candidates. Do not pad — only list alternatives that were genuinely considered.)
+(Add as many as were real candidates. Do not pad; list only alternatives that were genuinely considered.)
 
 ---
 
@@ -82,7 +82,7 @@ The real options that were on the table. For each, one paragraph: what it was, w
 ### Neutral
 - <Changes that are neither clearly positive nor negative — operational shifts, new dependencies, etc.>
 
-Honesty matters in this section. If an ADR has only positive consequences, the rigor is missing — every real trade-off carries cost.
+Honesty matters in this section. If an ADR has only positive consequences, the rigor is missing: every real trade-off carries cost.
 
 ---
 
@@ -102,7 +102,7 @@ Honesty matters in this section. If an ADR has only positive consequences, the r
 - **Accepted** — committed to and in effect.
 - **Superseded by ADR-MMMM** — replaced by a later decision. The original ADR is kept for historical context; the new ADR explains the reversal.
 
-ADRs are **append-only**. Once accepted, do not edit content. To change a decision, write a new ADR that supersedes the old one. Update the old ADR's Status field only — never its body.
+ADRs are **append-only**. Once accepted, do not edit content. To change a decision, write a new ADR that supersedes the old one. Update the old ADR's Status field only, never its body.
 
 ---
 

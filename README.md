@@ -10,7 +10,7 @@ The target user is a research scientist who wants daily AI briefings tailored to
 
 ### Why "Paperboy"?
 
-You're literally on a bike, getting papers delivered. It's the 1985 arcade game but instead of throwing newspapers at houses, you're absorbing ArXiv papers on an exercise bike. The name is a nod to that image, but the repo's real job is straightforward: source, score, and deliver a daily academic briefing — like a real paperboy, rain or shine.
+You're literally on a bike, getting papers delivered. It's the 1985 arcade game but instead of throwing newspapers at houses, you're absorbing ArXiv papers on an exercise bike. The name is a nod to that image, but the repo's real job is straightforward: source, score, and deliver a daily academic briefing, like a real paperboy, rain or shine.
 
 ## How It Works
 
@@ -107,7 +107,7 @@ The briefing provides the story; the paper provides the depth. Together they pro
 
 Before generating, click **Customize** on the Audio Overview to tune the output:
 
-**Duration**: Set to **Long** (~20-30 minutes). The briefing has ~4500 words across 8 sections — that's enough material for a substantial conversation. Short episodes tend to skim the most interesting parts (Challengers' Corner, Open Questions).
+**Duration**: Set to **Long** (~20-30 minutes). The briefing has ~4500 words across 8 sections, enough material for a substantial conversation. Short episodes tend to skim the most interesting parts (Challengers' Corner, Open Questions).
 
 **Style prompt**: This is where you steer the hosts' tone. Some prompts that work well with Paperboy's briefing structure:
 
@@ -118,7 +118,7 @@ Before generating, click **Customize** on the Audio Overview to tune the output:
 | **Practical focus** | "Emphasize the real-world applications and what this means for practitioners. Less theory, more 'what would I actually do with this on Monday morning?'" |
 | **Accessible** | "Assume the listener is smart but not a specialist. Explain jargon when it first appears. Use the analogies from the briefing and add your own." |
 
-You can combine these — e.g., "Intuition-first, but spend extra time debating the limitations."
+You can combine these: "Intuition-first, but spend extra time debating the limitations."
 
 ### Iteration
 
@@ -176,7 +176,7 @@ paperboy/
 
 ## Current Status
 
-**Phase 2 (Configuration & Polish) is in progress.** The pipeline runs end-to-end with both API and CLI backends. Live-tested against real ArXiv data, producing ~20-minute podcast episodes via NotebookLM.
+**Phase 2 (Configuration & Polish) is in progress.** The pipeline runs end-to-end with both API and CLI backends. It is live-tested against real ArXiv data; the runs produce ~20-minute podcast episodes via NotebookLM.
 
 ### Roadmap
 

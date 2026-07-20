@@ -97,7 +97,7 @@ The target user is a research scientist who wants daily AI briefings tailored to
 
 ### About the Name
 
-The name "Paperboy" is a lighthearted nod to the 1985 arcade game — the image of riding an exercise bike while getting ArXiv papers delivered. But the arcade and fitness angles are flavor, not focus. This repo's primary mission is **daily academic paper curation and delivery**. The delivery mechanism happens to be TTS consumed during a workout, which makes the name fun, but code, features, and documentation should stay grounded in the research pipeline domain. Don't theme things around arcades, bikes, or fitness.
+The name "Paperboy" is a lighthearted nod to the 1985 arcade game: the image of riding an exercise bike while getting ArXiv papers delivered. But the arcade and fitness angles are flavor, not focus. This repo's primary mission is **daily academic paper curation and delivery**. The delivery mechanism happens to be TTS consumed during a workout, which makes the name fun, but code, features, and documentation should stay grounded in the research pipeline domain. Don't theme things around arcades, bikes, or fitness.
 
 ## Tech Stack
 
@@ -151,7 +151,7 @@ The project uses military-inspired slash commands for structured development wor
 Work scales through four levels. Use `/task promote` or `/task plan` to evaluate:
 
 1. **Task** — One person, one session, clear action (`docs/tasks.md`)
-2. **TCS** — Multi-step with pass/fail criteria (Task, Condition, Standard) — also the universal task detail unit within all plan types
+2. **TCS** — Multi-step with pass/fail criteria (Task, Condition, Standard); also the universal task detail unit within all plan types
 3. **CONOP** — Multi-wave with design decisions and parallel tracks (`docs/plans/`)
 4. **OPORD** — Sequential execution of a decided strategy in waves (`docs/plans/`)
 
@@ -196,7 +196,7 @@ See `config/project.yaml` for all 6 build phases with status tracking.
 
 ## Config Workflow
 
-YAML files in `config/` are the source of truth. Python reads YAML directly — no JSON sync step needed.
+YAML files in `config/` are the source of truth. Python reads YAML directly; no JSON sync step is needed.
 
 - `config/project.yaml` — Project identity, phases, paths
 - `config/paperboy.yaml` — ArXiv categories, blog feeds, focus keywords, Claude API settings, selector weights, distiller preferences
@@ -205,7 +205,7 @@ API keys live in `.env` (never committed). See `.env.example` for required varia
 
 ## Agents and Teams
 
-**IMPORTANT**: Before deploying any agent team or multi-agent plan, read `.claude/README.md` for the current roster and usage guide. Match agents to the work — don't invent ad-hoc roles when a prepositioned agent already covers the need.
+**IMPORTANT**: Before deploying any agent team or multi-agent plan, read `.claude/README.md` for the current roster and usage guide. Match agents to the work; don't invent ad-hoc roles when a prepositioned agent already covers the need.
 
 ### Agent Roster
 

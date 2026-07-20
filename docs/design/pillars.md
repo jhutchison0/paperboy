@@ -21,7 +21,7 @@ Paperboy does not exist to summarize papers. It exists to produce briefings that
 **How it's enforced in the codebase**:
 - The distiller prompt specifies an 8-section structure designed for narrative flow
 - Challenger sections present counterarguments, creating natural dialogue material
-- Target word count (4,500 words) is calibrated for ~15-minute podcast episodes
+- Target word count (4,500 words) is calibrated for ~20-minute podcast episodes
 - Style parameter ("3blue1brown") enforces conversational, curiosity-driven tone
 - User context in the distiller config personalizes relevance framing
 
@@ -35,15 +35,15 @@ Paperboy does not exist to summarize papers. It exists to produce briefings that
 
 **The core principle**: ArXiv + blog RSS with graceful degradation. If one source fails, the pipeline continues. Pluggable source architecture (ContentSourcer ABC).
 
-Good briefings require good inputs. ArXiv alone misses industry perspectives, practical insights, and timely commentary. Blog feeds from research labs and independent ML writers provide complementary coverage. But no external source is reliable — APIs rate-limit, feeds go stale, servers go down. The pipeline must handle failure gracefully.
+Good briefings require good inputs. ArXiv alone misses industry perspectives, practical insights, and timely commentary. Blog feeds from research labs and independent ML writers provide complementary coverage. But no external source is reliable: APIs rate-limit, feeds go stale, servers go down. The pipeline must handle failure gracefully.
 
 **Why this matters**: A pipeline that crashes when one RSS feed times out is useless for daily automation. A pipeline that only reads ArXiv misses half the interesting work in AI. Source diversity ensures breadth; resilience ensures the pipeline runs every day regardless of which sources are having a bad day.
 
 **How it's enforced in the codebase**:
-- `ContentSourcer` is an ABC — `ArxivSourcer` and `BlogSourcer` are independent implementations
+- `ContentSourcer` is an ABC; `ArxivSourcer` and `BlogSourcer` are independent implementations
 - `SourceManager` aggregates results from all sourcers, catching and logging failures per source
 - Each sourcer has its own timeout and rate-limit settings
-- Failed sources produce warnings, not exceptions — the pipeline continues with whatever succeeded
+- Failed sources produce warnings, not exceptions; the pipeline continues with whatever succeeded
 - New source types can be added by implementing the `ContentSourcer` interface
 
 **What violating this looks like**: A single try/except around the entire source phase that aborts on any failure. Hard-coded feed URLs in Python instead of config. A monolithic function that mixes ArXiv API calls with RSS parsing.
@@ -54,7 +54,7 @@ Good briefings require good inputs. ArXiv alone misses industry perspectives, pr
 
 ## 3. Relevance Through Hybrid Scoring
 
-**The core principle**: Two-phase scoring — fast keyword matching followed by Claude semantic scoring. Configurable weights, thresholds, and focus areas.
+**The core principle**: Two-phase scoring. Fast keyword matching followed by Claude semantic scoring, with configurable weights, thresholds, and focus areas.
 
 Not every paper matters to every researcher. Paperboy's value comes from filtering 50+ daily candidates down to the one or two that are genuinely relevant to the user's work. Keyword matching is fast and cheap but misses semantic connections. Claude scoring understands meaning but costs money and time. The hybrid approach uses keywords as a fast filter, then applies Claude's judgment only to the top candidates.
 
@@ -65,7 +65,7 @@ Not every paper matters to every researcher. Paperboy's value comes from filteri
 - Weights are configurable: `keyword_weight: 0.4`, `claude_weight: 0.6`
 - `min_score_threshold` prevents low-quality selections from reaching distillation
 - `top_k_for_claude` controls how many papers get expensive Claude scoring
-- Focus areas and keywords live in config, not code — the user tunes without touching Python
+- Focus areas and keywords live in config, not code; the user tunes without touching Python
 - The cheaper `claude-haiku` model handles scoring; the full model handles distillation
 
 **What violating this looks like**: Scoring all 50 papers with Claude (expensive, slow). Using only title matching (misses relevant work). Hard-coding relevance criteria in the selector instead of reading from config. No threshold — always selecting the "best" even when nothing is relevant.
@@ -78,15 +78,15 @@ Not every paper matters to every researcher. Paperboy's value comes from filteri
 
 **The core principle**: Same date + config = same output. Date-stamped runs, deterministic selection, reproducible briefings.
 
-If you run the pipeline twice on the same day with the same config, you should get the same briefing. This is not a nice-to-have — it's essential for debugging, for trusting the output, and for avoiding duplicate work in automated scheduling.
+If you run the pipeline twice on the same day with the same config, you should get the same briefing. This is not a nice-to-have; it's essential for debugging, for trusting the output, and for avoiding duplicate work in automated scheduling.
 
-**Why this matters**: Idempotency makes the pipeline debuggable. If a briefing looks wrong, you can re-run the same date and trace what happened. It prevents automated schedulers from creating duplicate episodes. It enables backfilling — running the pipeline for past dates to generate briefings you missed. And it builds trust: the pipeline does what you expect, every time.
+**Why this matters**: Idempotency makes the pipeline debuggable. If a briefing looks wrong, you can re-run the same date and trace what happened. It prevents automated schedulers from creating duplicate episodes. It enables backfilling: running the pipeline for past dates to generate briefings you missed. And it builds trust: the pipeline does what you expect, every time.
 
 **How it's enforced in the codebase**:
-- Pipeline runs are keyed by date — output files include the date in their path
-- ArXiv queries use date ranges, not "most recent" — same date = same query
+- Pipeline runs are keyed by date; output files include the date in their path
+- ArXiv queries use date ranges, not "most recent"; same date = same query
 - Selector scoring is deterministic given the same inputs and config
-- Claude API calls use consistent prompts — while not bit-identical, the structure is reproducible
+- Claude API calls use consistent prompts; while not bit-identical, the structure is reproducible
 - `PipelineResult` captures metadata (date, config hash, sources, scores) for audit
 
 **What violating this looks like**: Using "today" as a relative reference that shifts mid-run. Random sampling from candidates. Output files without dates in their names. No way to re-run a past date.
@@ -99,9 +99,9 @@ If you run the pipeline twice on the same day with the same config, you should g
 
 **The core principle**: Pluggable sources, scorers, output formats. NotebookLM today, TTS tomorrow. New capabilities slot in without rewriting the pipeline.
 
-Paperboy's roadmap extends well beyond the current pipeline. TTS integration, podcast RSS feeds, multi-paper episodes, new source types — each of these should be additive. Adding a new source should mean implementing one class. Adding TTS should mean implementing one provider. The pipeline orchestrator should not need to change.
+Paperboy's roadmap extends well beyond the current pipeline: TTS integration, podcast RSS feeds, multi-paper episodes, new source types. Each of these should be additive. Adding a new source should mean implementing one class. Adding TTS should mean implementing one provider. The pipeline orchestrator should not need to change.
 
-**Why this matters**: Rewriting the pipeline for every new feature is unsustainable. The ABC pattern for sources (`ContentSourcer`), the planned ABC for TTS (`TTSProvider`), and the stage-based pipeline architecture ensure that new capabilities compose with existing ones. This is not premature abstraction — it's the architecture that makes the roadmap achievable.
+**Why this matters**: Rewriting the pipeline for every new feature is unsustainable. The ABC pattern for sources (`ContentSourcer`), the planned ABC for TTS (`TTSProvider`), and the stage-based pipeline architecture ensure that new capabilities compose with existing ones. This is not premature abstraction; it's the architecture that makes the roadmap achievable.
 
 **How it's enforced in the codebase**:
 - `ContentSourcer` ABC — implement `fetch()` to add a new source type
