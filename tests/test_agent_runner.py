@@ -16,6 +16,7 @@ Tests cover:
 import json
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -199,6 +200,14 @@ class TestInvoke:
         call_kwargs = mock_popen.call_args.kwargs
         env = call_kwargs.get("env", {})
         assert "ANTHROPIC_API_KEY" not in env
+
+    def test_invoke_runs_in_neutral_cwd(self, runner):
+        """Popen must run outside the repo so `claude -p` cannot load this
+        project's CLAUDE.md/skills into pipeline prompts (Pillars 1 and 4)."""
+        with patch("subprocess.Popen", return_value=_make_popen_mock(stdout="ok")) as mock_popen:
+            runner._invoke("some prompt", timeout=30)
+        call_kwargs = mock_popen.call_args.kwargs
+        assert call_kwargs.get("cwd") == tempfile.gettempdir()
 
     def test_invoke_builds_correct_command(self, runner):
         with patch("subprocess.Popen", return_value=_make_popen_mock(stdout="ok")) as mock_popen:

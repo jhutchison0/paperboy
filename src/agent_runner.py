@@ -19,6 +19,7 @@ import json
 import logging
 import os
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from typing import Optional
 
@@ -257,6 +258,11 @@ class AgentRunner:
                 stderr=subprocess.PIPE,
                 env=clean_env,
                 stdin=subprocess.DEVNULL,
+                # Neutral cwd: run outside the repo so the CLI cannot load
+                # this project's CLAUDE.md/skills into pipeline prompts.
+                # The distiller prompt is the sole style authority (Pillar 1);
+                # workspace docs must not be hidden inputs (Pillar 4).
+                cwd=tempfile.gettempdir(),
             )
         except FileNotFoundError:
             logger.error("AgentRunner: 'claude' not found on PATH — install Claude Code CLI")
