@@ -17,6 +17,7 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-07-20: Adopt upstream tacsop 2026-07-20 doctrine cycle — Part 1 hub rename verified (utils → tacsop); Part 2 planning doctrine (CONOP/OPORD format templates, task.md proword + promote wiring, deep-modules sentence); Part 3 writing-simple-and-direct skill + ADOPTION.md run, shift-left-testing 2.1.0 (4 new sidecars). Property-test plumbing deferred to first property test. 156 tests pass.
 - [x] 2026-05-22: Adopt upstream utils 2026-05-19 doctrine cycle — LANGUAGE.md, CONTEXT.md, ADR system, SKILLS_FRAMEWORK v2 (5 legacy single-file skills → directory form), PostToolUse shift-left audit hook (glob adapted for flat src/), Python 3.11 min, test-first python-prototyper. Audited by pipeline-sme + code-reviewer; 7 fixes applied. Commit c61b79d.
 - [x] 2026-05-21: Honest success/failure reporting — PipelineResult.partial status, no dedup poisoning on distill failure, CLI exits 2 on partial
 - [x] 2026-05-21: AgentRunner timeout diagnostics — Popen+communicate captures partial stdout, 1.5x backoff on distill timeout retry, distill_timeout default 300→600

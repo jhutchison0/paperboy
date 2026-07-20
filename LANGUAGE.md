@@ -179,6 +179,18 @@ The crosswalk is intentionally one-way: external content adopts civilian, intern
 
 ---
 
+## Cruft Words (Banned in Prose Artifacts)
+
+The authoritative list for `writing-simple-and-direct` rule 5. These words are banned as filler in prose artifacts: delete one and the sentence loses nothing.
+
+leverage, utilize, robust, seamless, comprehensive, facilitate, streamline, delve, crucial, holistic
+
+Banned phrases: "it should be noted that"; "in order to" (exception: mission statements, where the phrase carries the purpose clause).
+
+**Term-of-art carve-out**: a listed word is banned as a filler modifier, not as a precise domain term. The test: if the word names a defined concept in this glossary or a measurable criterion (e.g., "robust" in Phase 2's "Robust CLI" deliverable, where it means validated config + clear error messages), it stays; if deleting it loses no meaning, it goes.
+
+---
+
 ## Maintenance
 
 Update LANGUAGE.md when:

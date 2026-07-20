@@ -74,7 +74,7 @@ def mock_external_api():
 
 ### Scope
 
-By default, fixtures are function-scoped — torn down and rebuilt for each test. Override with `scope="module"` or `scope="session"` only when:
+By default, fixtures are function-scoped: torn down and rebuilt for each test. Override with `scope="module"` or `scope="session"` only when:
 - The fixture is genuinely expensive to set up (real DB connection, large model load).
 - The tests using the fixture don't mutate it.
 
@@ -197,7 +197,7 @@ def test_with_generated_data(fake):
 ## Fixture Tips
 
 - **Name fixtures by what they ARE, not what they do.** `test_database` not `setup_database`.
-- **Yield for cleanup.** The `yield` keyword splits a fixture into "setup" and "teardown" — everything after `yield` runs after the test.
+- **Yield for cleanup.** The `yield` keyword splits a fixture into "setup" and "teardown": everything after `yield` runs after the test.
 - **Compose fixtures.** A fixture can depend on other fixtures by taking them as parameters.
 - **Parametrize at the test, not the fixture, when you need cartesian coverage.** Fixtures are for setup; `@pytest.mark.parametrize` is for varying inputs.
 

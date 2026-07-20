@@ -546,3 +546,251 @@ If anything in this cycle breaks your repo, each artifact reverts independently:
 - **utils sessions** — `docs/sessions/20260519_doctrine_artifact_buildout.md` documents the original build; the current session doc (the one in this propagation's commit) documents the Pass 4 + enforcement-layer additions.
 
 ---
+
+---
+
+## 2026-07-20: NAME CHANGE (`utils` → `tacsop`) + Planning Doctrine + Writing & Testing Doctrine
+
+One combined cycle in three parts, each independently adoptable via its own
+adoption-mode table. **Part 1 is the breaking item and leads deliberately; read it
+even if you defer the rest.** Part 2 (planning doctrine, 2026-07-17) and Part 3
+(writing and testing doctrine + relicense, 2026-07-20) are fully additive.
+
+**Processed**: 2026-07-20. All three parts adopted in one session. Disposal:
+
+*Part 1 (name change)*:
+- Local hub clone rename: **ALREADY DONE** (verified `~/projects/github/tacsop` exists with remote `jhutchison0/tacsop.git`; no `utils` directory remains)
+- `scripts/adopt_doctrine.py` patch: **N/A** (paperboy never copied the helper; it runs from the hub clone)
+- Historical docs/links: **NO ACTION** per instruction
+
+*Part 2 (planning doctrine)*:
+- `CONOP-FORMAT.md` + `OPORD-FORMAT.md`: **TEMPLATE-COPY** ✓ into `docs/plans/`; the existing `20260310_agent_pipeline_conop.md` is grandfathered
+- `task.md` merge: **CUSTOMIZE** ✓ (promote wiring + approval/owner bullets; Level 3/4 Format lines rewritten to the proword scheme with a paperboy example; Prowords section copied; the inline 5-paragraph CONOP listing was superseded by the pointer to `CONOP-FORMAT.md`)
+- Deep-modules sentence: **CUSTOMIZE** ✓ appended to CLAUDE.md Simplicity First
+- `python-prototyper` Step 4d: **ALREADY PRESENT** verbatim since c61b79d; no edit needed
+- Retrospective: skimmed elephant-graveyard report; failure shapes noted (unfalsified assumptions, risks without falsifiable exit criteria)
+
+*Part 3 (writing & testing doctrine)*:
+- `writing-simple-and-direct`: **TEMPLATE-COPY** ✓ (5 files) + ADOPTION.md run: CLAUDE.md "Prose Style" kernel added, LANGUAGE.md "Cruft Words" section added (carve-out example adapted to paperboy's "Robust CLI" deliverable), code-reviewer checklist line added. Vale seam not taken. Existing docs grandfathered.
+- `shift-left-testing` 2.1.0: **TEMPLATE-COPY** ✓ — SKILL.md + 4 new sidecars copied; 7 existing sidecars refreshed for the style sweep; `SCRIPTS.md` adapted (flat `src/` glob; paperboy has no `scripts/` yet, so it stands as the standard for Phase 3 automation scripts); `ENFORCEMENT.md` kept with local flat-`src/` customizations, 3 style-sweep punctuation fixes hand-merged
+- Property-testing plumbing: **DEFERRED** per PATCH-COPY mode; apply with the first property test (candidate: selector scoring invariants)
+- Other Level 0 skill refresh: **DEFERRED** (style-only sweep; refresh when convenient)
+- `LICENSE`: **NO ACTION** (paperboy is GPL v3 by deliberate 2026-03-11 decision, not a copied hub stub)
+- Known Issue (`decision_science` exponential): **N/A** (paperboy does not carry the module)
+
+---
+
+### Part 1 — NAME CHANGE: upstream hub renamed `utils` → `tacsop` (BREAKING)
+
+The upstream hub repository has been renamed from `utils` to **`tacsop`** (Tactical
+Standing Operating Procedure — the document through which a headquarters publishes the
+standing procedures its units operate by, and from which each unit derives its own
+local SOP). The old name described a utility library; the new name describes what the
+hub actually is: the doctrinal foundation for agent/team workflows and task escalation.
+Full rationale and candidate names in
+[`docs/adr/0002-rename-repository-to-tacsop.md`](adr/0002-rename-repository-to-tacsop.md).
+
+New canonical locations:
+
+- GitHub: `https://github.com/jhutchison0/tacsop` (old URLs redirect as long as the
+  name `utils` is never reused — it will not be)
+- Local convention: `~/projects/github/tacsop/`
+
+Nothing inside the bundle changes behavior: the `myproject` package placeholder, hook
+substitution, and settings merges are all unchanged. The only breaking edge is the
+hardcoded default upstream path in copies of `scripts/adopt_doctrine.py`.
+
+### Adoption-Mode Table (Part 1)
+
+| # | Artifact | Mode | Notes |
+|---|---|---|---|
+| 1 | `scripts/adopt_doctrine.py` | **PATCH-COPY** | If your repo carries a copy from the 2026-05-19 bundle, its `DEFAULT_UPSTREAM` points at `~/projects/github/utils/`, which no longer exists after the local hub clone is renamed. Re-copy the current script from the hub, or edit the one line, or always pass `--upstream PATH`. |
+| 2 | Local hub clone | **MANUAL** | Any machine with a clone of the hub needs a directory rename and remote update (steps below). |
+| 3 | Historical docs/links | **NO ACTION** | Session docs, reviews, and old notifications that link `github.com/jhutchison0/utils` keep working via GitHub's rename redirect. Do not rewrite history. |
+
+### Action required (Part 1)
+
+1. On each machine with a local clone of the hub:
+   ```bash
+   mv ~/projects/github/utils ~/projects/github/tacsop
+   cd ~/projects/github/tacsop
+   git remote set-url origin https://github.com/jhutchison0/tacsop.git
+   ```
+2. If your repo carries `scripts/adopt_doctrine.py`, re-copy it from
+   `~/projects/github/tacsop/scripts/adopt_doctrine.py` (its `DEFAULT_UPSTREAM` now
+   points at the new path), or pass `--upstream ~/projects/github/tacsop` on every run.
+3. If any CI job, mirror, or script of yours references the old GitHub URL directly,
+   update it to `https://github.com/jhutchison0/tacsop` rather than trusting the
+   redirect long-term.
+4. Leave historical documents unchanged.
+
+### Rollback (Part 1)
+
+None needed. Taking no action costs nothing until you either (a) run a stale copy of
+`adopt_doctrine.py` without `--upstream` after your local hub clone is renamed, or
+(b) depend on the redirect from a context that resolves URLs strictly. Both are fixed
+by the steps above at any later time.
+
+---
+
+### Part 2 — Planning Doctrine: plan-format standards, prowords, deep-modules (additive)
+
+The task-escalation ladder (`/task`: task → task-condition-standard → concept-of-
+operations → operations-order) has always specified tasks to a known standard (TCS),
+but the two plan-document levels above it had no format standard at all. Two pinned
+schemas now exist, following the `docs/adr/ADR-FORMAT.md` house pattern:
+`docs/plans/CONOP-FORMAT.md` (concept-of-operations: where design decisions get
+debated) and `docs/plans/OPORD-FORMAT.md` (operations-order: the execution form of a
+decided strategy, five-paragraph, checkpointed).
+
+The formats were validated against your history before shipping. A four-repo
+retrospective (magic-movies, swimming-analytics, elephant-graveyard, tactics-game)
+mined 20 multi-session churn episodes, classified with an explicit hindsight-bias
+guard: 6 preventable-by-planning, 10 mixed, 3 discovery-priced-in, 1 pure process.
+The dominant failure shape everywhere: **a load-bearing assumption with no falsifier
+and no kill-criterion**. Second place: **named risks with toothless mitigations**
+("we'll add a test later"). The formats' hardening targets exactly these:
+
+- **Assumptions table** — every load-bearing assumption carries its cheapest
+  empirical falsifier, its blast radius if wrong, and a kill-criterion.
+- **Validate before detailing** — the falsifier runs before dependent
+  execution-phases are authored in detail.
+- **Execution-phase order derives from the stated dependency chain** — if the plan
+  names a source of truth, phase 1 secures it.
+- **Gating-metric calibration** — a metric may not gate work until it rank-orders
+  known-good above known-bad references.
+- **First-contact rule** — the earliest feasible checkpoint runs against the real
+  target (real payloads, real hardware, real platform).
+- **Checkpoints are commit-gates with a named owner** — a phase is not closed until
+  its verifying commit exists.
+- **Mid-phase halt** — a live finding that invalidates a phase's precondition halts
+  the phase; it outranks the plan's momentum.
+- **Terminal statuses + append-only lifecycle** — every plan ends Rejected,
+  Complete, or Superseded; approved plans change only by dated amendment.
+
+### Files (Part 2, tacsop)
+
+```
+docs/plans/CONOP-FORMAT.md                        (new)
+docs/plans/OPORD-FORMAT.md                        (new)
+.claude/commands/task.md                          (promote wiring, template pointers, Prowords section)
+CLAUDE.md                                         (deep-modules sentence in Simplicity First)
+.claude/agents/python-prototyper.md               (Step 4d interface check)
+docs/reviews/20260717_planning_retrospective_*.md (evidence, reference-only)
+```
+
+### Adoption-Mode Table (Part 2)
+
+| # | Artifact | Mode | Notes |
+|---|---|---|---|
+| 1 | `docs/plans/CONOP-FORMAT.md` | **TEMPLATE-COPY** | Copy verbatim into your `docs/plans/`. Existing plans are grandfathered — do not rename or restructure them. |
+| 2 | `docs/plans/OPORD-FORMAT.md` | **TEMPLATE-COPY** | Copy verbatim. Co-dependent with #1 and #3. |
+| 3 | `.claude/commands/task.md` changes | **CUSTOMIZE** | Merge three additions into your copy (exact lines below). Includes the proword convention, which the format files' naming scheme (`conop_<PROWORD>_<slug>.md`) requires. |
+| 4 | Deep-modules discipline (`CLAUDE.md`) | **CUSTOMIZE** | One sentence merged into your Simplicity First principle (below). Independent of #1–3; skip cleanly if unwanted. |
+| 5 | `python-prototyper.md` Step 4d | **CONDITIONAL** | Only if your repo carries this agent. Copy Step 4d from tacsop's file. |
+| 6 | Retrospective reports | **NO ACTION** | Read the one about your repo (table below) — the evidence is your own session docs. |
+
+### Action required (Part 2)
+
+1. Copy `docs/plans/CONOP-FORMAT.md` and `docs/plans/OPORD-FORMAT.md` from tacsop
+   into your `docs/plans/` (create the directory if absent).
+2. In your `.claude/commands/task.md`, merge:
+   - Under the `promote` subcommand, replace
+     `- If the user agrees, create a skeleton document in docs/plans/`
+     with:
+     ```
+     - If the user agrees, create a skeleton document in `docs/plans/` using the template in `docs/plans/CONOP-FORMAT.md` (or `docs/plans/OPORD-FORMAT.md`)
+     - The plan must exist and reach Approved **before** its first wave launches — a plan written after the build documents, it does not plan
+     - Every exit/kill-criterion in the plan carries a named owner; an ownerless criterion defers itself indefinitely
+     ```
+   - Append to the Level 3 and Level 4 **Format** lines respectively:
+     `Template and section standard: docs/plans/CONOP-FORMAT.md.` /
+     `Template and section standard: docs/plans/OPORD-FORMAT.md.`
+   - If your copy predates the proword convention (no `## Prowords` section), copy
+     that whole section from tacsop's `task.md`.
+3. (Optional, #4) Append to your CLAUDE.md Simplicity First principle:
+   > Prefer deep modules — small interfaces hiding meaningful implementation — over
+   > shallow ones; before declaring an interface done, ask whether each parameter is
+   > load-bearing or whether the function could derive it from one it already has.
+4. (Conditional, #5) If you carry `python-prototyper.md`, copy Step 4d (the
+   10-second load-bearing-parameter check after GREEN) from tacsop's file.
+5. Read your repo's retrospective report — the format additions cite your own
+   sessions as evidence:
+
+   | Repo | Report |
+   |---|---|
+   | magic-movies | `tacsop/docs/reviews/20260717_planning_retrospective_magic_movies.md` |
+   | swimming-analytics | `tacsop/docs/reviews/20260717_planning_retrospective_swimming_analytics.md` |
+   | elephant-graveyard | `tacsop/docs/reviews/20260717_planning_retrospective_elephant_graveyard.md` |
+   | tactics-game | `tacsop/docs/reviews/20260717_planning_retrospective_tactics_game.md` |
+   | (all others) | Skim any report's SUMMARY — the failure shapes are general. |
+
+### Rollback (Part 2)
+
+Everything in Part 2 is additive. Delete the two FORMAT files, revert the `task.md`
+merge, and drop the CLAUDE.md sentence to return to prior state; no artifact
+changes runtime behavior. Existing plans are untouched either way.
+
+---
+
+### Part 3 — Writing & Testing Doctrine: prose-style skill, property-based testing, Apache-2.0 relicense (additive)
+
+Three additions authored 2026-07-19/20, each validated in the hub before shipping.
+
+**Writing style.** A new Level 0 skill, `writing-simple-and-direct` (v1.0.0, five
+files), pins the house prose style: eight kernel rules distilled from Barzun's
+*Simple and Direct*, each with a test that catches its violation; six before/after
+example pairs; a four-pass review protocol for prose artifacts; and a per-repo
+adoption guide. The kernel also lands as a CLAUDE.md "Prose Style" section and the
+cruft-word list as a LANGUAGE.md section; the skill's `ADOPTION.md` walks through
+both plus a one-line code-reviewer checklist addition. Before shipping, the entire
+hub corpus was swept to comply (~150 edits across 31 files, verification and flags
+in `docs/reviews/20260719_writing_style_sweep.md`), so the files you copy are their
+own exemplars. Two boundary conditions, restated from `ADOPTION.md` so nobody
+over-applies the rules: existing docs are grandfathered (session docs and reviews
+are records; leave them), and document schemas outrank style (never cut a required
+section to save tokens).
+
+**Testing depth.** `shift-left-testing` goes 2.0.0 → 2.1.0 with four sidecars:
+`PROPERTY-BASED.md` (invariant testing with Hypothesis), `NUMERIC.md` (float
+tolerances, numpy/pandas assertions, injectable randomness, stochastic code),
+`REGRESSION.md` (characterization pins for legacy code, golden files, the bless
+workflow), and `SCRIPTS.md` (testing CLIs and filesystem scripts, dry-run as a
+contract, widening the audit-hook perimeter to `scripts/`). Validated by use: the
+hub's first property suite (`tests/unit/test_from_yaml_properties.py`, five tests)
+closed a standing decision-science test gap, and strategy design alone surfaced a
+real crash bug (Known Issue below). That is the sidecar doing exactly what it
+promises before it ever left the building.
+
+**License.** The hub relicensed from GPL v3 to Apache-2.0. The hub had never been
+distributed, so no copyleft obligations ever attached; the sole author relicensed
+cleanly. Template content you copy from the hub is now Apache-2.0: attribution and
+license retention (§4) instead of copyleft, plus an explicit patent grant.
+
+### Adoption-Mode Table (Part 3)
+
+| # | Artifact | Mode | Notes |
+|---|---|---|---|
+| 1 | `.claude/skills/writing-simple-and-direct/` (5 files) | **TEMPLATE-COPY** | Copy the directory, then run its `ADOPTION.md`: CLAUDE.md kernel block, LANGUAGE.md cruft list, code-reviewer checklist line. Applies without adaptation. |
+| 2 | `.claude/skills/shift-left-testing/` 2.1.0 | **TEMPLATE-COPY** | Copy the four new sidecars plus the updated `SKILL.md` (new sidecar index, `tests/golden/` + `tests/scripts/` in the layout). Fully additive over 2.0.0. |
+| 3 | Property-testing plumbing | **PATCH-COPY** | `hypothesis>=6.0` in dev extras; `.hypothesis/` in `.gitignore`; the profile block from `tests/conftest.py` (50 examples locally, 300 in CI, switched by the `CI` env var). Needed only when you write your first property test. |
+| 4 | Copies of other Level 0 skills | **NO ACTION** (or refresh) | A style-only sweep touched every skill file; meaning is unchanged. Refresh copies whenever convenient. |
+| 5 | `LICENSE` | **MANUAL** | Informational for repos with their own license. If you copied the hub's old GPL stub verbatim, replace it (with the new Apache-2.0 text or your own choice). |
+
+### Known Issue (repos carrying `decision_science`)
+
+`value_functions.exponential()` raises `ZeroDivisionError` for nonzero `|rate|`
+below ~2.2e-16, where `1 - e^(-rate)` rounds to exactly 0.0. The input satisfies
+the documented contract ("rate must be nonzero"); the crash is real. Repro:
+`exponential(50.0, low=0.0, high=100.0, rate=1e-17)`. Found during property-test
+strategy design, 2026-07-20. The upstream fix is pending a design call (extend the
+zero guard vs. fall back to linear); until it ships, avoid effectively-zero rates.
+
+### Rollback (Part 3)
+
+Everything is additive or informational. Delete the skill directory and revert the
+CLAUDE.md, LANGUAGE.md, and code-reviewer additions to drop the style doctrine.
+Delete the four sidecars and re-copy the prior `SKILL.md` to return shift-left-testing
+to 2.0.0. The relicense requires no downstream action at all.
+
+---

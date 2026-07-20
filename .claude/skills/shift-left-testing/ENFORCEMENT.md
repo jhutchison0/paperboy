@@ -4,7 +4,7 @@ Sidecar to `SKILL.md`. Documents the deterministic mechanisms layered on top of 
 
 ## The Problem This Sidecar Solves
 
-`VERTICAL-SLICING.md` states the discipline: write a failing test, then the minimum implementation that passes it, then move to the next slice. A skill describes; it does not enforce. Whether any agent invokes the skill on any given turn is decided by the model — probabilistic, not deterministic. The user framing: *"claude dice."* The dice often come up favorable. Not always. We layer mechanisms that fire on every relevant action so the discipline does not depend on a single roll.
+`VERTICAL-SLICING.md` states the discipline: write a failing test, then the minimum implementation that passes it, then move to the next slice. A skill describes; it does not enforce. Whether any agent invokes the skill on any given turn is decided by the model: probabilistic, not deterministic. The user framing: *"claude dice."* The dice often come up favorable. Not always. We layer mechanisms that fire on every relevant action so the discipline does not depend on a single roll.
 
 ## Enforcement Gradient
 
@@ -19,7 +19,7 @@ Doctrine is enforced at multiple layers. Each is either probabilistic or determi
 | 5 | Stop hook diff audit | Deterministic | No (logs + warns) | Harness runs at end of every turn |
 | 6 | PreToolUse block hook | Deterministic | Yes (blocks) | Harness refuses Write/Edit before condition met |
 
-Layers 1–4 are currently active in this repo. Layer 5 is a candidate for the next iteration. **Layer 6 is intentionally not configured** — see "Why not hard blocks" below.
+Layers 1–4 are currently active in this repo. Layer 5 is a candidate for the next iteration. **Layer 6 is intentionally not configured** (see "Why not hard blocks" below).
 
 ## What the Audit Hook Does (Layer 4)
 
@@ -55,7 +55,7 @@ If the audit log shows persistent violations after the soft mechanism has been i
 - **Temporal vertical-slicing violations**: writing all tests first, then all impl. Both have test partners; the temporal discipline gap is invisible to a name-existence check.
 - Test stubs that exist but contain no assertions.
 - Tests in non-standard locations (the inference is strictly `tests/**/test_<basename>.py`).
-- Commits made outside Claude Code (CI checks would catch some of these — see `CI.md`).
+- Commits made outside Claude Code (CI checks would catch some of these; see `CI.md`).
 - Tests that exist but don't actually test the new code (e.g., a stale `test_foo.py` that doesn't cover the new `foo.bar()` function).
 
 The "misses" list is what the (probabilistic) skill is for. Hooks reduce dependence on the dice; they do not eliminate it.

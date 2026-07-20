@@ -6,7 +6,7 @@ Sidecar to `SKILL.md`. Worked examples for each tier. Read when writing a new te
 
 ### What to Test
 
-Test at the smallest possible unit — a function, a method, a small class. Mock everything it depends on.
+Test at the smallest possible unit: a function, a method, a small class. Mock everything it depends on.
 
 ```python
 class OrderCalculator:
@@ -38,6 +38,8 @@ def test_calculate_total_negative_discount_raises():
     with pytest.raises(ValueError, match="Discount cannot be negative"):
         calc.calculate_total(subtotal=100.0, discount=-10.0)
 ```
+
+Bare `==` passes in these examples only because the chosen decimals happen to come out exact in binary floating point; default to `pytest.approx` for computed floats (see `NUMERIC.md`).
 
 ### Coverage Strategy
 
@@ -81,7 +83,7 @@ def test_get_temperature():
     assert service.get_temperature("Seattle") == 65.0
 ```
 
-The dependency (`api_client`) is injected at construction. Real code passes the real client; tests pass a mock. This is *constructor injection* — the simplest dependency injection pattern Python supports.
+The dependency (`api_client`) is injected at construction. Real code passes the real client; tests pass a mock. This is *constructor injection*: the simplest dependency injection pattern Python supports.
 
 ## Integration Testing
 
@@ -155,7 +157,7 @@ def test_user_crud_operations(test_database):
     assert get_user(test_database, user.id) is None
 ```
 
-SQLite-in-memory is the workhorse — drop-in for most SQL workloads in tests. For Redis, use `fakeredis`. For S3, use `moto`.
+SQLite-in-memory is the workhorse: drop-in for most SQL workloads in tests. For Redis, use `fakeredis`. For S3, use `moto`.
 
 ## Simulation Testing
 
@@ -222,7 +224,7 @@ def test_tracking_with_simulation():
 - **Test deterministically.** Control time, randomness, network conditions.
 - **Test continuously.** Fast enough for CI/CD.
 
-The cost is the simulator itself — keep it small, prove it matches real behavior, and revisit it when the real system arrives.
+The cost is the simulator itself. Keep it small, prove it matches real behavior, and revisit it when the real system arrives.
 
 ## See Also
 

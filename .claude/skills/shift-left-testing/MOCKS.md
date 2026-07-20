@@ -158,10 +158,10 @@ When in doubt, start with Pattern 1. Move up only when the test you're writing g
 
 ## Anti-Patterns
 
-- **Using `unittest.mock.Mock()` for everything.** It works, but it makes tests cryptic — any attribute access returns another Mock, so typos pass silently. Prefer explicit mock classes.
+- **Using `unittest.mock.Mock()` for everything.** It works, but it makes tests cryptic: any attribute access returns another Mock, so typos pass silently. Prefer explicit mock classes.
 - **Mocking the thing under test.** If you find yourself mocking the very class your test is supposed to verify, the test isn't testing anything. Step back.
 - **Asserting on the mock's internal state instead of the system's behavior.** "The mock's `_called` attribute is True" is a weaker test than "the user was created in the database."
-- **Letting the mock drift from the real interface.** Mocks should match the real type signature. If the real API adds a parameter, the mock should too — otherwise tests pass with code that's broken in production. (Tools like `unittest.mock.create_autospec` enforce this.)
+- **Letting the mock drift from the real interface.** Mocks should match the real type signature. If the real API adds a parameter, the mock should too; otherwise tests pass with code that's broken in production. (Tools like `unittest.mock.create_autospec` enforce this.)
 
 ## See Also
 

@@ -57,6 +57,10 @@ project/
     │   ├── test_data.yaml
     │   └── sample_users.json
     │
+    ├── golden/             # Golden files for snapshot comparisons (see REGRESSION.md)
+    │   ├── report_basic.json
+    │   └── export_two_nodes.csv
+    │
     ├── unit/               # Component unit tests
     │   ├── __init__.py
     │   ├── test_component_a.py
@@ -73,6 +77,10 @@ project/
     │   ├── __init__.py
     │   ├── test_simulated_workflow.py
     │   └── test_failure_scenarios.py
+    │
+    ├── scripts/            # Script and CLI tests (see SCRIPTS.md)
+    │   ├── __init__.py
+    │   └── test_<script_name>.py
     │
     └── external/           # Real external system tests (optional)
         ├── __init__.py

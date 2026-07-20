@@ -41,8 +41,10 @@ Interpret the user's arguments as one of these actions:
 ### `promote <task>` — Escalate a task to a planning document
 - Evaluate the task against the Escalation Ladder (below)
 - Recommend the appropriate document type
-- If the user agrees, create a skeleton document in `docs/plans/`
+- If the user agrees, create a skeleton document in `docs/plans/` using the template in `docs/plans/CONOP-FORMAT.md` (or `docs/plans/OPORD-FORMAT.md`)
 - Link the task to the new document
+- The plan must exist and reach Approved **before** its first wave launches — a plan written after the build documents, it does not plan
+- Every exit/kill-criterion in the plan carries a named owner; an ownerless criterion defers itself indefinitely
 
 ### `update <task> — <note>` — Add a status note to a task
 - Append a brief status update inline
@@ -117,12 +119,7 @@ TCS is also the **universal task specification unit** — every task within a CO
 
 Every task within the CONOP is specified at TCS detail level.
 
-**Format**: `docs/plans/conop_NNN_descriptive_name.md` following the template:
-1. SITUATION (background, terrain, constraints, assumptions)
-2. MISSION (requirements, TCS table, acceptable risk)
-3. EXECUTION (waves, wave details, concept diagram)
-4. LOGISTICS (file ownership, data flow)
-5. COMMAND AND SIGNAL (decision points, open questions)
+**Format**: `docs/plans/conop_<PROWORD>_<descriptive_name>.md` — e.g., `conop_pathfinder_multi_paper_briefings.md`. First line of the doc: `# CONOP PATHFINDER — Multi-Paper Briefings`. Template and section standard: `docs/plans/CONOP-FORMAT.md`.
 
 **Team**: 3-5 agents. Use team templates from `.claude/teams/`:
 - `source-development.md` for ArXiv/RSS sourcing work
@@ -142,12 +139,19 @@ Every task within the CONOP is specified at TCS detail level.
 
 Every task within the OPORD is specified at TCS detail level.
 
-**Format**: `docs/plans/opord_NNN_descriptive_name.md` — tighter execution focus:
-- Waves run sequentially: Wave 1 → Wave 2 → Wave 3
-- Each wave has a checkpoint/gate before proceeding
-- Explicit resource requirements and timelines
+**Format**: `docs/plans/opord_<PROWORD>_<descriptive_name>.md`. Often inherits the parent CONOP's proword. First line: `# OPORD PATHFINDER — <descriptive name>`. Template and section standard: `docs/plans/OPORD-FORMAT.md`.
 
 **Team**: Full team from the relevant template, with lead coordinating wave transitions.
+
+## Prowords
+
+CONOPs and OPORDs get a **proword** — a short, memorable handle so plans can be referred to by a single word in conversation instead of a filename or topic phrase. TCS items do not (too small; would dilute the signal).
+
+**Form**: 2–3 syllable concrete noun, NATO-phonetic-adjacent feel — pronounceable, unambiguous on a radio. Solo by default (WIZARD, COMPASS, PATHFINDER); modifier+noun when you want flavor (IRON WIZARD, NIGHT COMPASS).
+
+**Picking**: Roll your own. No approved word list — the whole point is the handle being memorable to the people using it. Avoid reusing a proword from an open plan; reuse is fine once that plan closes.
+
+**Scaling** (preserved for future use, not currently needed in this template): If work ever escalates above OPORD into a multi-OPORD campaign, the campaign gets a proword and child OPORDs inherit a themed family — e.g., CAMPAIGN THUNDER contains OPORD THUNDER STRIKE and OPORD THUNDER BOLT. Same pattern can name waves inside a single OPORD if useful. This convention does not apply to lower-level nouns (objectives, routes, targets) — leave those to the downstream project that actually needs them.
 
 ## Terminology: Phases vs Waves
 

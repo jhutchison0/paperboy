@@ -31,7 +31,7 @@ def test_update_user():
     assert updated.name == "Updated"
 ```
 
-If creation is expensive enough that you want to share it, use a fixture — but the fixture must teardown cleanly so each test sees fresh state.
+If creation is expensive enough that you want to share it, use a fixture, but the fixture must teardown cleanly so each test sees fresh state.
 
 ## Anti-Pattern 2: Testing Implementation, Not Behavior
 
@@ -192,7 +192,7 @@ def test_model_prediction_shape_and_range():
     assert 0 <= prediction[0] <= 1
 ```
 
-ML tests should focus on **invariants** (shapes, ranges, monotonicity) rather than exact values — model retraining changes exact values without changing correctness.
+ML tests should focus on **invariants** (shapes, ranges, monotonicity) rather than exact values, because model retraining changes exact values without changing correctness.
 
 ## Pre-Commit Checklist
 
@@ -224,7 +224,7 @@ Quarterly or per phase:
 - [ ] Remove obsolete tests (deleted features should have deleted tests)
 - [ ] Update test data (it ages)
 - [ ] Refactor duplicated test code into fixtures
-- [ ] Review slow tests — optimize or mark them
+- [ ] Review slow tests: optimize or mark them
 - [ ] Update mocks to match real system changes
 - [ ] Confirm marker definitions in `pyproject.toml` still match how tests are categorized
 

@@ -2,11 +2,11 @@
 
 Sidecar to `SKILL.md`. The discipline of writing tests **one at a time**, in lockstep with the implementation each one drives. Adapted from Matt Pocock's `tdd` skill (`mattpocock/skills/skills/engineering/tdd/SKILL.md`); the rules are verbatim where attributed.
 
-The patterns in `PATTERNS.md` and `MOCKS.md` describe *what* tests look like. This file describes *when* to write each one — and it is the hardest part to maintain.
+The patterns in `PATTERNS.md` and `MOCKS.md` describe *what* tests look like. This file describes *when* to write each one, and it is the hardest part to maintain.
 
 ## The Failure Mode
 
-Without explicit discipline, both agents and humans tend to write **horizontal slices**: all tests first, then all implementation. The structure looks productive but produces brittle code — the implementation gets shaped by what the author *thought* the tests would need, not by what each test actually requires.
+Without explicit discipline, both agents and humans tend to write **horizontal slices**: all tests first, then all implementation. The structure looks productive but produces brittle code: the implementation gets shaped by what the author *thought* the tests would need, not by what each test actually requires.
 
 ```
 WRONG (horizontal):
@@ -19,7 +19,7 @@ RIGHT (vertical):
   RED → GREEN: test3 → impl3
 ```
 
-The vertical slice is sometimes called a "tracer bullet" — each test pierces the entire stack from input to output, and the implementation grows just enough to pass it before the next bullet is fired.
+The vertical slice is sometimes called a "tracer bullet": each test pierces the entire stack from input to output, and the implementation grows just enough to pass it before the next bullet is fired.
 
 ## Rules (verbatim from Pocock)
 
@@ -48,7 +48,7 @@ This checklist exists because TDD without a plan degenerates into chasing whatev
 
 > Tests should verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't.
 
-This is the discriminator between brittle tests and durable tests. A test that breaks when you refactor the implementation (without changing the public behavior) is the wrong kind of test — it is coupled to internals.
+This is the discriminator between brittle tests and durable tests. A test that breaks when you refactor the implementation (without changing the public behavior) is the wrong kind of test: it is coupled to internals.
 
 The practical heuristic: when a test asserts on a private attribute (`obj._internal_state`), a private method (`obj._helper()`), or a specific implementation choice (`assert isinstance(result.cache, RedisCache)`), it has fallen into this trap.
 
@@ -160,7 +160,7 @@ def test_high_tax_rate(): ...
 # ... then implementation
 ```
 
-This *looks* disciplined but it isn't. The implementation will be shaped to pass all six tests at once, which means each test is no longer driving design — it's checking that an already-decided implementation satisfies some shape. You've moved from TDD to test-after-design.
+This *looks* disciplined but it isn't. The implementation will be shaped to pass all six tests at once, which means each test is no longer driving design; it's checking that an already-decided implementation satisfies some shape. You've moved from TDD to test-after-design.
 
 ## Source
 

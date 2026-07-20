@@ -83,8 +83,8 @@ exclude_lines = [
 ### Setting the Threshold
 
 - **80%** is the conventional default and reasonable for most projects.
-- **<60%** suggests systematic under-testing — investigate before lowering further.
-- **>90%** can drive over-testing — tests written for coverage metrics, not for risk.
+- **<60%** suggests systematic under-testing; investigate before lowering further.
+- **>90%** can drive over-testing: tests written for coverage metrics, not for risk.
 - The right threshold is what gives you confidence to deploy. There's no universal answer.
 
 Don't chase 100%. Some lines (defensive guards, branch-unreachable paths) are not worth testing. Use `# pragma: no cover` to mark intentional omissions.
@@ -175,7 +175,7 @@ repos:
 
 Install once: `pre-commit install`. Now `git commit` runs unit tests automatically.
 
-Don't put integration or external tests in the pre-commit hook — they're too slow for the inner loop.
+Don't put integration or external tests in the pre-commit hook; they're too slow for the inner loop.
 
 ## See Also
 

@@ -80,6 +80,8 @@ You are a senior code reviewer for paperboy, an AI research podcast pipeline. Th
 - Consistency between config YAML keys and Python attribute names
 - Log level appropriateness (info vs. warning vs. error)
 
+**Prose artifacts**: review per `.claude/skills/writing-simple-and-direct/REVIEWING.md` (pass order, finding format, severity mapping).
+
 ## Architecture Awareness
 
 ### Pipeline Flow
