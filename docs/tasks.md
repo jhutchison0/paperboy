@@ -6,6 +6,20 @@
 
 ## Active
 
+- [ ] [P1] Privatize distiller `user_context` — move personal context (employer, role, division) out of tracked config into a private data source like `.env`. Pre-public gate. — owner: unassigned
+
+  TCS detail:
+
+  | Task | Condition | Standard |
+  |------|-----------|----------|
+  | Env override in loader | `.env` defines `USER_CONTEXT` (python-dotenv supports quoted multi-line values) | `config.py` prefers `USER_CONTEXT` over YAML `distiller.user_context`, same pattern as the existing `ANTHROPIC_API_KEY` override; failing test written first proves precedence |
+  | Genericize tracked default | `config/paperboy.yaml` as committed | `user_context` describes a generic researcher persona with no employer, division, or personal details; an inline comment documents the `.env` override |
+  | Document the override | `.env.example` | `USER_CONTEXT` block added with a multi-line quoting example, the privacy rationale, and the fallback-to-YAML behavior |
+  | Migrate real context | user's local `.env` (gitignored) | current Argonne text moved verbatim; a briefing run after migration carries identical user-context framing |
+  | Regression coverage | pytest | tests cover env-set, env-absent (YAML fallback), and empty/whitespace env value; full suite green |
+
+  Decision note (owner: jhutchison): the historical Argonne text remains in git history after this task lands. Decide before flipping the repo public whether to also scrub old `config/paperboy.yaml` blobs in a history rewrite (same mechanism as the 2026-07-20 typo-email scrub).
+
 - [ ] [P3] Agent backend: no temperature control on CLI path (Pillar 4 — idempotency gap) — owner: unassigned
 - [ ] [P3] Batch scoring: batch_size=1, target is 5 per invocation — owner: unassigned
 - [ ] [P3] Update CONOP checklist phases with completion status — owner: unassigned
