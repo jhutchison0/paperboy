@@ -126,9 +126,9 @@ distiller:
   target_word_count: 4500
   style: "3blue1brown"
   include_challenger_sections: true
+  # Personalize via USER_CONTEXT in .env (private, gitignored). This tracked
+  # value is a generic example; the env var overrides it when set.
   user_context: >
-    The reader is a research scientist
-    who is building expertise in generative AI for decision support.
-    They work with LLMs as tools for structured reasoning,
-    knowledge graphs, and deep learning.
-    Connect research to practical applications.
+    The reader is a research scientist building expertise in generative AI
+    for decision support. Connect research to practical applications in
+    their field.

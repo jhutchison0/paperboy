@@ -218,6 +218,12 @@ class PipelineConfig:
         # Secrets from environment
         config.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
 
+        # Private personalization from environment (overrides the tracked YAML,
+        # which carries only a generic example persona)
+        env_user_context = os.environ.get("USER_CONTEXT", "").strip()
+        if env_user_context:
+            config.distiller.user_context = env_user_context
+
         return config
 
     def validate(self) -> tuple[list[str], list[str]]:

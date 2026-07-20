@@ -185,6 +185,44 @@ class TestPipelineRangeChecks:
         assert cfg.dedup_cooldown_days == 30
 
 
+class TestUserContextEnvOverride:
+    """USER_CONTEXT env var overrides YAML distiller.user_context.
+
+    Personal context (employer, role) lives in .env, never in the tracked
+    YAML. Tests pass an explicit config_path and a nonexistent env_path so
+    the developer's real .env and config cannot leak into assertions.
+    """
+
+    def _config_path(self, tmp_path):
+        p = tmp_path / "cfg.yaml"
+        p.write_text("distiller:\n  user_context: yaml persona\n")
+        return str(p)
+
+    def _no_env(self, tmp_path):
+        return str(tmp_path / "nonexistent.env")
+
+    def test_env_overrides_yaml(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("USER_CONTEXT", "private persona from env")
+        cfg = PipelineConfig.load(
+            config_path=self._config_path(tmp_path), env_path=self._no_env(tmp_path)
+        )
+        assert cfg.distiller.user_context == "private persona from env"
+
+    def test_blank_env_falls_back_to_yaml(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("USER_CONTEXT", "   ")
+        cfg = PipelineConfig.load(
+            config_path=self._config_path(tmp_path), env_path=self._no_env(tmp_path)
+        )
+        assert cfg.distiller.user_context == "yaml persona"
+
+    def test_absent_env_falls_back_to_yaml(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("USER_CONTEXT", raising=False)
+        cfg = PipelineConfig.load(
+            config_path=self._config_path(tmp_path), env_path=self._no_env(tmp_path)
+        )
+        assert cfg.distiller.user_context == "yaml persona"
+
+
 class TestAgentRunnerRangeChecks:
     """AgentRunner config validation."""
 
