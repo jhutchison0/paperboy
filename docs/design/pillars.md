@@ -68,7 +68,7 @@ Not every paper matters to every researcher. Paperboy's value comes from filteri
 - Focus areas and keywords live in config, not code; the user tunes without touching Python
 - The cheaper `claude-haiku` model handles scoring; the full model handles distillation
 
-**What violating this looks like**: Scoring all 50 papers with Claude (expensive, slow). Using only title matching (misses relevant work). Hard-coding relevance criteria in the selector instead of reading from config. No threshold — always selecting the "best" even when nothing is relevant.
+**What violating this looks like**: Scoring all 50 papers with Claude (expensive, slow). Using only title matching (misses relevant work). Hard-coding relevance criteria in the selector instead of reading from config. No threshold: always selecting the "best" even when nothing is relevant.
 
 **Connection to other pillars**: Good selection directly enables Pillar 1 (quality briefings from quality inputs). Configurable scoring supports Pillar 5 (swappable scoring strategies). Deterministic scoring supports Pillar 4 (same inputs = same selections).
 

@@ -171,7 +171,7 @@ The crosswalk is intentionally one-way: external content adopts civilian, intern
 
 **"Component"**: not used in paperboy. If imported from external prose, translate to `agent`, `skill`, `sourcer`, or `pipeline stage` per context.
 
-**"Plan"** unqualified: prefer `TCS`, `CONOP`, or `OPORD` — they signal scope. Reserve unqualified "plan" only for genuinely informal sketches.
+**"Plan"** unqualified: prefer `TCS`, `CONOP`, or `OPORD`; they signal scope. Reserve unqualified "plan" only for genuinely informal sketches.
 
 **"Arcade"** / **"bike"** / **"fitness"** as themes: paperboy's name is a nod to the 1985 arcade game and the user's exercise-bike listening habit, but the codebase is a research-paper pipeline. Don't theme features or docs around the joke.
 
