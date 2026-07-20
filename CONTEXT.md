@@ -37,7 +37,7 @@ See [config/project.yaml](config/project.yaml) for canonical values. Snapshot at
 - **Active work**: Public-repo preparation (prose sweep per `writing-simple-and-direct`), 2026-07-20 upstream doctrine cycle adopted (planning formats, prose style, shift-left-testing 2.1.0).
 - **Tests**: 156 passing.
 - **Backend support**: API (Anthropic SDK), Agent (Claude CLI subprocess for Max subscription), keyword-only fallback. Auto mode tries them in that order.
-- **Known reliability concerns**: blog feed audit pending; on 2026-05-19, 5 of 6 feeds returned 0 articles (one parse error, four likely dormant).
+- **Known reliability concerns**: none open. The 2026-07-20 blog feed audit replaced the stale Google feedburner URL, updated OpenAI's redirect, and retired the dead Anthropic feed and archived Distill.pub (both commented out in `config/paperboy.yaml`).
 
 ---
 

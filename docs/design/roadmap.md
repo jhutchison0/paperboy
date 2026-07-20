@@ -14,7 +14,7 @@ Paperboy's **core pipeline is complete** (Phase 1). The system sources papers fr
 ### Current Capabilities
 
 - ArXiv sourcing across configurable categories (cs.AI, cs.LG, cs.CL, stat.ML)
-- RSS feed sourcing from 6 research blogs (Anthropic, Google Research, OpenAI, Lilian Weng, The Gradient, Distill.pub)
+- RSS feed sourcing from 4 research blogs (Google Research, OpenAI, Lilian Weng, The Gradient)
 - Graceful degradation when individual sources fail
 - Two-phase hybrid scoring (keyword matching + Claude semantic evaluation)
 - Claude-powered 8-section briefing distillation

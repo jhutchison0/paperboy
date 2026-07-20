@@ -26,14 +26,18 @@ arxiv:
 
 blogs:
   feeds:
-    - name: "Anthropic Research"
-      url: "https://www.anthropic.com/research/feed.xml"
-      category: "ai-labs"
+    # Anthropic publishes no official RSS feed as of 2026-07 (the old
+    # /research/feed.xml returns 404). Re-enable if one ships; a
+    # community-maintained mirror exists (github.com/Olshansk/rss-feeds)
+    # for those who accept the third-party dependency.
+    # - name: "Anthropic Research"
+    #   url: "https://www.anthropic.com/research/feed.xml"
+    #   category: "ai-labs"
     - name: "Google Research Blog"
-      url: "http://feeds.feedburner.com/blogspot/gJZg"
+      url: "https://research.google/blog/rss/"   # feedburner/blogspot feed went stale in 2024
       category: "ai-labs"
     - name: "OpenAI Blog"
-      url: "https://openai.com/blog/rss.xml"
+      url: "https://openai.com/news/rss.xml"     # /blog/rss.xml redirects here
       category: "ai-labs"
     - name: "Lilian Weng"
       url: "https://lilianweng.github.io/index.xml"
@@ -41,9 +45,11 @@ blogs:
     - name: "The Gradient"
       url: "https://thegradient.pub/rss/"
       category: "ml-blog"
-    - name: "Distill.pub"
-      url: "https://distill.pub/rss.xml"
-      category: "ml-blog"
+    # Distill.pub is archived (last entry 2021); feed is valid but will
+    # never yield articles inside the lookback window.
+    # - name: "Distill.pub"
+    #   url: "https://distill.pub/rss.xml"
+    #   category: "ml-blog"
   timeout_seconds: 15
 
 # ============================================================

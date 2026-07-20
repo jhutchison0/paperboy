@@ -19,7 +19,7 @@ ArXiv API + RSS Feeds  -->  Source  -->  Score & Select  -->  Distill  -->  Podc
      (97 candidates)        (all)        (top 5 scored)    (1 briefing)    (NotebookLM)
 ```
 
-1. **Source** — Pulls recent papers from ArXiv categories (cs.AI, cs.LG, cs.CL, stat.ML) and blog posts from configurable RSS feeds (Anthropic, Google Research, OpenAI, Lilian Weng, The Gradient, Distill.pub). Graceful degradation: if one source fails, the pipeline continues with the rest.
+1. **Source** — Pulls recent papers from ArXiv categories (cs.AI, cs.LG, cs.CL, stat.ML) and blog posts from configurable RSS feeds (Google Research, OpenAI, Lilian Weng, The Gradient). Graceful degradation: if one source fails, the pipeline continues with the rest.
 
 2. **Score & Select** — Two-phase hybrid scoring. Fast keyword matching filters all candidates, then Claude semantic scoring evaluates the top 5 against your configured focus areas. Configurable weights (40% keyword + 60% Claude), thresholds, and top-k limits keep API costs predictable.
 

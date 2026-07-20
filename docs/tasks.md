@@ -9,7 +9,6 @@
 - [ ] [P3] Agent backend: no temperature control on CLI path (Pillar 4 — idempotency gap) — owner: unassigned
 - [ ] [P3] Batch scoring: batch_size=1, target is 5 per invocation — owner: unassigned
 - [ ] [P3] Update CONOP checklist phases with completion status — owner: unassigned
-- [ ] [P3] Blog feed audit: 5 of 6 feeds returned 0 articles on 2026-05-19 (Anthropic Research parse error; Google/Lilian Weng/The Gradient/Distill.pub empty) — owner: unassigned
 
 ## Blocked
 
@@ -17,6 +16,7 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-07-20: Blog feed audit (closed P3 from 2026-05-19) — Anthropic feed is a 404 with no official replacement (commented out with re-enable note); Google feedburner feed went stale in 2024, replaced with research.google/blog/rss; OpenAI URL updated to post-redirect openai.com/news/rss.xml; Distill.pub archived since 2021, commented out; Lilian Weng and The Gradient healthy. Live run: 82 papers + 10 articles, no feed warnings.
 - [x] 2026-07-20: Privatize distiller user_context (P1, pre-public gate) — USER_CONTEXT env override in config.py (test-first, 3 tests), generic persona in tracked YAML, .env.example documented, real context migrated to local .env and verified end-to-end. History scrubbed: role/division text replaced in all historical config blobs via git-filter-repo replace-text; typo email jhustchion@anl.gov fixed via mailmap the same day. All commit hashes rewritten.
 - [x] 2026-07-20: Public-repo prose sweep — README, CONTEXT, LANGUAGE, CLAUDE, CHANGELOG, docs/adr, docs/design, config swept per writing-simple-and-direct on topic/docs-public-prose-sweep; code-reviewer audit gate APPROVE WITH FIXES (4 Minor, applied); factual corrections verified against code/config (Eight-Section Structure, BlogSourcer feeds, episode length); merged 1d66fdd, branch deleted
 - [x] 2026-07-20: Adopt upstream tacsop 2026-07-20 doctrine cycle — Part 1 hub rename verified (utils → tacsop); Part 2 planning doctrine (CONOP/OPORD format templates, task.md proword + promote wiring, deep-modules sentence); Part 3 writing-simple-and-direct skill + ADOPTION.md run, shift-left-testing 2.1.0 (4 new sidecars). Property-test plumbing deferred to first property test. 156 tests pass.

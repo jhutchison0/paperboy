@@ -50,7 +50,7 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 **ArxivSourcer**: The concrete sourcer for ArXiv categories (e.g., `cs.AI`, `cs.LG`, `cs.CL`). Uses the `arxiv` library.
 
-**BlogSourcer**: The concrete sourcer for RSS feeds. Currently configured for Anthropic Research, Google Research Blog, OpenAI Blog, Lilian Weng, The Gradient, and Distill.pub (see `config/paperboy.yaml`).
+**BlogSourcer**: The concrete sourcer for RSS feeds. Currently configured for Google Research Blog, OpenAI Blog, Lilian Weng, and The Gradient (see `config/paperboy.yaml`; Anthropic and Distill.pub are commented out there with reasons).
 
 **SourceManager**: The orchestrator that runs every configured sourcer in parallel, normalizes outputs, and deduplicates against `SelectionHistory`. _Avoid:_ source registry.
 
