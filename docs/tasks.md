@@ -9,6 +9,7 @@
 - [ ] [P3] Agent backend: no temperature control on CLI path (Pillar 4 — idempotency gap) — owner: unassigned
 - [ ] [P3] Batch scoring: batch_size=1, target is 5 per invocation — owner: unassigned
 - [ ] [P3] Update CONOP checklist phases with completion status — owner: unassigned
+- [ ] [P3] Evaluate prose-kernel briefings by listening — generate NotebookLM episodes from a kernel-styled briefing (the 2026-07-20 ToolSciVer redistill is ready) and from its pre-kernel baseline; compare host delivery, pacing, and clarity. Text metrics (em dashes 49 → 0) are verified; only listening tells whether the prose discipline changes the podcast. — owner: distiller-dev
 
 ## Blocked
 

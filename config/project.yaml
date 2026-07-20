@@ -156,5 +156,5 @@ commands:
 # =============================================================================
 # LAST UPDATED
 # =============================================================================
-last_updated: "2026-05-22"
-updated_by: "Doctrine adoption from upstream utils 2026-05-19 cycle: LANGUAGE.md, CONTEXT.md, ADR system, SKILLS_FRAMEWORK v2 (5 legacy single-file skills → directory form), PostToolUse shift-left audit hook, Python 3.11 minimum, test-first python-prototyper agent"
+last_updated: "2026-07-20"
+updated_by: "Public release prep: tacsop 2026-07-20 doctrine cycle (plan formats, prose skill, shift-left 2.1.0), public-repo prose sweep with audit gate, user_context privatization + history scrub, blog feed audit fix, agent-backend cwd isolation, Apache-2.0 relicense, prose kernel in distiller prompt"
