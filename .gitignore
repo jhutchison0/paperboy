@@ -210,4 +210,5 @@ __marimo__/
 output/
 .claude/agent-memory/
 .claude/audits/
+.claude/settings.local.json
 docs/design/hold/

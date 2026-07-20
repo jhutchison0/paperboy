@@ -26,7 +26,7 @@ The upstream `utils` 2026-05-19 doctrine cycle made this decision for its own re
 
 The question this ADR resolves is: **does paperboy keep the same rule, or does it diverge?**
 
-A numeric trigger ("migrate at >500 lines") was considered and rejected by the same reasoning as upstream — every legacy skill in this repo had silently crossed that threshold without action. The rule self-violated.
+A numeric trigger ("migrate at >500 lines") was considered and rejected by the same reasoning as upstream; every legacy skill in this repo had silently crossed that threshold without action. The rule self-violated.
 
 ---
 
@@ -51,14 +51,14 @@ A line-count threshold that mandates directory form only past that point. Smalle
 Rejected because:
 - Every legacy single-file skill paperboy inherited crossed 500 lines without anyone noticing or acting on it. The rule self-violated.
 - Authors do not reliably predict how a skill will grow; the threshold debate would recur at every PR.
-- The cost of "premature" directory form is one extra directory and one extra file — trivial. The cost of "delayed" directory form is a 1500-line monolith refactor — non-trivial.
+- The cost of "premature" directory form is one extra directory and one extra file: trivial. The cost of "delayed" directory form is a 1500-line monolith refactor: non-trivial.
 
 ### Alternative B: Diverge from upstream — keep single-file as the default
 
 Paperboy has fewer skills than utils and skill bloat is less acute. Keeping single-file would minimize per-skill overhead.
 
 Rejected because:
-- Aligning with upstream simplifies future doctrine adoption — any new skill that lands upstream in directory form lands here unchanged.
+- Aligning with upstream simplifies future doctrine adoption: any new skill that lands upstream in directory form lands here unchanged.
 - The five legacy skills had already drifted past size thresholds without local action; predicting better self-discipline this time is unwarranted.
 - Aligns with Anthropic's December 2025 open standard regardless of upstream.
 
@@ -74,7 +74,7 @@ Adopt upstream's rule. Slight per-skill overhead: even a 30-line skill is a dire
 
 - New skills are structurally ready for sidecars from day one.
 - Aligns with Anthropic's December 2025 skills open standard.
-- Aligns with upstream `utils` — incoming doctrine artifacts land unchanged.
+- Aligns with upstream `utils`; incoming doctrine artifacts land unchanged.
 - Progressive disclosure is the default frame when authoring a new skill, even when the first version is small.
 - Eliminates a recurring debate ("is this skill big enough to warrant a directory?").
 
@@ -97,3 +97,9 @@ Adopt upstream's rule. Slight per-skill overhead: even a 30-line skill is a dire
 - `.claude/skills/shift-left-testing/ENFORCEMENT.md` — sidecar example demonstrating the value of directory form.
 - Anthropic, Skills Open Standard (December 2025) — directory form with frontmatter.
 - Matt Pocock, [`mattpocock/skills`](https://github.com/mattpocock/skills) — the prior-art that established directory-form as production-tested.
+
+---
+
+## Amendments
+
+- **2026-07-20**: Punctuation-only style edits applied during the public-repo prose sweep per the `writing-simple-and-direct` skill, mirroring upstream's treatment of its own ADR-0001. Lead-approved exception to the append-only rule; decision content, status, dates, and the historical `utils` name unchanged. This note is the append that records it.

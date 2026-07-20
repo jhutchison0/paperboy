@@ -14,7 +14,7 @@ A `PostToolUse` audit hook (`.claude/hooks/post-tool-shift-left-audit.sh`) fires
 - **Python** (`tests/`) — pytest suites for sourcing, selection, distillation, pipeline, config
 
 ### Simplicity First
-Make every change as simple as possible. Avoid massive or complex changes. Every change should impact as little code as necessary. When in doubt, prefer the simpler solution. Prefer deep modules — small interfaces hiding meaningful implementation — over shallow ones; before declaring an interface done, ask whether each parameter is load-bearing or whether the function could derive it from one it already has.
+Make every change as simple as possible. Avoid massive or complex changes. Every change should impact as little code as necessary. When in doubt, prefer the simpler solution. Prefer deep modules (small interfaces hiding meaningful implementation) over shallow ones; before declaring an interface done, ask whether each parameter is load-bearing or whether the function could derive it from one it already has.
 
 ### Branching (short-lived topic branches by work shape)
 Branch on the shape of the work, not on a permanent partition of the codebase. Lead-only doc/ADR/small-refactor work lands directly on `main`. Team-deployed or multi-agent code work with an audit gate uses a short-lived `topic/<scope>-<slug>` branch, merged via merge-commit at the gate and **deleted (local + origin) immediately after merge**. No permanent domain branches. See [`.claude/skills/using-topic-branches/SKILL.md`](.claude/skills/using-topic-branches/SKILL.md), which also covers auditing standing branches.
@@ -97,7 +97,7 @@ The target user is a research scientist who wants daily AI briefings tailored to
 
 ### About the Name
 
-The name "Paperboy" is a lighthearted nod to the 1985 arcade game — the image of riding an exercise bike while getting ArXiv papers delivered. But the arcade and fitness angles are flavor, not focus. This repo's primary mission is **daily academic paper curation and delivery**. The delivery mechanism happens to be TTS consumed during a workout, which makes the name fun, but code, features, and documentation should stay grounded in the research pipeline domain. Don't theme things around arcades, bikes, or fitness.
+The name "Paperboy" is a lighthearted nod to the 1985 arcade game: the image of riding an exercise bike while getting ArXiv papers delivered. But the arcade and fitness angles are flavor, not focus. This repo's primary mission is **daily academic paper curation and delivery**. The delivery mechanism happens to be TTS consumed during a workout, which makes the name fun, but code, features, and documentation should stay grounded in the research pipeline domain. Don't theme things around arcades, bikes, or fitness.
 
 ## Tech Stack
 
@@ -151,7 +151,7 @@ The project uses military-inspired slash commands for structured development wor
 Work scales through four levels. Use `/task promote` or `/task plan` to evaluate:
 
 1. **Task** — One person, one session, clear action (`docs/tasks.md`)
-2. **TCS** — Multi-step with pass/fail criteria (Task, Condition, Standard) — also the universal task detail unit within all plan types
+2. **TCS** — Multi-step with pass/fail criteria (Task, Condition, Standard); also the universal task detail unit within all plan types
 3. **CONOP** — Multi-wave with design decisions and parallel tracks (`docs/plans/`)
 4. **OPORD** — Sequential execution of a decided strategy in waves (`docs/plans/`)
 
@@ -196,7 +196,7 @@ See `config/project.yaml` for all 6 build phases with status tracking.
 
 ## Config Workflow
 
-YAML files in `config/` are the source of truth. Python reads YAML directly — no JSON sync step needed.
+YAML files in `config/` are the source of truth. Python reads YAML directly; no JSON sync step is needed.
 
 - `config/project.yaml` — Project identity, phases, paths
 - `config/paperboy.yaml` — ArXiv categories, blog feeds, focus keywords, Claude API settings, selector weights, distiller preferences
@@ -205,7 +205,7 @@ API keys live in `.env` (never committed). See `.env.example` for required varia
 
 ## Agents and Teams
 
-**IMPORTANT**: Before deploying any agent team or multi-agent plan, read `.claude/README.md` for the current roster and usage guide. Match agents to the work — don't invent ad-hoc roles when a prepositioned agent already covers the need.
+**IMPORTANT**: Before deploying any agent team or multi-agent plan, read `.claude/README.md` for the current roster and usage guide. Match agents to the work; don't invent ad-hoc roles when a prepositioned agent already covers the need.
 
 ### Agent Roster
 

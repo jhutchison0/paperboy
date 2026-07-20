@@ -2,7 +2,7 @@
 
 A glossary of project-specific domain terms for paperboy. One-line definitions, no synonyms.
 
-This file follows the pattern from Matt Pocock's `grill-with-docs` skill (`CONTEXT-FORMAT.md`), adapted for paperboy's domains: the research-pipeline data model, the dual-backend Claude integration, the agent framework, the military-inspired escalation ladder, and the doctrine relationship with upstream `utils`.
+This file follows the pattern from Matt Pocock's `grill-with-docs` skill (`CONTEXT-FORMAT.md`), adapted for paperboy's domains: the research-pipeline data model, the dual-backend Claude integration, the agent framework, the military-inspired escalation ladder, and the doctrine relationship with upstream `tacsop`.
 
 **Rules** (verbatim from the source pattern):
 - Keep definitions tight. One sentence max.
@@ -20,13 +20,13 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 **Article**: A blog post sourced from an RSS feed (`src/models.py:Article`). Structurally similar to Paper but with feed metadata instead of ArXiv metadata. _Avoid:_ post, item.
 
-**ScoredPaper**: A Paper or Article wrapped with selector output — keyword score, Claude score, hybrid score, reasoning. The unit selection operates on. _Avoid:_ candidate (ambiguous: pre- or post-score?).
+**ScoredPaper**: A Paper or Article wrapped with selector output (keyword score, Claude score, hybrid score, reasoning). The unit selection operates on. _Avoid:_ candidate (ambiguous: pre- or post-score?).
 
 **Briefing**: The final distilled markdown document for one paper, optimized for NotebookLM two-voice podcast generation, structured in the canonical eight sections (see **Eight-Section Structure**). _Avoid:_ summary, digest, report.
 
-**Eight-Section Structure**: The fixed briefing layout produced by `BriefingDistiller`: (1) Opening Hook, (2) Why Should You Care, (3) The Problem, (4) Core Idea, (5) How It Works, (6) Results, (7) Limitations & Open Questions, (8) Key Takeaways. Each section steers a specific phase of the two-voice podcast dialogue. _Avoid:_ briefing template (the structure is enforced by the distillation prompt, not a template engine).
+**Eight-Section Structure**: The fixed briefing layout produced by `BriefingDistiller` (`src/distiller.py`): (1) Opening Hook: Why Should You Care?, (2) The Core Intuition, (3) The Technical Sketch, (4) The Evidence: Did It Actually Work?, (5) The Challengers' Corner, (6) Connection to Decision Support and Real-World Impact, (7) Open Questions and Future Directions, (8) Key Takeaways. Each section steers a specific segment of the two-voice podcast dialogue. _Avoid:_ briefing template (the structure is enforced by the distillation prompt, not a template engine).
 
-**BriefingDocument**: The in-memory dataclass (`src/models.py:BriefingDocument`) carrying the briefing's structured content before serialization. _Avoid:_ briefing object — say BriefingDocument when you mean the dataclass.
+**BriefingDocument**: The in-memory dataclass (`src/models.py:BriefingDocument`) carrying the briefing's structured content before serialization. _Avoid:_ briefing object (say BriefingDocument when you mean the dataclass).
 
 **PipelineResult**: The outcome record (`src/pipeline.py`) of one `DailyPipeline.run()` carrying status (`success` / `partial` / `error`), the briefing path if produced, and the failure reason if not. _Avoid:_ run record.
 
@@ -34,13 +34,13 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 ## Pipeline Stages
 
-**Source Stage**: The fetch phase — `SourceManager` queries every configured `ContentSourcer` and returns deduplicated Papers and Articles. _Avoid:_ ingest.
+**Source Stage**: The pipeline's fetch stage. `SourceManager` queries every configured `ContentSourcer` and returns deduplicated Papers and Articles. _Avoid:_ ingest.
 
-**Selection Stage**: The score-and-rank phase — `PaperSelector` applies keyword scoring then Claude semantic scoring, then ranks against the configured threshold. _Avoid:_ filter (selection is rank-based, not predicate-based).
+**Selection Stage**: The pipeline's score-and-rank stage. `PaperSelector` applies keyword scoring then Claude semantic scoring, then ranks against the configured threshold. _Avoid:_ filter (selection is rank-based, not predicate-based).
 
-**Distillation Stage**: The briefing-production phase — `BriefingDistiller` prompts Claude with the chosen paper and produces the eight-section markdown. _Avoid:_ summarization (the briefing is more than a summary).
+**Distillation Stage**: The pipeline's briefing-production stage. `BriefingDistiller` prompts Claude with the chosen paper and produces the eight-section markdown. _Avoid:_ summarization (the briefing is more than a summary).
 
-**Hybrid Scoring**: The two-phase selection design — cheap keyword scoring filters the candidate set, then Claude semantic scoring ranks the shortlist. Configured by selector weights in `paperboy.yaml`. _Avoid:_ two-stage scoring (overloaded), ML scoring (not ML).
+**Hybrid Scoring**: The two-phase selection design: cheap keyword scoring filters the candidate set, then Claude semantic scoring ranks the shortlist. Configured by selector weights in `paperboy.yaml`. _Avoid:_ two-stage scoring (overloaded), ML scoring (not ML).
 
 ---
 
@@ -50,7 +50,7 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 **ArxivSourcer**: The concrete sourcer for ArXiv categories (e.g., `cs.AI`, `cs.LG`, `cs.CL`). Uses the `arxiv` library.
 
-**BlogSourcer**: The concrete sourcer for RSS feeds. Currently configured for Anthropic Research, Google AI, Lilian Weng, The Gradient, Distill.pub, and Hugging Face Daily Papers.
+**BlogSourcer**: The concrete sourcer for RSS feeds. Currently configured for Anthropic Research, Google Research Blog, OpenAI Blog, Lilian Weng, The Gradient, and Distill.pub (see `config/paperboy.yaml`).
 
 **SourceManager**: The orchestrator that runs every configured sourcer in parallel, normalizes outputs, and deduplicates against `SelectionHistory`. _Avoid:_ source registry.
 
@@ -66,9 +66,9 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 **Agent Backend**: Subprocess-invokes `claude -p ...` to use a Claude Max subscription instead of API billing. Implemented in `src/agent_runner.py:AgentRunner`. _Avoid:_ CLI backend (true, but say agent backend for symmetry with the config value).
 
-**Auto Mode**: The default `--backend` value — try API, fall back to Agent, fall back to keyword-only. _Avoid:_ fallback mode.
+**Auto Mode**: The default `--backend` value: try API, fall back to Agent, fall back to keyword-only. _Avoid:_ fallback mode.
 
-**Keyword-Only Mode**: Selection runs keyword scoring only; distillation is skipped. The pipeline still reports `success` — the briefing is intentionally absent. _Avoid:_ dry-run (means something different).
+**Keyword-Only Mode**: Selection runs keyword scoring only; distillation is skipped. The pipeline still reports `success` because the briefing is intentionally absent. _Avoid:_ dry-run (means something different).
 
 ---
 
@@ -102,11 +102,11 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 **Task**: One person, one session, one clear action. The smallest unit in `docs/tasks.md`. Promote upward when the work exceeds one session or requires multi-step coordination.
 
-**TCS**: Task, Condition, Standard — a structured task spec with pass/fail criteria. The universal task-detail unit inside all plan types (CONOP, OPORD). _Avoid:_ ticket, story.
+**TCS**: Task, Condition, Standard. A structured task spec with pass/fail criteria; the universal task-detail unit inside all plan types (CONOP, OPORD). _Avoid:_ ticket, story.
 
-**CONOP**: Concept of Operations — a multi-wave plan covering design decisions and parallel tracks. Lives in `docs/plans/`. _Avoid:_ design doc.
+**CONOP**: Concept of Operations. A multi-wave plan covering design decisions and parallel tracks. Lives in `docs/plans/`. _Avoid:_ design doc.
 
-**OPORD**: Operations Order — the sequential execution form of a decided strategy, organized in waves. Lives in `docs/plans/`. _Avoid:_ runbook.
+**OPORD**: Operations Order. The sequential execution form of a decided strategy, organized in waves. Lives in `docs/plans/`. _Avoid:_ runbook.
 
 **Wave**: A tactical parallel-execution unit inside a CONOP or OPORD where agent teams deploy. Bounded by a shared exit criterion. _Avoid:_ sprint, batch.
 
@@ -118,9 +118,9 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 ## Governance & Doctrine Relationship
 
-**Upstream**: The `utils` repository (`~/projects/github/utils`) that sources doctrine — agent definitions, skills, commands, command templates, and conventions — for paperboy and other downstream consumers.
+**Upstream**: The `tacsop` repository (`~/projects/github/tacsop`, named `utils` until 2026-07-20) that sources doctrine (agent definitions, skills, commands, command templates, and conventions) for paperboy and other downstream consumers.
 
-**Doctrine**: A framework-level convention or pattern maintained in `utils` and intended for adoption across downstream consumer repos. Paperboy is a downstream; it consumes doctrine but does not propagate.
+**Doctrine**: A framework-level convention or pattern maintained in `tacsop` and intended for adoption across downstream consumer repos. Paperboy is a downstream; it consumes doctrine but does not propagate.
 
 **Upstream Update**: A pending doctrine notification surfaced as `.claude/upstream-update.md` at session start. Reviewed and selectively adopted per artifact.
 
@@ -140,7 +140,7 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 **CONTEXT.md**: Paperboy's narrative identity, mission, current state, and key constraints. Companion to `LANGUAGE.md` and `config/project.yaml`. Maintained via the `maintaining-project-context` skill.
 
-**ADR**: Architecture Decision Record — a numbered file in `docs/adr/NNNN-<slug>.md` capturing one decision that satisfies the triple filter: hard to reverse AND surprising without context AND result of a real trade-off. Maintained via the `recording-architecture-decisions` skill.
+**ADR**: Architecture Decision Record. A numbered file in `docs/adr/NNNN-<slug>.md` capturing one decision that satisfies the triple filter: hard to reverse AND surprising without context AND result of a real trade-off. Maintained via the `recording-architecture-decisions` skill.
 
 **Triple Filter**: The gate for whether a decision warrants an ADR. All three required: hard to reverse, surprising without context, real trade-off. Source: Matt Pocock's ADR format.
 
@@ -171,7 +171,7 @@ The crosswalk is intentionally one-way: external content adopts civilian, intern
 
 **"Component"**: not used in paperboy. If imported from external prose, translate to `agent`, `skill`, `sourcer`, or `pipeline stage` per context.
 
-**"Plan"** unqualified: prefer `TCS`, `CONOP`, or `OPORD` — they signal scope. Reserve unqualified "plan" only for genuinely informal sketches.
+**"Plan"** unqualified: prefer `TCS`, `CONOP`, or `OPORD`; they signal scope. Reserve unqualified "plan" only for genuinely informal sketches.
 
 **"Arcade"** / **"bike"** / **"fitness"** as themes: paperboy's name is a nod to the 1985 arcade game and the user's exercise-bike listening habit, but the codebase is a research-paper pipeline. Don't theme features or docs around the joke.
 
