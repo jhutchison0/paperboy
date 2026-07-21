@@ -2,11 +2,11 @@
 
 This is the template for Concepts of Operations in this repo. CONOPs live in `docs/plans/conop_<PROWORD>_<descriptive_name>.md`. See `.claude/commands/task.md` for the escalation ladder that promotes work to CONOP level, and the proword conventions.
 
-A CONOP is where **design decisions get debated**. If the strategy is already decided and the work only needs sequenced execution, skip the CONOP and write an OPORD (see `OPORD-FORMAT.md`). If there are no design decisions and no parallel tracks, the work does not warrant a CONOP — keep it at TCS level in `docs/tasks.md`.
+A CONOP is where **design decisions get debated**. If the strategy is already decided and the work only needs sequenced execution, skip the CONOP and write an OPORD (see `OPORD-FORMAT.md`). If there are no design decisions and no parallel tracks, the work does not warrant a CONOP; keep it at TCS level in `docs/tasks.md`.
 
-Most of this format codifies structure validated in practice by `docs/plans/decision_science_utility.md` — Problem, Situation, Approaches, Design Decisions, Waves, NOT-Build, and Agent Design existed there before they existed here. Mission and Measures of Success are doctrinal additions from FM 5-0, not yet validated by an instance. The Assumptions block and the gating rules were added 2026-07-17 from a four-repo planning retrospective (`docs/reviews/20260717_planning_retrospective_*.md`).
+Most of this format codifies structure validated in practice by `docs/plans/decision_science_utility.md`: Problem, Situation, Approaches, Design Decisions, Waves, NOT-Build, and Agent Design existed there before they existed here. Mission and Measures of Success are doctrinal additions from FM 5-0, not yet validated by an instance. The Assumptions block and the gating rules were added 2026-07-17 from a four-repo planning retrospective (`docs/reviews/20260717_planning_retrospective_*.md`).
 
-Plans that predate these format standards — in this repo or downstream — are grandfathered: do not rename or restructure them.
+Plans that predate these format standards (in this repo or downstream) are grandfathered: do not rename or restructure them.
 
 ---
 
@@ -19,7 +19,7 @@ Promote from TCS to CONOP when **any** of the following hold (from the escalatio
 - Touches 4+ components or introduces new architecture
 - Will span multiple sessions
 
-Every task inside a CONOP is specified at **TCS detail level** — the document type escalates the frame; the task granularity stays consistent.
+Every task inside a CONOP is specified at **TCS detail level**: the document type escalates the frame; the task granularity stays consistent.
 
 ---
 
@@ -181,12 +181,12 @@ Related CONOPs/OPORDs, ADRs, session docs, external sources.
 
 - **Draft** — being written; not yet ready for challenge.
 - **In Debate** — under review. Review weight scales to blast radius: a plan whose failure is cheap and reversible gets one reviewer, not the full panel; `decision-scientist` joins only when a decision model is in scope.
-- **Approved** — lead has selected an approach; open design decisions resolved or explicitly deferred with rationale. From this point the CONOP is **append-only**: reality-driven changes land as dated amendment entries (a "Locked Decisions" or "Status Log" section), never as silent rewrites of the original sections — an edited-in-place plan erases the churn record that future retrospectives need.
+- **Approved** — lead has selected an approach; open design decisions resolved or explicitly deferred with rationale. From this point the CONOP is **append-only**: reality-driven changes land as dated amendment entries (a "Locked Decisions" or "Status Log" section), never as silent rewrites of the original sections; an edited-in-place plan erases the churn record that future retrospectives need.
 - **Rejected** — debated and not pursued. Kept as the record of why; the proword is released.
 - **Complete** — executed directly from the CONOP (no OPORD was needed) and closed; the proword is released.
 - **Superseded by OPORD <PROWORD>** — execution has begun under an OPORD, which usually inherits the proword. The CONOP is kept as the record of *why*; the OPORD is the record of *how*.
 
-Every CONOP must end in a terminal status (Rejected, Complete, or Superseded). A plan left "Approved" forever is a stale board — when work stops for any reason, annotate the status with why.
+Every CONOP must end in a terminal status (Rejected, Complete, or Superseded). A plan left "Approved" forever is a stale board; when work stops for any reason, annotate the status with why.
 
 ---
 
@@ -198,7 +198,7 @@ Promote only when **all** of the following hold (from the escalation ladder):
 - [ ] Waves must run in a defined sequence
 - [ ] Wave-by-wave completion needs tracked checkpoints
 
-If any box is unchecked, execute directly from the approved CONOP — not every CONOP needs an OPORD.
+If any box is unchecked, execute directly from the approved CONOP: not every CONOP needs an OPORD.
 
 ---
 

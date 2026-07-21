@@ -2,9 +2,9 @@
 
 This is the template for Operations Orders in this repo. OPORDs live in `docs/plans/opord_<PROWORD>_<descriptive_name>.md`, usually inheriting the parent CONOP's proword. See `.claude/commands/task.md` for the escalation ladder and `CONOP-FORMAT.md` for the promotion gate.
 
-An OPORD is the **execution form of a decided strategy**. It answers *how and in what order*, not *whether and which way* — those questions were closed in the CONOP. If you find yourself debating design decisions inside an OPORD, stop: the work belongs back at CONOP level.
+An OPORD is the **execution form of a decided strategy**. It answers *how and in what order*, not *whether and which way*: those questions were closed in the CONOP. If you find yourself debating design decisions inside an OPORD, stop: the work belongs back at CONOP level.
 
-The five-paragraph structure below is deliberately inherited from the doctrinal OPORD (Situation, Mission, Execution, Sustainment, Command & Signal). The paragraphs are the completeness checklist — an OPORD missing one is malformed, not stylistically different.
+The five-paragraph structure below is deliberately inherited from the doctrinal OPORD (Situation, Mission, Execution, Sustainment, Command & Signal). The paragraphs are the completeness checklist: an OPORD missing one is malformed, not stylistically different.
 
 ---
 
@@ -148,13 +148,13 @@ reuse.
 
 - **Active** — execution in progress.
 - **Complete** — end state achieved, completion checklist done.
-- **Aborted** — execution stopped short; the closing session doc records why. An aborted OPORD's proword is released, but reuse is discouraged for a while — the association lingers.
+- **Aborted** — execution stopped short; the closing session doc records why. An aborted OPORD's proword is released, but reuse is discouraged for a while: the association lingers.
 
 ---
 
 ## The Five Paragraphs Are the Checklist
 
-A reviewer (human or `code-reviewer`) can validate an OPORD mechanically: five paragraphs present, intent has purpose/key-tasks/end-state, every task carries a TCS row, every wave has an exit criterion and checkpoint, report-immediately conditions listed. This is the property that makes the format worth its ceremony — completeness is checkable before execution starts, which is shift-left applied to planning itself.
+A reviewer (human or `code-reviewer`) can validate an OPORD mechanically: five paragraphs present, intent has purpose/key-tasks/end-state, every task carries a TCS row, every wave has an exit criterion and checkpoint, report-immediately conditions listed. This is the property that makes the format worth its ceremony: completeness is checkable before execution starts, which is shift-left applied to planning itself.
 
 ---
 
