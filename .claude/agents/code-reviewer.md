@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Reviews code changes for quality, adherence to paperboy's 5 design pillars, and consistency. Use proactively after writing or modifying code.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: inherit
 memory: project
 ---

@@ -1,6 +1,6 @@
 # Session Doc Format
 
-Reference for the `docs/sessions/YYYYMMDD_<subject>.md` format produced by `/session-end`. Demoted from `.claude/skills/session-end.md` on 2026-05-19 — the workflow stays at `.claude/commands/session-end.md`, this file holds the format details.
+Reference for the `docs/sessions/YYYYMMDD_<subject>.md` format produced by `/session-end`. Demoted from `.claude/skills/session-end.md` on 2026-05-19; the workflow stays at `.claude/commands/session-end.md` and this file holds the format details.
 
 For the broader Git workflow conventions (branch strategy, commit message tags, pre-commit checks), see `.claude/commands/session-end.md` directly.
 
@@ -16,7 +16,7 @@ For the broader Git workflow conventions (branch strategy, commit message tags, 
 
 ## Knowledge Graph Header
 
-Session docs create edges to permanent documents — design docs, plans, prior sessions, external references. The header is the graph.
+Session docs create edges to permanent documents: design docs, plans, prior sessions, external references. The header is the graph.
 
 ### Header Template
 
@@ -78,7 +78,7 @@ grep -r "Follows.*20260421" docs/sessions/          # Sessions continuing 2026-0
 ```markdown
 ## Summary
 
-[Brief overview of work completed in this session — 2-4 sentences.]
+[Brief overview of work completed in this session, 2-4 sentences.]
 
 ## Work Completed
 
@@ -185,11 +185,11 @@ Per the project's CLAUDE.md documentation style: **prefer Mermaid over ASCII art
 
 ## Best Practices
 
-- **Include date, branch, and tags** in every session doc — the knowledge graph depends on them.
+- **Include date, branch, and tags** in every session doc; the knowledge graph depends on them.
 - **Validate that relationship edges point to real files** before committing.
-- **Only include relationship fields that apply** — don't pad with placeholder links.
+- **Only include relationship fields that apply**; do not pad with placeholder links.
 - **Use the right diagram type** for the complexity at hand.
-- **Always include Summary and Next Steps** — the rest is optional.
+- **Always include Summary and Next Steps**; the rest is optional.
 - **Tag with activity and status** so sessions can be filtered by type.
 
 ---

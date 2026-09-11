@@ -1,7 +1,7 @@
 ---
 name: proposer
 description: Analyzes problems and proposes bold approaches before implementation. Debates with code-reviewer to stress-test ideas. Use before committing to an implementation strategy on any non-trivial pipeline change.
-tools: Read, Write, Edit, Grep, Glob, Bash
+tools: Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch
 model: sonnet
 memory: project
 ---

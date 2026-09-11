@@ -28,7 +28,7 @@ The PostToolUse hook at `.claude/hooks/post-tool-shift-left-audit.sh` fires afte
 1. Exits silently for tools other than `Write` / `Edit`.
 2. Exits silently for paths outside `src/*.py` (paperboy uses a flat `src/` layout — no `src/paperboy/` subdirectory).
 3. Exits silently for `__init__.py`, `conftest.py`, and any file already matching `test_*.py` / `*_test.py`.
-4. Infers the test partner: `tests/**/test_<basename>.py` via `find`.
+4. Infers the test partner: `tests/**/test_<basename>.py` via `find`; when that misses, any `tests/**/test_*.py` that imports the module (`from src.mod import`, `import src.mod`, or `from src import mod`) counts, so feature-named suites are partners too.
 5. If the test partner does not exist, appends a `MISSING_TEST` line to `.claude/audits/shift-left-violations.log` and writes a one-line warning to stderr (which the harness surfaces back to the agent in the tool result).
 6. If the test partner exists, appends an `OK_TEST_EXISTS` line for each match.
 
@@ -54,7 +54,7 @@ If the audit log shows persistent violations after the soft mechanism has been i
 **Misses**:
 - **Temporal vertical-slicing violations**: writing all tests first, then all impl. Both have test partners; the temporal discipline gap is invisible to a name-existence check.
 - Test stubs that exist but contain no assertions.
-- Tests in non-standard locations (the inference is strictly `tests/**/test_<basename>.py`).
+- Tests outside `tests/`, or tests that reach the module without importing it by name (a fixture that imports it, an app factory that mounts it). The inference is name match, then import grep, nothing deeper.
 - Commits made outside Claude Code (CI checks would catch some of these; see `CI.md`).
 - Tests that exist but don't actually test the new code (e.g., a stale `test_foo.py` that doesn't cover the new `foo.bar()` function).
 

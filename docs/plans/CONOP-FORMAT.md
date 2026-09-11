@@ -53,7 +53,7 @@ can build on. Name files.
 
 ### Enemy Forces (what works against us)
 Risks, failure modes, constraints, and technical debt actively working
-against this plan. Be specific — "complexity" is not an enemy force;
+against this plan. Be specific: "complexity" is not an enemy force;
 "the scorer has no test coverage for degenerate weight vectors" is.
 
 ### Terrain (the ground we operate on)
@@ -73,8 +73,8 @@ would prove it wrong (capture a real payload, run on the real target,
 score the known-good reference). The **blast radius** names which
 waves and decisions collapse with it. The **kill-criterion** is the
 result that abandons the approach rather than patching it. An
-assumption with no falsifier is a risk being ignored, not a fact —
-and naming a risk while deferring its mitigation to "a test later"
+assumption with no falsifier is a risk being ignored, not a fact.
+Naming a risk while deferring its mitigation to "a test later"
 is decoration, not mitigation.
 
 ---
@@ -82,7 +82,7 @@ is decoration, not mitigation.
 ## Mission
 
 One sentence. Who, what, by when, **in order to** what. The "in order
-to" clause is mandatory — it is the purpose that survives contact when
+to" clause is mandatory; it is the purpose that survives contact when
 the plan's specifics don't.
 
 ---
@@ -103,7 +103,7 @@ is, pros, cons, risk level.
 ## Design Decisions
 
 Decisions this CONOP resolves, each with its rationale. Decisions that
-remain **open** must be flagged here — open design decisions block
+remain **open** must be flagged here; open design decisions block
 promotion to OPORD. If a resolved decision passes the ADR triple
 filter (hard to reverse, surprising without context, real trade-off),
 write the ADR and link it.
@@ -115,15 +115,15 @@ write the ADR and link it.
 - **MOP (performance)**: Did we do the thing right? Tests green,
   coverage, lint, review findings addressed. Mechanical, checkable.
 - **MOE (effectiveness)**: Did the thing work? The outcome in the
-  world the plan exists to change — the downstream repo migrated, the
+  world the plan exists to change: the downstream repo migrated, the
   scorer adopted, the workflow faster. State **when** each MOE
-  becomes measurable — many are not observable at plan close.
+  becomes measurable; many are not observable at plan close.
 
 A plan with MOP but no MOE measures activity instead of outcome.
 
 **Calibration rule**: any metric used to gate a wave must first
 demonstrate that it rank-orders known-good above known-bad reference
-cases. An uncalibrated gate is worse than none — it converts a
+cases. An uncalibrated gate is worse than none; it converts a
 measurement error into waves of misdirected work.
 
 ---
@@ -138,7 +138,7 @@ Waves are tactical parallel-execution units. Two sequencing rules:
 2. **Validate before detailing.** Each load-bearing assumption's
    cheapest falsifier (see Assumptions) runs before or within the
    first wave that depends on it. Until it passes, dependent waves
-   stay at one-line sketch level — do not author detailed waves on
+   stay at one-line sketch level; do not author detailed waves on
    an unvalidated core.
 
 Each wave gets:
@@ -164,7 +164,7 @@ than any review gate.
 
 ## Agent and Team Design
 
-New agents or team templates this plan requires, or "none — uses
+New agents or team templates this plan requires, or "none; uses
 existing roster." If new, specify scope-matrix rows before
 implementation begins.
 

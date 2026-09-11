@@ -83,6 +83,8 @@ Typical ownership boundaries:
 
 ## Updating the Roster
 
+Keep upstream-template agents (`test-runner`, `code-reviewer`, `proposer`, `python-prototyper`) free of project-specific knowledge: they stay portable across repos. A `tools:` line is capability, not knowledge; `WebSearch, WebFetch` on `proposer` and `code-reviewer` exist so a proposal can cite a source it fetched and a challenge can re-fetch it.
+
 When the project's needs evolve, update:
 1. The agent file in `agents/` (authoritative source)
 2. This README's roster table
