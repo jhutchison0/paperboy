@@ -1,14 +1,14 @@
 ---
 name: writing-simple-and-direct
 description: House prose style distilled from Barzun's Simple and Direct. Eight kernel rules with expansions, before/after patterns, and a review protocol for every prose artifact (SITREPs, reviews, proposals, ADRs, session docs, backbriefs, commit messages). Use when writing or reviewing any prose artifact.
-version: "1.0.0"
+version: "1.0.1"
 ---
 
 # Writing Simple and Direct
 
 House style for prose. Three goals: clearer communication for humans, fewer tokens per artifact, and removal of machine-prose defaults from our output. This SKILL.md is the entry point; expansions, examples, and the review protocol live in sidecar files loaded on demand.
 
-Scope, stated once: document schemas (TCS, CONOP-FORMAT, OPORD-FORMAT) define **what** a document contains. This skill defines **how** the words go. Never cut a required section to save tokens.
+Scope, stated once: document schemas (TCS, CONOP-FORMAT, OPORD-FORMAT) define **what** a document contains. This skill defines **how** the words go. Never cut a required section to save tokens. A chart that could be a table or a sentence is not this skill's tokens to cut; that finding is the figure skill's pre-question (designing-clear-data-displays).
 
 **Philosophy**: *Have a point. Make it in the fewest words that keep it true.*
 
@@ -76,4 +76,4 @@ Loaded on demand when this SKILL.md cites them. Read only the ones relevant to t
 ---
 
 **Maintained by**: Writing Simple and Direct Skill
-**Version**: 1.0.0, first committed version: directory form with four sidecars and the review protocol (2026-07-20)
+**Version**: 1.0.1, one scope sentence handing the chart-or-table question to designing-clear-data-displays (2026-08-27). 1.0.0, first committed version: directory form with four sidecars and the review protocol (2026-07-20)

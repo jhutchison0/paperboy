@@ -112,7 +112,7 @@ These skills are portable to any software project. They contain no project names
 
 ### shift-left-testing (directory form)
 
-**Path**: `.claude/skills/shift-left-testing/SKILL.md` + 7 sidecars (`TIERS.md`, `PATTERNS.md`, `MOCKS.md`, `FIXTURES.md`, `VERTICAL-SLICING.md`, `CI.md`, `ANTIPATTERNS.md`).
+**Path**: `.claude/skills/shift-left-testing/SKILL.md` + 12 sidecars (`TIERS.md`, `PATTERNS.md`, `MOCKS.md`, `FIXTURES.md`, `VERTICAL-SLICING.md`, `ENFORCEMENT.md`, `CI.md`, `ANTIPATTERNS.md`, `PROPERTY-BASED.md`, `NUMERIC.md`, `REGRESSION.md`, `SCRIPTS.md`).
 
 **Focus**: Multi-tier testing strategy with vertical-slicing (tracer-bullet) TDD, mocks, fixtures, simulation, CI integration, and explicit anti-patterns.
 
@@ -155,6 +155,46 @@ These skills are portable to any software project. They contain no project names
 **Key concepts**: triple filter (hard-to-reverse AND surprising-without-context AND result-of-real-trade-off), sequential numbering, never-ADR-routine-choices.
 
 **Use when**: A decision is made that satisfies all three filter conditions. Do not write an ADR otherwise.
+
+### using-topic-branches (directory form)
+
+**Path**: `.claude/skills/using-topic-branches/SKILL.md`
+
+**Focus**: Branch by work shape, not by domain: lead-only doc, ADR, and small-refactor work lands on `main`; team-deployed or multi-agent code work with an audit gate uses a short-lived `topic/<scope>-<slug>` branch, merged at the gate and deleted (local and origin) at once.
+
+**Key concepts**: work shape over permanent partition, merge-commit at the gate, delete-after-merge, standing-branch audit.
+
+**Use when**: Starting a unit of work, deciding whether to branch, merging at a gate, or auditing standing branches across a repo.
+
+### writing-simple-and-direct (directory form)
+
+**Path**: `.claude/skills/writing-simple-and-direct/SKILL.md` + 4 sidecars (`RULES.md`, `EXAMPLES.md`, `REVIEWING.md`, `ADOPTION.md`).
+
+**Focus**: House prose style distilled from Barzun's *Simple and Direct*: eight kernel rules with expansions, before/after patterns, and a review protocol for every prose artifact. The figure skill's twin: this one governs the words, that one governs the ink.
+
+**Key concepts**: have a point and state it first, the concrete word, one idea per sentence, active voice, cruft words (the banned list in LANGUAGE.md), hedge with numbers, no em dashes in running prose; schemas define what, this defines how.
+
+**Use when**: Writing or reviewing any prose artifact (SITREPs, reviews, proposals, ADRs, session docs, backbriefs, commit messages).
+
+### traversing-the-knowledge-base (directory form)
+
+**Path**: `.claude/skills/traversing-the-knowledge-base/SKILL.md`
+
+**Focus**: Walk the repo's existing link graph (typed session-doc headers, markdown links, bare path mentions) instead of keyword search: lineage, blast radius, neighbors in both directions, why-does-this-exist, reference integrity.
+
+**Key concepts**: the corpus is already a graph, match paths not just links, inbound plus outbound, the `KB-graph:` evidence line, the five-session falsifiable criterion (M1 uptake, M2 integrity, M3 routing value).
+
+**Use when**: Tracing why an artifact exists, assessing blast radius before editing a living doc, orienting on session lineage, or checking reference integrity.
+
+### designing-clear-data-displays (directory form)
+
+**Path**: `.claude/skills/designing-clear-data-displays/SKILL.md` + 4 sidecars (`RULES.md`, `EXAMPLES.md`, `REVIEWING.md`, `ADOPTION.md`).
+
+**Focus**: House figure style distilled from Edward Tufte's books and course: eight kernel rules with sources and tests, generic before/after pairs, and a review protocol for charts, figures, maps, tables, and data-bearing layouts. The prose skill's twin: that one governs the words, this one governs the ink.
+
+**Key concepts**: data-ink within reason, label where the data lives, smallest effective difference, 1 + 1 = 3 placement faults, lie factor 0.95 to 1.05, small multiples, documentation on the figure, content counts most. A repo's UX rules outrank the style; state the override.
+
+**Use when**: Drawing or reviewing any data display; writing code that places marks and labels; adopting the skill in a downstream repo.
 
 ### task management (command: `/task`)
 

@@ -44,6 +44,23 @@ All prose artifacts follow the writing-simple-and-direct skill. The kernel:
 Schemas define what a document contains; this defines how the words go.
 Never cut a required section to save tokens.
 
+## Figure Style
+
+All data displays follow the designing-clear-data-displays skill. The kernel:
+
+1. Show the data; erase ink that carries none, within reason.
+2. Label the data where it lives; a key the eye must decode fails.
+3. Make every distinction as subtle as it can be and still be seen.
+4. Two marks too close make a third; move one, do not shrink both.
+5. Show the effect at its true size: lie factor between 0.95 and 1.05.
+6. Answer "compared to what?"; small multiples over one lonely chart.
+7. Document the display: title, source, units, scale on the figure.
+8. Content counts most: simple design, intense content.
+
+Schemas and a repo's UX rules define what a display must contain; this defines how the ink goes.
+Before the eight: could a table or a sentence carry these numbers? Under about twenty, a table usually does (VDQI p. 56).
+A UX rule that asks for a less dense display wins; state the override.
+
 ## Environment Setup
 
 This project uses **uv** (Astral) for interpreters, environments, and packages. **All commands must run inside the venv.**

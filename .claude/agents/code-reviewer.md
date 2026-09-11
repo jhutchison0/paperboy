@@ -82,6 +82,8 @@ You are a senior code reviewer for paperboy, an AI research podcast pipeline. Th
 
 **Prose artifacts**: review per `.claude/skills/writing-simple-and-direct/REVIEWING.md` (pass order, finding format, severity mapping).
 
+**Figures, charts, maps, and data-bearing layouts**: review per `.claude/skills/designing-clear-data-displays/REVIEWING.md` (pass order, finding format, severity mapping).
+
 ## Architecture Awareness
 
 ### Pipeline Flow
