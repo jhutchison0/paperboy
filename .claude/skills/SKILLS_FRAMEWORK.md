@@ -196,6 +196,18 @@ These skills are portable to any software project. They contain no project names
 
 **Use when**: Drawing or reviewing any data display; writing code that places marks and labels; adopting the skill in a downstream repo.
 
+### lake-conventions (directory form)
+
+**Path**: `.claude/skills/lake-conventions/SKILL.md` + 3 sidecars (`PREFLIGHT.md`, `ADOPTION.md`, `HOME-STORAGE.md`).
+
+**Focus**: The two storage systems this fleet writes to. For the work lakehouse: bucket tiers as maturity stages, the two path grammars, format by audience, the two companion files every dataset ships, mandatory S3 client settings, and a dev/prod split whose safe default is refusing to guess. For personal projects: `HOME-STORAGE.md`, writing bulk data to home network storage with no address in git.
+
+**Key concepts**: scope selects the storage system, committed config points at code and docs while only the environment points at data, required variable with loud failure, never an embedded database over SMB, a mirror with deletions is not backup.
+
+**Audience in paperboy**: the repo is scope: personal, so only `HOME-STORAGE.md` applies here; the lake sections stay closed.
+
+**Use when**: Adding or reviewing home-storage writes, choosing a format for a stored artifact, or preparing a machine to do storage work.
+
 ### task management (command: `/task`)
 
 **Focus**: Military-inspired work tracking with structured escalation from tasks to operations orders.

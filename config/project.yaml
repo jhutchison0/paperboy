@@ -14,6 +14,7 @@
 project:
   name: "Paperboy - Research Podcast Pipeline"
   version: "0.2.0"
+  scope: personal  # routes bulk-data writes to home storage, never the work lake (lake-conventions HOME-STORAGE.md)
   current_phase: "Phase 2 — Configuration & Polish"
   language: "Python"
   description: "AI research podcast pipeline that sources papers from ArXiv and blogs from RSS feeds, scores for relevance, and distills into briefings for NotebookLM podcast generation"

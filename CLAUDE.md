@@ -22,6 +22,9 @@ Branch on the shape of the work, not on a permanent partition of the codebase. L
 ### Session Documentation
 Document work in `docs/sessions/YYYYMMDD_*.md`. See `config/project.yaml` for phase tracking.
 
+### Bulk Data Storage
+Paperboy is scope: personal (`config/project.yaml`). Bulk data it may someday write (Phase 4 audio, archives) goes to home storage per `.claude/skills/lake-conventions/HOME-STORAGE.md`, never the work lake. No storage address goes in git; role-named `HOME_*` variables in `.env` carry the real paths. Today the pipeline writes only small gitignored markdown to `output/`, so no `HOME_*` variables exist yet; add them with the first bulk-data write.
+
 ### Knowledge-Base Traversal
 The docs form a link graph (typed session-doc headers, markdown links, path mentions). Walk it before you grep it: recipes in [`.claude/skills/traversing-the-knowledge-base/SKILL.md`](.claude/skills/traversing-the-knowledge-base/SKILL.md). `/pcc` check 5 verifies the references still resolve.
 
