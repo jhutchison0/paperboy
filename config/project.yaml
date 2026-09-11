@@ -37,10 +37,13 @@ design_pillars:
 # Read by src/machine.py; /session-start Step 1.5 prints the resolved line.
 #
 # No usernames here. Per-user namespaces are derived from $USER at runtime.
+# An optional `backend:` key (api | agent) tells auto-mode which Claude backend
+# this box prefers; see README "Claude Backends". Advisory, never binding.
 machines:
   Muninn:
     role: workstation
     scope: [personal]
+    backend: agent  # home box: subscription via Claude CLI, no API spend
     references: {}
   unknown:
     role: unspecified

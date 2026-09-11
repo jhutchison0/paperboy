@@ -25,6 +25,7 @@ except ImportError:
 from src.agent_runner import AgentRunner
 from src.config import PipelineConfig
 from src.distiller import BriefingDistiller
+from src.machine import resolve_machine
 from src.models import BriefingDocument, Paper, ScoredPaper, normalize_paper_id
 from src.selector import PaperSelector
 from src.sourcer import SourceManager
@@ -278,9 +279,16 @@ class DailyPipeline:
         Resolve which Claude backend to use.
 
         Fallback chain (auto mode):
+          0. Machine roster preference (machines.<host>.backend in
+             config/project.yaml), when that backend is available
           1. API key available → Anthropic SDK
           2. Claude CLI available → AgentRunner
           3. Neither → keyword-only scoring, no distillation
+
+        The roster preference is advisory: an unavailable or unknown
+        preference logs a warning and falls through to the chain. An
+        explicit --backend flag never reaches this branch and so outranks
+        the roster.
 
         Args:
             backend: One of "auto", "api", "agent", "keyword-only".
@@ -307,7 +315,32 @@ class DailyPipeline:
             logger.info("Backend: AgentRunner (Claude Code CLI)")
             return None, runner
 
-        # auto: try API first, then agent, then keyword-only
+        # auto: machine roster preference first, then API, then agent, then keyword-only
+        machine = resolve_machine()
+        if machine.backend == "api":
+            if self.config.anthropic_api_key:
+                logger.info(f"Backend (auto): Anthropic SDK (machine roster: {machine.name})")
+                return Anthropic(api_key=self.config.anthropic_api_key), None
+            logger.warning(
+                f"Backend (auto): machine roster ({machine.name}) prefers api but "
+                "ANTHROPIC_API_KEY is not set; falling through to detection"
+            )
+        elif machine.backend == "agent":
+            if self.config.agent_runner.enabled:
+                runner = AgentRunner(self.config)
+                if runner.is_available():
+                    logger.info(f"Backend (auto): AgentRunner (machine roster: {machine.name})")
+                    return None, runner
+            logger.warning(
+                f"Backend (auto): machine roster ({machine.name}) prefers agent but "
+                "the Claude CLI is unavailable; falling through to detection"
+            )
+        elif machine.backend:
+            logger.warning(
+                f"Backend (auto): machine roster ({machine.name}) names unknown backend "
+                f"'{machine.backend}' (expected api or agent); ignoring"
+            )
+
         if self.config.anthropic_api_key:
             logger.info("Backend (auto): Anthropic SDK (API key found)")
             return Anthropic(api_key=self.config.anthropic_api_key), None

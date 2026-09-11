@@ -64,8 +64,10 @@ The pipeline needs Claude for semantic scoring and briefing distillation. It sup
 |---------|-------------|------|
 | **API** (SDK) | Uses `ANTHROPIC_API_KEY` from `.env` | `--backend api` |
 | **Agent** (CLI) | Invokes `claude -p` subprocess, uses your Max/Pro subscription | `--backend agent` |
-| **Auto** (default) | Tries API first, falls back to CLI, then keyword-only | `--backend auto` |
+| **Auto** (default) | Machine roster preference first, then API, then CLI, then keyword-only | `--backend auto` |
 | **Keyword-only** | No Claude — keyword scoring only, no distillation | `--backend keyword-only` |
+
+Auto mode consults the machine roster (`machines.<host>.backend` in `config/project.yaml`) before detecting: a box rostered `backend: agent` stays on the subscription CLI even when an `.env` key is present, and a work box rostered `backend: api` states its intent explicitly. The preference is advisory — if the preferred backend is unavailable, auto falls through to detection with a logged warning — and an explicit `--backend` flag always wins.
 
 ```bash
 # Explicit backend selection

@@ -81,6 +81,49 @@ class TestResolveMachine:
         assert machine.resolve_machine().references == {}
 
 
+# --- backend preference ---
+
+ROSTER_WITH_BACKEND = """\
+machines:
+  homebox:
+    role: workstation
+    scope: [personal]
+    backend: agent
+    references: {}
+  unknown:
+    role: unspecified
+    scope: [personal]
+    references: {}
+"""
+
+
+@pytest.fixture
+def roster_with_backend(tmp_path, monkeypatch):
+    config = tmp_path / "project.yaml"
+    config.write_text(ROSTER_WITH_BACKEND)
+    monkeypatch.setattr(machine, "CONFIG_FILE", config)
+    return config
+
+
+class TestBackendPreference:
+    def test_roster_backend_is_read(self, roster_with_backend, monkeypatch):
+        _at_host(monkeypatch, "homebox")
+
+        assert machine.resolve_machine().backend == "agent"
+
+    def test_absent_backend_is_none(self, roster, monkeypatch):
+        _at_host(monkeypatch, "titanx")
+
+        assert machine.resolve_machine().backend is None
+
+    def test_describe_names_backend_when_set(self, roster_with_backend, monkeypatch):
+        _at_host(monkeypatch, "homebox")
+
+        line = machine.describe(machine.resolve_machine())
+
+        assert line == "homebox (workstation, personal, backend: agent)"
+
+
 # --- describe ---
 
 

@@ -27,6 +27,9 @@ class Machine:
     scope: tuple[str, ...]
     references: dict[str, Path]
     known: bool
+    # Paperboy extension over the hub template: an optional per-box Claude
+    # backend preference ("api" or "agent"), honored by auto-mode resolution.
+    backend: str | None = None
 
 
 def resolve_machine() -> Machine:
@@ -50,6 +53,7 @@ def resolve_machine() -> Machine:
             for name, raw in (entry.get("references") or {}).items()
         },
         known=known,
+        backend=entry.get("backend"),
     )
 
 
@@ -57,7 +61,8 @@ def describe(machine: Machine) -> str:
     """One line naming this box, for /session-start to print."""
     if not machine.known:
         return f"{machine.name} (not in the roster; add it to config/project.yaml)"
-    return f"{machine.name} ({machine.role}, {'+'.join(machine.scope)})"
+    backend = f", backend: {machine.backend}" if machine.backend else ""
+    return f"{machine.name} ({machine.role}, {'+'.join(machine.scope)}{backend})"
 
 
 if __name__ == "__main__":

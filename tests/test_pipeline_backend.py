@@ -14,7 +14,24 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.config import PipelineConfig
+from src.machine import Machine
 from src.pipeline import DailyPipeline
+
+
+def _machine(backend=None):
+    """A roster entry as auto-mode sees it; backend is the only field it reads."""
+    return Machine(
+        name="testbox", role="workstation", scope=("personal",),
+        references={}, known=True, backend=backend,
+    )
+
+
+@pytest.fixture(autouse=True)
+def no_machine_preference(monkeypatch):
+    """Pin the machine roster to no-preference so tests are hermetic against
+    the host's real config/project.yaml (same principle as the USER_CONTEXT
+    tests). Preference tests override with their own patch."""
+    monkeypatch.setattr("src.pipeline.resolve_machine", lambda: _machine())
 
 
 @pytest.fixture
@@ -108,6 +125,63 @@ class TestResolveBackend:
         assert pipeline._has_claude_backend is True
         assert pipeline.selector.claude is None
         assert pipeline.selector.agent_runner is not None
+
+
+class TestMachineBackendPreference:
+    @patch("src.pipeline.AgentRunner")
+    def test_auto_honors_agent_preference_over_api_key(self, MockRunner, config_with_key, monkeypatch):
+        """The home-box case: an .env carrying a key (e.g. for USER_CONTEXT)
+        must not silently switch a subscription box onto paid API."""
+        monkeypatch.setattr("src.pipeline.resolve_machine", lambda: _machine("agent"))
+        mock_instance = MagicMock()
+        mock_instance.is_available.return_value = True
+        MockRunner.return_value = mock_instance
+
+        pipeline = DailyPipeline(config_with_key, backend="auto")
+
+        assert pipeline.selector.claude is None
+        assert pipeline.selector.agent_runner is not None
+
+    def test_auto_honors_api_preference(self, config_with_key, monkeypatch):
+        monkeypatch.setattr("src.pipeline.resolve_machine", lambda: _machine("api"))
+
+        pipeline = DailyPipeline(config_with_key, backend="auto")
+
+        assert pipeline.selector.claude is not None
+        assert pipeline.selector.agent_runner is None
+
+    @patch("src.pipeline.AgentRunner")
+    def test_unavailable_preference_falls_through_to_chain(self, MockRunner, config_with_key, monkeypatch):
+        """Preference is advisory: prefers agent, CLI absent, key present ->
+        the detection chain still finds the SDK instead of erroring."""
+        monkeypatch.setattr("src.pipeline.resolve_machine", lambda: _machine("agent"))
+        mock_instance = MagicMock()
+        mock_instance.is_available.return_value = False
+        MockRunner.return_value = mock_instance
+
+        pipeline = DailyPipeline(config_with_key, backend="auto")
+
+        assert pipeline.selector.claude is not None
+
+    def test_unknown_preference_is_ignored(self, config_with_key, monkeypatch):
+        monkeypatch.setattr("src.pipeline.resolve_machine", lambda: _machine("carrier-pigeon"))
+
+        pipeline = DailyPipeline(config_with_key, backend="auto")
+
+        assert pipeline.selector.claude is not None
+
+    @patch("src.pipeline.AgentRunner")
+    def test_explicit_flag_outranks_preference(self, MockRunner, config_with_key, monkeypatch):
+        """--backend api on an agent-preferring box uses the API: the flag wins."""
+        monkeypatch.setattr("src.pipeline.resolve_machine", lambda: _machine("agent"))
+        mock_instance = MagicMock()
+        mock_instance.is_available.return_value = True
+        MockRunner.return_value = mock_instance
+
+        pipeline = DailyPipeline(config_with_key, backend="api")
+
+        assert pipeline.selector.claude is not None
+        assert pipeline.selector.agent_runner is None
 
 
 class TestHealthCheck:

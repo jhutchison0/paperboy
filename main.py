@@ -76,7 +76,7 @@ def cli():
     "--backend",
     type=click.Choice(["auto", "api", "agent", "keyword-only"], case_sensitive=False),
     default="auto",
-    help="Claude backend: auto (detect), api (SDK), agent (CLI), keyword-only (no Claude)",
+    help="Claude backend: auto (machine roster, then detect), api (SDK), agent (CLI), keyword-only (no Claude)",
 )
 @click.option("--no-dedup", is_flag=True, default=False, help="Disable deduplication (allow re-selecting recent papers)")
 def run(config, output_dir, days_back, target_date, backend, no_dedup):
