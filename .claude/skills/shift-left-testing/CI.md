@@ -25,24 +25,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Set up uv with Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          uv venv
+          uv pip install -e ".[dev]"
 
       - name: Run unit tests
-        run: pytest tests/unit/ -v --cov=src --cov-report=xml
+        run: .venv/bin/pytest tests/unit/ -v --cov=src --cov-report=xml
 
       - name: Run integration tests
-        run: pytest tests/integration/ -v
+        run: .venv/bin/pytest tests/integration/ -v
 
       - name: Run simulation tests
-        run: pytest tests/simulation/ -v
+        run: .venv/bin/pytest tests/simulation/ -v
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -54,7 +55,8 @@ jobs:
 **Notes**:
 - External tests (`tests/external/`) are NOT in CI by default. They run manually or on a nightly schedule.
 - Matrix the Python versions you support, not "all of them." Three versions covers most cases.
-- `pip install -e ".[dev]"` requires a `pyproject.toml` with a `[project.optional-dependencies] dev = [...]` section.
+- `uv pip install -e ".[dev]"` requires a `pyproject.toml` with a `[project.optional-dependencies] dev = [...]` section.
+- `setup-uv` with a `python-version` input installs a uv-managed interpreter; `uv venv` then builds on it, so the job never touches the runner's system Python.
 
 ## Coverage Configuration
 
@@ -127,26 +129,23 @@ Then test failures appear as inline review comments on the changed lines.
 
 ## Caching Dependencies
 
-Speed up CI by caching `~/.cache/pip`:
+`setup-uv` handles caching itself — `enable-cache: true` in the example above persists uv's wheel cache between runs. Key it on your dependency spec if you want tighter invalidation:
 
 ```yaml
-- name: Cache pip
-  uses: actions/cache@v4
+- uses: astral-sh/setup-uv@v5
   with:
-    path: ~/.cache/pip
-    key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
-    restore-keys: |
-      ${{ runner.os }}-pip-
+    enable-cache: true
+    cache-dependency-glob: "**/pyproject.toml"
 ```
 
-This typically cuts install time from 60s to 5s on subsequent runs.
+uv's installs are fast enough that cold-cache runs are rarely the bottleneck; the cache mostly saves PyPI bandwidth.
 
 ## Parallel Execution
 
 For large test suites, run tests in parallel with `pytest-xdist`:
 
 ```bash
-pip install pytest-xdist
+uv pip install pytest-xdist
 pytest -n auto  # Use all available cores
 ```
 

@@ -33,10 +33,10 @@ ArXiv API + RSS Feeds  -->  Source  -->  Score & Select  -->  Distill  -->  Podc
 # Clone and set up
 git clone https://github.com/jhutchison0/paperboy.git
 cd paperboy
-python3 -m venv .venv
+curl -LsSf https://astral.sh/uv/install.sh | sh   # If uv is not installed
+uv venv --managed-python
 source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 
 # Configure (pick one)
 # Option A: Anthropic API key (direct API access)

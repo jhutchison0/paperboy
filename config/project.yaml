@@ -100,19 +100,21 @@ build_phases:
 # -----------------------------------------------------------------------------
 # Python Settings
 # -----------------------------------------------------------------------------
-# IMPORTANT: All Python commands (pytest, python main.py, pip) must run inside the
-# project venv. The venv lives at .venv/ in the repo root.
+# IMPORTANT: All Python commands (pytest, python main.py, package installs) must run
+# inside the project venv. The venv lives at .venv/ in the repo root. uv (Astral) is
+# the engine for interpreters, environments, and packages.
 #
 # Setup:
-#   python3 -m venv .venv
-#   source .venv/bin/activate
-#   pip install -r requirements.txt
+#   uv python install 3.12
+#   uv venv --managed-python
+#   uv pip install -r requirements.txt
 #
 # Running without activating:
 #   .venv/bin/pytest                    # Tests
 #   .venv/bin/python main.py run        # Pipeline
 python:
   min_version: "3.11"
+  package_manager: "uv"
   venv: ".venv"
   requirements: requirements.txt
   dependencies:

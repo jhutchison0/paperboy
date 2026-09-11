@@ -43,13 +43,14 @@ Never cut a required section to save tokens.
 
 ## Environment Setup
 
-This project uses a Python virtual environment. **All commands must run inside the venv.**
+This project uses **uv** (Astral) for interpreters, environments, and packages. **All commands must run inside the venv.**
 
 ```bash
 # First-time setup
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh   # If uv is not installed
+uv python install 3.12             # uv-managed interpreter (no system coupling)
+uv venv --managed-python           # Create .venv on the managed interpreter
+uv pip install -r requirements.txt
 cp .env.example .env               # Add your ANTHROPIC_API_KEY
 ```
 

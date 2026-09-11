@@ -66,7 +66,7 @@ class ElevenLabsTTS(TTSProvider):
     ElevenLabs TTS integration (stub — ready for implementation).
 
     When you're ready to add ElevenLabs:
-    1. pip install elevenlabs
+    1. uv pip install elevenlabs
     2. Set ELEVENLABS_API_KEY in .env
     3. Implement synthesize() and available_voices()
     4. Add voice stitching in PodcastAudioGenerator
