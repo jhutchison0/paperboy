@@ -10,6 +10,13 @@ Read `config/project.yaml` - the central source of truth containing:
 - Build phases with status tracking
 - Directory structure
 
+## Step 1.5: Identify the Machine
+
+    .venv/bin/python -m src.machine
+
+Prints one line. Report it. If the host is not in the roster, say so and offer
+to add it. Do not add it silently.
+
 ## Step 2: Check Current Phase
 
 Read `config/project.yaml` build_phases section:
@@ -51,13 +58,14 @@ git branch -v         # Current branch state
 
 Provide a brief summary:
 
-1. **Version**: Current version from project.yaml
-2. **Phase**: Current build phase and its deliverable
-3. **Recent Work**: Last session summary
-4. **Tasks**: Active count, blocked count, top priority items
-5. **Pending**: Key items remaining in current phase
-6. **Test Status**: All passing or failures?
-7. **Git State**: Branch, uncommitted changes?
+1. **Machine**: The line from Step 1.5
+2. **Version**: Current version from project.yaml
+3. **Phase**: Current build phase and its deliverable
+4. **Recent Work**: Last session summary
+5. **Tasks**: Active count, blocked count, top priority items
+6. **Pending**: Key items remaining in current phase
+7. **Test Status**: All passing or failures?
+8. **Git State**: Branch, uncommitted changes?
 
 Then ask: **"What would you like to work on today?"**
 

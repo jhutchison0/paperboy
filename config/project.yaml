@@ -30,6 +30,23 @@ design_pillars:
   extensibility_by_design: "Pluggable sources, scorers, output formats. NotebookLM today, TTS tomorrow. New capabilities slot in without rewriting."
 
 # -----------------------------------------------------------------------------
+# Machines
+# -----------------------------------------------------------------------------
+# Roster of the boxes this repo is cloned on, keyed by hostname (`hostname`).
+# Read by src/machine.py; /session-start Step 1.5 prints the resolved line.
+#
+# No usernames here. Per-user namespaces are derived from $USER at runtime.
+machines:
+  Muninn:
+    role: workstation
+    scope: [personal]
+    references: {}
+  unknown:
+    role: unspecified
+    scope: [personal]
+    references: {}
+
+# -----------------------------------------------------------------------------
 # Directory Structure
 # -----------------------------------------------------------------------------
 paths:
