@@ -1,6 +1,6 @@
 # Paperboy — Task List
 
-**Last Updated**: 2026-07-20
+**Last Updated**: 2026-09-10
 
 ---
 
@@ -17,6 +17,7 @@ _(none)_
 
 ## Completed
 
+- [x] 2026-09-10: Adopt hub 2026-08 doctrine catch-up (five entries) — uv environments (venv rebuilt on managed 3.12.13, exact 166-test parity, skills refreshed); machine identity (machines: roster, src/machine.py test-first, /session-start Step 1.5; this box is Muninn); audit-hook import-grep fallback (src.-prefixed dotted names for the flat layout, pipe-test verified) + WebSearch/WebFetch on proposer and code-reviewer; KB traversal skill + /pcc checks 5-6 (by-hand first run, 3 findings dispositioned to 0-MISSING baseline); figure style skill + CLAUDE.md kernel + reviewer line; home storage (scope: personal, HOME_* plumbing deferred to first bulk write). SKILLS_FRAMEWORK index caught up (4 unlisted skills). Suite 166 → 172. Disposals annotated in .claude/upstream-update.md.
 - [x] 2026-07-20: Prose kernel in distiller prompt — writing-simple-and-direct rules adapted for spoken briefings and embedded in SYSTEM_PROMPT (both backends); em-dash validation warning added. Verified by controlled redistill of the same paper (arXiv:2607.16131): em dashes 49 → 0, cruft words 1 → 0, 8/8 sections intact, 4615 words. Commit c539160.
 - [x] 2026-07-20: Relicense GPL v3 → Apache-2.0 ahead of going public — sole author, never distributed, so no copyleft obligations attached; uniform with tacsop (whose template content is Apache-2.0 and lands here every doctrine cycle); explicit patent grant. Canonical LICENSE text; README badge updated. Supersedes the 2026-03-11 GPL switch.
 - [x] 2026-07-20: Isolate agent backend from workspace context — AgentRunner now runs `claude -p` with cwd=tempfile.gettempdir() so the CLI cannot load the repo's CLAUDE.md/skills into pipeline prompts. Found via briefing forensics: May briefings had 42-43 em dashes, today's had 0 (the Prose Style kernel had leaked into distillation). Restores distiller prompt as sole style authority (Pillar 1) and removes a hidden output input (Pillar 4). Test-first; 160 tests pass.

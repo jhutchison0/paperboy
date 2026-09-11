@@ -795,3 +795,32 @@ Delete the four sidecars and re-copy the prior `SKILL.md` to return shift-left-t
 to 2.0.0. The relicense requires no downstream action at all.
 
 ---
+
+## 2026-08-03 through 2026-08-30: Five-entry catch-up cycle
+
+**Processed**: 2026-09-10. Discovered by direct hub read (`~/projects/github/tacsop/docs/doctrine-updates.md`); no push notification had arrived for these. All five entries adopted in one session on Muninn, in dependency order (environment first, records last). Full detail per entry lives in the hub file; disposal summary:
+
+*2026-08-03 (uv environment doctrine, drop-in)*: **ADOPTED** ✓
+- Venv rebuilt `uv venv --managed-python` on uv-managed CPython 3.12.13; exact parity (166 tests). This box had no pyenv/conda incumbents, so removal is N/A.
+- `python-venv-management` 3.0.0 + `shift-left-testing/CI.md`: TEMPLATE-COPY verbatim (no local customizations existed).
+- CLAUDE.md / README.md / config/project.yaml setup blocks → uv; `package_manager: uv`; ElevenLabs stub docstring hint patched. Install spec stays `requirements.txt` (no pyproject extras here).
+
+*2026-08-21 (KB traversal, amended 08-22)*: **ADOPTED** ✓
+- Skill CUSTOMIZE: edge table recounted (15/15 typed session docs, 108 links, 875 mentions), window reset to 2026-09-10, hub March allowlist dropped.
+- `/pcc` checks 5+6 wired after a by-hand first run, per the amendment. First run: 3 findings, dispositioned to a 0-MISSING baseline (`output/` allowlisted runtime, `.claude/agent-memory/` allowlisted runtime, `docs/reviews/` created with `.gitkeep`). sed task-range verified against paperboy headings (captures Active + Blocked, stops at Completed).
+- Amendment artifact 4 (`.claude/` versioning): **ALREADY SATISFIED** — Mode A, 57 tracked files, exactly the three blessed ignores.
+
+*2026-08-27 (figure style + research tools + hook fallback)*: **ADOPTED** ✓
+- Part 1: `designing-clear-data-displays` 1.1.0 TEMPLATE-COPY (byte-identical); ADOPTION.md steps run (CLAUDE.md Figure Style kernel, code-reviewer figure line, index entry); `writing-simple-and-direct` → 1.0.1. No UX override to state; no sweep, per grandfathering.
+- Part 2: `WebSearch, WebFetch` added to proposer + code-reviewer; capability-vs-knowledge sentence added to `.claude/README.md` (paperboy phrasing: upstream-template agents, no Level 0 vocabulary here).
+- Part 3: import-grep fallback ported into the locally-patched hook with one adaptation — dotted names keep the `src.` prefix because flat-layout imports are `from src import X`. Pipe-test verified `src/config.py` (previously false MISSING_TEST) now matches 4 feature-named suites. Windows path normalization ported alongside. ENFORCEMENT.md updated. SCRIPTS.md line 3: N/A (our copy is locally adapted and clean). Rule-8 re-copies: CONOP-FORMAT, OPORD-FORMAT, session-doc-format (hub 5f70a48 covered only part; the 08-27 sweep had more).
+- Rode along: SKILLS_FRAMEWORK.md index caught up with the directory (4 unlisted skills added, shift-left sidecar list corrected to 12).
+
+*2026-08-29 (machine identity + lake conventions)*: **Part 1 ADOPTED** ✓ / **Part 2 SKIP** (remote is github.com, not a work host)
+- `machines:` roster added (Muninn workstation personal + unknown); `src/machine.py` adapted for flat src (import `src.machine`, `parents[1]`), test written first (6 tests RED→GREEN); `/session-start` Step 1.5 + Machine as summary item 1. Live check: `Muninn (workstation, personal)`.
+
+*2026-08-30 (home storage, lake-conventions 1.1.0)*: **ADOPTED, plumbing deferred** ✓
+- Skill TEMPLATE-COPY whole (4 files, identical); `scope: personal` declared in project.yaml; Muninn rostered personal so the HOME-STORAGE gate can open; CLAUDE.md + CONTEXT.md Reading Order + SKILLS_FRAMEWORK.md wired.
+- `HOME_*` `.env.example` names: **DEFERRED** until the first bulk-data write (Phase 4 audio is the expected trigger); today the pipeline writes only small gitignored markdown, and role-named variables nothing reads would be inert.
+
+---
