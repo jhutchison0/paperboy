@@ -77,6 +77,22 @@ Session start found `.venv/` an empty shell built on system Python 3.10.12 (belo
 
 Disposal record for all five entries appended to `.claude/upstream-update.md` (annotate, never delete); `docs/tasks.md` updated; final verification run.
 
+### 8. Machine-keyed backend preference (follow-on) — `808eaea`
+
+The adoption paid off the same day. The user's observation: `.env` + API key exists for work; at home on Muninn the subscription CLI serves, and auto mode only picked it because the home box happened to lack a key. That intent is now committed config: `machines.<host>.backend` (api | agent) is consulted by auto-mode resolution ahead of the detection chain. Precedence: explicit `--backend` flag > roster preference > detection. Advisory, never binding: an unavailable or unknown preference logs a warning and falls through, preserving graceful degradation.
+
+Built test-first in three slices: `Machine.backend` field (a deliberate, in-code-marked paperboy extension over the hub template), the auto-branch resolution (5 tests including flag-outranks-roster), roster + docs wiring (README backend table, `--backend` help text, project.yaml comment). One trap handled deliberately: backend tests now pin `resolve_machine` via an autouse fixture so the suite is hermetic against the host's real roster — without it, Muninn's own entry would have flipped existing auto-mode tests. Live-verified: `Muninn (workstation, personal, backend: agent)`; `Backend (auto): AgentRunner (machine roster: Muninn)`. Suite 172 → 180.
+
+### 9. Upward lesson channel seeded (hub D10)
+
+`.claude/upstream-lesson.md` created: paperboy is now a third canary on the hub's D10 upward channel (after tactics-game and veil-engine), carrying three fleet-scope lessons in the D9 one-line schema. The hub harvests the file at its next machine visit or consolidation session; nothing was written into the hub clone directly, so the lessons enter the hub loop at OBSERVED through its own provenance-preserving harvest rather than bypassing that gate.
+
+LESSON (OBSERVED): machines: roster works as a config dimension for runtime behavior — optional `machines.<host>.backend` honored by auto-mode resolution makes work-API/home-subscription explicit committed intent | evidence: src/machine.py + src/pipeline.py + tests/test_pipeline_backend.py (808eaea) | scope: fleet | owner: paperboy src/machine.py (hub template candidate) | verdict: ADD
+
+LESSON (OBSERVED): a behavior-affecting roster key makes tests host-dependent unless resolve_machine is pinned (autouse no-preference fixture), same trap class as a real .env leaking into tests | evidence: tests/test_pipeline_backend.py no_machine_preference fixture (808eaea) | scope: fleet | owner: paperboy tests/test_pipeline_backend.py | verdict: ADD
+
+LESSON (OBSERVED): second consumer confirms the single-entry propagation gap — no notification for five hub entries, caught up only by direct hub read | evidence: .claude/upstream-update.md disposal record 2026-09-10 | scope: fleet | owner: hub propagate_doctrine.py (open hub P1) | verdict: UPDATE
+
 ## Key Decisions
 
 | Decision | Rationale |
@@ -110,8 +126,10 @@ Disposal record for all five entries appended to `.claude/upstream-update.md` (a
 | `688878a` | [doc] Adopt figure style doctrine (hub 2026-08-27 Part 1) |
 | `bc8d4dc` | [infra] Adopt home storage doctrine (hub 2026-08-30, lake-conventions 1.1.0) |
 | `d9a7eda` | [doc] Annotate five-entry doctrine catch-up; task list updated |
+| `15d819a` | [doc] Session doc: 2026-09-10 five-entry doctrine catch-up; project stamp |
+| `808eaea` | [pipeline][config][test] Machine roster backend preference for auto mode |
 
-Plus this session-end commit (project.yaml stamp, session doc).
+Plus the closing commit (upstream-lesson channel, session-doc extension, project stamp).
 
 ## Upstream Note
 
@@ -119,8 +137,8 @@ Nothing in the hub artifacts was broken during adoption, so no correction routes
 
 ## Next Steps
 
-- [ ] Push this branch (the push was blocked by the session's permission classifier; run `git push` by hand or approve it)
-- [ ] Re-create local `.env` on this box (`ANTHROPIC_API_KEY`, `USER_CONTEXT`): a re-clone does not carry it, and live pipeline runs need it
+- [ ] Hub harvest: `.claude/upstream-lesson.md` carries three fleet-scope lessons awaiting the hub's D10 harvest on its next machine visit or consolidation session
+- [ ] Optional on this box: a local `.env` with `USER_CONTEXT` only (safe — no key means no API path, and the roster preference now guards even if a key arrives); roster the work box `backend: api` on the next visit there
 - [ ] KB-traversal window is open: next five sessions record `KB-graph:` lines and check-5 counts (M1/M2/M3 close-out per the skill's matrix)
 - [ ] Standing P3s unchanged: listen-test the prose kernel (distiller-dev), CLI temperature control, batch scoring 1 → 5, CONOP checklist status
 - [ ] First property test still pending (selector scoring invariants; Hypothesis plumbing arrives with it)
