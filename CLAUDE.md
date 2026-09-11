@@ -22,6 +22,9 @@ Branch on the shape of the work, not on a permanent partition of the codebase. L
 ### Session Documentation
 Document work in `docs/sessions/YYYYMMDD_*.md`. See `config/project.yaml` for phase tracking.
 
+### Knowledge-Base Traversal
+The docs form a link graph (typed session-doc headers, markdown links, path mentions). Walk it before you grep it: recipes in [`.claude/skills/traversing-the-knowledge-base/SKILL.md`](.claude/skills/traversing-the-knowledge-base/SKILL.md). `/pcc` check 5 verifies the references still resolve.
+
 ### Documentation Style
 When creating diagrams in markdown documentation, **prefer Mermaid over ASCII art**. Mermaid renders natively in GitHub and provides clear, maintainable visualizations.
 

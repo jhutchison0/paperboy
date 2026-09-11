@@ -111,6 +111,8 @@ When an agent or human is introduced to paperboy, point them at these files in t
 8. [docs/adr/](docs/adr/) — accepted architecture decisions; check before reopening any decision they cover.
 9. [docs/sessions/](docs/sessions/) — most recently modified file for live context.
 
+When navigating between these documents, walk the link graph rather than keyword-searching: [.claude/skills/traversing-the-knowledge-base/SKILL.md](.claude/skills/traversing-the-knowledge-base/SKILL.md) has the traversal recipes.
+
 ---
 
 ## Distinguishing This File from Adjacent Artifacts
