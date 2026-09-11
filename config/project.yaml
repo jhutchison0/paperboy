@@ -176,5 +176,5 @@ commands:
 # =============================================================================
 # LAST UPDATED
 # =============================================================================
-last_updated: "2026-07-20"
-updated_by: "Public release prep: tacsop 2026-07-20 doctrine cycle (plan formats, prose skill, shift-left 2.1.0), public-repo prose sweep with audit gate, user_context privatization + history scrub, blog feed audit fix, agent-backend cwd isolation, Apache-2.0 relicense, prose kernel in distiller prompt"
+last_updated: "2026-09-10"
+updated_by: "Five-entry doctrine catch-up from tacsop hub (2026-08-03 through 2026-08-30): uv environments, machine identity (machines: roster, src/machine.py), audit-hook import-grep fallback + agent research tools, KB traversal + pcc checks 5-6, figure style skill, home storage (scope: personal). Venv rebuilt on uv-managed 3.12.13; suite 166 -> 172"
