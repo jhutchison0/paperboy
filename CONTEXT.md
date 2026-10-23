@@ -1,6 +1,6 @@
 # CONTEXT.md — What Paperboy Is
 
-A one-page narrative of paperboy's identity, mission, current state, and key constraints. Uses terms defined in [LANGUAGE.md](LANGUAGE.md). For machine-readable state, see [config/project.yaml](config/project.yaml).
+A one-page narrative of paperboy's identity, mission, current state, and key constraints. Uses terms defined in [LANGUAGE.md](LANGUAGE.md). For machine-readable identity (version, phases, machines, paths), see [config/project.yaml](config/project.yaml).
 
 Maintained via the `maintaining-project-context` skill. Update when the project's mission, scope, or doctrine relationship materially changes, not for routine task progress.
 
@@ -30,14 +30,16 @@ This is a personal-use research tool with a working pipeline, not a product. Tre
 
 ## Current State
 
-See [config/project.yaml](config/project.yaml) for canonical values. Snapshot at last update of this file:
+This section names where each part of the current state lives and holds no snapshot, because a snapshot here reads as current after it stops being true. The `maintaining-the-common-operating-picture` skill says why.
 
-- **Version**: 0.2.0
-- **Active phase**: Phase 2 — Configuration & Polish (Phase 1 — Core Pipeline complete and working end-to-end).
-- **Active work**: Public-repo preparation (prose sweep per `writing-simple-and-direct`), 2026-07-20 upstream doctrine cycle adopted (planning formats, prose style, shift-left-testing 2.1.0).
-- **Tests**: 156 passing.
-- **Backend support**: API (Anthropic SDK), Agent (Claude CLI subprocess for Max subscription), keyword-only fallback. Auto mode tries them in that order.
-- **Known reliability concerns**: none open. The 2026-07-20 blog feed audit replaced the stale Google feedburner URL, updated OpenAI's redirect, and retired the dead Anthropic feed and archived Distill.pub (both commented out in `config/paperboy.yaml`).
+- **Version and phase**: [config/project.yaml](config/project.yaml), `project.version` and `build_phases`. Identity; it changes only when someone edits it.
+- **Campaign focus**: the `## Focus` section at the head of [docs/tasks.md](docs/tasks.md). Intent, not state.
+- **Known unknowns**: [docs/gaps.md](docs/gaps.md), each with the collector that would close it and the decision it blocks.
+- **Last session**: the newest file in [docs/sessions/](docs/sessions/) by name (names are date-first). A record, true as of its date.
+- **The machine**: `.venv/bin/python -m src.machine`, against the `machines:` roster in `config/project.yaml`.
+- **Which Claude backend a run uses**: resolved at run time from the `--backend` flag, then the machine roster's preference, then what the environment provides (an API key, the `claude` CLI, or neither); `python main.py run --help` and the README's "Claude Backend Options" table say how.
+- **Source roster and selection tunables**: [config/paperboy.yaml](config/paperboy.yaml). Whether a feed is live is measured by a `python main.py source` run (gap G6), never read from this file.
+- **Suite, branch, and tools**: measured by command at `/session-start`, never written down.
 
 ---
 
@@ -77,11 +79,11 @@ The hard rules. Violating these requires explicit user override per change.
 
 ## Key Relationships
 
-**Upstream doctrine source**: `tacsop` (GitHub `jhutchison0/tacsop`, named `utils` until 2026-07-20) propagates doctrine updates via `.claude/upstream-update.md`. Paperboy reviews each entry and adopts/adapts/skips per artifact. Major cycles adopted: 2026-05-19 (LANGUAGE.md, CONTEXT.md, ADR system, SKILLS_FRAMEWORK v2, shift-left audit hook) and 2026-07-20 (CONOP/OPORD plan formats, writing-simple-and-direct, shift-left-testing 2.1.0).
+**Upstream doctrine source**: `tacsop` (GitHub `jhutchison0/tacsop`, named `utils` until 2026-07-20) propagates doctrine updates via `.claude/upstream-update.md`. Paperboy reviews each entry and adopts/adapts/skips per artifact; each cycle's disposal is annotated in that file (annotated, never deleted) and recorded in the session doc of the day.
 
 **Sister repo (pattern, not doctrine)**: `elephant-graveyard` (LED curtain digital twin) shares workspace patterns (agents, commands, skills, session docs) but is not a doctrine source. Paperboy was bootstrapped from elephant-graveyard's infrastructure; the pipeline code in `src/` was written fresh.
 
-**Agent roster** (current, in `.claude/agents/`, eight total):
+**Agent roster** (in `.claude/agents/`; `ls .claude/agents/` lists them):
 - `pipeline-sme` — mission alignment, roadmap, pillars
 - `proposer` — solution-space exploration, pre-implementation debate
 - `content-curator` — sources, selection, scoring
@@ -104,14 +106,15 @@ When an agent or human is introduced to paperboy, point them at these files in t
 1. **This file** (`CONTEXT.md`) — what paperboy is.
 2. [LANGUAGE.md](LANGUAGE.md) — how we name things.
 3. [CLAUDE.md](CLAUDE.md) — workflow conventions and quick commands.
-4. [config/project.yaml](config/project.yaml) — current machine-readable state (version, phase, paths).
+4. [config/project.yaml](config/project.yaml) — machine-readable identity (version, phases, machines, paths).
 5. [config/paperboy.yaml](config/paperboy.yaml) — pipeline tunables (sources, scoring weights, distiller settings).
 6. [docs/design/pillars.md](docs/design/pillars.md) — the five design pillars in detail.
 7. [.claude/README.md](.claude/README.md) — agent roster, scope matrix, team templates.
 8. [docs/adr/](docs/adr/) — accepted architecture decisions; check before reopening any decision they cover.
-9. [docs/sessions/](docs/sessions/) — most recently modified file for live context.
-
-10. [.claude/skills/lake-conventions/HOME-STORAGE.md](.claude/skills/lake-conventions/HOME-STORAGE.md) — where bulk data goes if paperboy ever writes any (scope: personal, home storage, no address in git).
+9. [docs/sessions/](docs/sessions/) — the newest file by name for live context (names are date-first).
+10. [docs/tasks.md](docs/tasks.md) — the `## Focus` section at its head: what comes next, in order.
+11. [docs/gaps.md](docs/gaps.md) — what nobody can see yet, and the decision each gap blocks.
+12. [.claude/skills/lake-conventions/HOME-STORAGE.md](.claude/skills/lake-conventions/HOME-STORAGE.md) — where bulk data goes if paperboy ever writes any (scope: personal, home storage, no address in git).
 
 When navigating between these documents, walk the link graph rather than keyword-searching: [.claude/skills/traversing-the-knowledge-base/SKILL.md](.claude/skills/traversing-the-knowledge-base/SKILL.md) has the traversal recipes.
 
@@ -123,7 +126,9 @@ When navigating between these documents, walk the link graph rather than keyword
 |---|---|
 | `CONTEXT.md` (this file) | *What is paperboy and what does it care about?* |
 | [LANGUAGE.md](LANGUAGE.md) | *What do specific terms mean in this project?* |
-| [config/project.yaml](config/project.yaml) | *What is the machine-readable current state?* |
+| [config/project.yaml](config/project.yaml) | *What is the project's machine-readable identity: version, phases, machines, paths?* |
+| [docs/tasks.md](docs/tasks.md) | *What comes next, and in what order?* |
+| [docs/gaps.md](docs/gaps.md) | *What can nobody see yet, and what does that block?* |
 | [config/paperboy.yaml](config/paperboy.yaml) | *What are the pipeline's tunable parameters?* |
 | [CLAUDE.md](CLAUDE.md) | *What conventions and commands does the agent need at hand?* |
 | [docs/design/pillars.md](docs/design/pillars.md) | *What are the five design pillars in detail?* |
@@ -134,5 +139,5 @@ Do not duplicate content across these files. When tempted, ask: "Which one of th
 
 ---
 
-**Last Updated**: 2026-07-20
+**Last Updated**: 2026-10-22
 **Maintained by**: The `maintaining-project-context` skill, with human review.

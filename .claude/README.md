@@ -50,7 +50,7 @@ Each template documents its own task ordering, scaling options, and tips.
 
 ### Step 2: Scale to the work
 
-Not every task needs 7 agents. Scale to fit:
+Not every task needs the whole roster. Scale to fit:
 
 | Work Size | Example | Agents |
 |-----------|---------|--------|

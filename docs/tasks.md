@@ -1,6 +1,15 @@
 # Paperboy — Task List
 
-**Last Updated**: 2026-09-10
+## Focus
+
+The order of the campaign, as intent, as of 2026-10-22. A line here says what comes next, never what is true now; `/session-end` rewrites this section when the order changes. Counts and statuses are measured at `/session-start`, not kept here; a step that needs a number names the command that measures it.
+
+1. Close this doctrine cycle at the first `/session-end` under the Claims table (2026-10-22): the `## Claims` rows with both overclaim counts, the disposal annotations in `.claude/upstream-update.md`, then push `main`.
+2. Flip the repository public and cut v0.3.0 with a CHANGELOG entry (carried since 2026-07-20). Before the flip: optionally ask GitHub support to run GC so pre-rewrite objects cannot resolve by URL, and close gap G5 (every clone post-rewrite) by each rostered box reporting at `/session-start`.
+3. Measure the gaps the register opened, in this order, each recorded in `docs/reviews/`: G4 (two Agent-backend scoring passes over one saved candidate list), G3 (the listening test, owner distiller-dev), G6 (a `python main.py source` run read for feed warnings).
+4. Standing P3s as they fit: batch scoring at the configured target batch size, the CONOP checklist status, and the first property test (selector scoring invariants; the Hypothesis plumbing arrives with it).
+5. On the hub's next notification: the OVERWATCH release when the hold lifts, reconciled against today's early adoption of `verifying-claims` by entry B's Detect block (revert path in the Completed entry dated 2026-10-22); the correction entries for the register pin and the audit hook's import grep; the ISOLATION sidecar and the `--python .venv` pin if entry C ships.
+6. Through the KB-traversal window (five sessions from 2026-09-10): a `KB-graph:` line in each session doc for every traversal that informed the work, and the `/pcc` check 5 count recorded.
 
 ---
 
