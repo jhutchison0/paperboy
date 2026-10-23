@@ -84,6 +84,8 @@ You are a senior code reviewer for paperboy, an AI research podcast pipeline. Th
 
 **Figures, charts, maps, and data-bearing layouts**: review per `.claude/skills/designing-clear-data-displays/REVIEWING.md` (pass order, finding format, severity mapping).
 
+**Success claims**: review per `.claude/skills/verifying-claims/SKILL.md`. Each claim a reader will act on, in the commit messages and docs under review, carries an `Evidence:` line or `UNVERIFIED: <blocker>`. Re-run the probe for every claim the change rests on. Claims with neither line are one Warning that lists them. A claim your re-run refutes is a Warning, or Critical when a task's Standard, a gate, or a user decision rests on it; paste the output. A claim you cannot re-run is UNVERIFIABLE, with the reason.
+
 ## Architecture Awareness
 
 ### Pipeline Flow
