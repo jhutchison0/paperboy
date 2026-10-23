@@ -208,6 +208,16 @@ These skills are portable to any software project. They contain no project names
 
 **Use when**: Adding or reviewing home-storage writes, choosing a format for a stored artifact, or preparing a machine to do storage work.
 
+### verifying-claims (directory form)
+
+**Path**: `.claude/skills/verifying-claims/SKILL.md` + 1 sidecar (`EXAMPLES.md`).
+
+**Focus**: House rule for success claims: six kernel rules, four claim states, one probe per claim type, and seven before/after pairs. The testing skill governs how code gets tested; this one governs what a report may say about the result.
+
+**Key concepts**: claim no higher than the state the evidence reaches (written, tested, deployed, observed), an absence is a claim too, evidence from this turn and after the last change to the thing claimed, check the outcome the claim names with a check that can fail, an `Evidence:` line or `UNVERIFIED: <blocker>` under each claim a reader will act on, a skipped check is not a blocker, a checkout a timer or service runs from is deployed only when clean, probes read and never write; the `## Claims` table at `/session-end`.
+
+**Use when**: Reporting that something passed, landed, synced, exists, or is absent; repeating a number measured earlier; writing or reviewing a session's Claims table.
+
 ### maintaining-the-common-operating-picture (directory form)
 
 **Path**: `.claude/skills/maintaining-the-common-operating-picture/SKILL.md` + 3 sidecars (`DOCTRINE.md`, `EXAMPLES.md`, `ADOPTION.md`).
@@ -420,6 +430,10 @@ This is why `session-end`, `pcc`, `pci`, `sitrep`, `session-start`, and `task` r
 │   ├── ADOPTION.md
 │   ├── HOME-STORAGE.md
 │   └── PREFLIGHT.md
+│
+├── verifying-claims/
+│   ├── SKILL.md
+│   └── EXAMPLES.md
 │
 ├── maintaining-the-common-operating-picture/
 │   ├── SKILL.md

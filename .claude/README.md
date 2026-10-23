@@ -81,6 +81,10 @@ Typical ownership boundaries:
 
 **Forgetting source resilience**: Any change to sourcing must handle failure gracefully. If one feed or ArXiv category breaks, the pipeline must continue. The code-reviewer enforces this.
 
+## Skills the Roster Applies
+
+Paperboy keeps no skills tree here; `.claude/skills/SKILLS_FRAMEWORK.md` is the single index. Four house rules reach every agent through CLAUDE.md's kernels and the `code-reviewer` checklist: prose per `.claude/skills/writing-simple-and-direct/`, figures per `.claude/skills/designing-clear-data-displays/`, success claims per `.claude/skills/verifying-claims/` (the `Evidence:` line under each claim a reader will act on, and the `## Claims` table at `/session-end`), and standing facts per `.claude/skills/maintaining-the-common-operating-picture/` (where state lives, and the gap register `docs/gaps.md`).
+
 ## Updating the Roster
 
 Keep upstream-template agents (`test-runner`, `code-reviewer`, `proposer`, `python-prototyper`) free of project-specific knowledge: they stay portable across repos. A `tools:` line is capability, not knowledge; `WebSearch, WebFetch` on `proposer` and `code-reviewer` exist so a proposal can cite a source it fetched and a challenge can re-fetch it.

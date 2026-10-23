@@ -64,6 +64,21 @@ Schemas and a repo's UX rules define what a display must contain; this defines h
 Before the eight: could a table or a sentence carry these numbers? Under about twenty, a table usually does (VDQI p. 56).
 A UX rule that asks for a less dense display wins; state the override.
 
+## Claim Style
+
+Every claim a reader will act on (that something works, landed, synced, exists, or is absent) follows the verifying-claims skill. The kernel:
+
+1. Name the state: written, tested, deployed, or observed. Claim no higher than your evidence reaches. An absence is a claim too.
+2. Evidence comes from this turn, after the last change to the thing claimed. Earlier output is stale: re-run the check, re-measure the number.
+3. Check the outcome the claim names, with a check that can fail. A launcher's exit 0 is not the outcome; no error is not evidence.
+4. Under each claim a reader will act on, put an `Evidence:` line with the command and its output, or `UNVERIFIED: <blocker>`. A skipped check is not a blocker; run it.
+5. A checkout a timer or service runs from is deployed only when clean: `git status --porcelain` prints nothing.
+6. Probes read; they never write to the system they check.
+
+A plan, an opinion, or an explanation of code is not a claim. The belief a plan rests on is one: check it before you act.
+A diff shown in the same message is its own evidence. Say what you did not do; that needs no `Evidence:` line.
+`/session-end` gathers the session's claims into a `## Claims` table.
+
 ## Picture Style
 
 Every statement about what is true now (a host, a count, a schedule, a coverage figure, a version) follows the maintaining-the-common-operating-picture skill. The kernel:
