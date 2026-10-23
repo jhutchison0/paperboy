@@ -79,7 +79,7 @@ The hard rules. Violating these requires explicit user override per change.
 
 ## Key Relationships
 
-**Upstream doctrine source**: `tacsop` (GitHub `jhutchison0/tacsop`, named `utils` until 2026-07-20) propagates doctrine updates via `.claude/upstream-update.md`. Paperboy reviews each entry and adopts/adapts/skips per artifact; each cycle's disposal is annotated in that file (annotated, never deleted) and recorded in the session doc of the day.
+**Upstream doctrine source**: `tacsop` (GitHub `jhutchison0/tacsop`, named `utils` until 2026-07-20) propagates doctrine updates via `.claude/upstream-update.md`. Paperboy reviews each entry and adopts/adapts/skips per artifact; each cycle's disposal is annotated in that file and recorded in the session doc of the day. When every delivered entry carries its annotation, the file is removed (2026-10-22): the hub's delivery mark `.claude/doctrine-delivered` prevents redelivery, and git history keeps the annotations.
 
 **Sister repo (pattern, not doctrine)**: `elephant-graveyard` (LED curtain digital twin) shares workspace patterns (agents, commands, skills, session docs) but is not a doctrine source. Paperboy was bootstrapped from elephant-graveyard's infrastructure; the pipeline code in `src/` was written fresh.
 
