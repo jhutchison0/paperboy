@@ -824,3 +824,226 @@ to 2.0.0. The relicense requires no downstream action at all.
 - `HOME_*` `.env.example` names: **DEFERRED** until the first bulk-data write (Phase 4 audio is the expected trigger); today the pipeline writes only small gitignored markdown, and role-named variables nothing reads would be inert.
 
 ---
+## 2026-09-18: CI Fix: `uv venv --clear` After `setup-uv` (`shift-left-testing` 2.1.1)
+
+The workflow example in `shift-left-testing/CI.md` fails on current uv, and every
+repo that copied it fails with it. The job dies in "Install dependencies" with
+exit 2, a few milliseconds in, before any test runs.
+
+The cause: `setup-uv@v5`, given a `python-version`, runs `uv venv` itself. The
+example then ran a bare `uv venv`, and current uv refuses to overwrite an existing
+environment ("A virtual environment already exists at: .venv"). Found 2026-09-18
+in `fist` on its first self-hosted run (uv 0.12.16); reproduced in the runner's
+workspace with the runner's own uv; the `.venv` was born inside the `setup-uv`
+step. It is not specific to a self-hosted runner: a hosted runner installs the
+same uv.
+
+Audience: every repo whose workflow uses `astral-sh/setup-uv` with a
+`python-version` input followed by a bare `uv venv`. A repo that installs Python
+another way (`actions/setup-python`, a container) is not affected.
+
+Reversible: a one-flag change. Rollback below.
+
+### Detect
+
+```bash
+grep -nE '^\s*uv venv\s*$' .github/workflows/*.y*ml
+```
+
+Any hit in a workflow that also uses `setup-uv` with `python-version` is the
+defect. On 2026-09-18 the hub's clones showed it in `stx-server` (`tests.yml`) and
+`veil-engine` (`ci.yml`); `fist` was fixed the same day.
+
+### Adoption-Mode Table
+
+| # | Artifact | Mode | Notes |
+|---|---|---|---|
+| 1 | `.github/workflows/*.yml` install step | **PATCH** | `uv venv` becomes `uv venv --clear`. One flag; nothing else in the step changes. |
+| 2 | `.claude/skills/shift-left-testing/` | **TEMPLATE-COPY** | Level 0: re-copy from the hub. 2.1.1 changes `CI.md` and the version lines of `SKILL.md` only. |
+| 3 | `setup-uv` cache inputs | **CONDITIONAL** | Only for a repo that runs on a self-hosted runner: `enable-cache: auto` and `cache-local-path: ~/.cache/uv`. The default cache sits under `RUNNER_TEMP`, which a self-hosted runner wipes after every job. |
+
+### Action required
+
+1. Patch the workflow:
+
+```yaml
+      - name: Install dependencies
+        # --clear: setup-uv@v5 has already run `uv venv` for python-version, and
+        # uv refuses to overwrite an existing .venv without it (exit 2).
+        run: |
+          uv venv --clear
+          uv pip install -e ".[dev]"
+```
+
+`--clear` holds whether or not the action created the environment first
+(`setup-uv` v6 makes that opt-in), so it is safe to apply without checking which
+version of the action a repo pins.
+
+2. Re-copy the skill from the hub and verify:
+
+```bash
+cp -r ~/projects/github/tacsop/.claude/skills/shift-left-testing .claude/skills/
+diff -r ~/projects/github/tacsop/.claude/skills/shift-left-testing .claude/skills/shift-left-testing && echo identical
+```
+
+3. Push, and read the run. The install step now passes; a failure after it is a
+   different defect.
+
+### One lesson that travels
+
+A dry run of a workflow's `run:` lines on your own box is not a dry run of the
+workflow. `fist`'s shell steps passed for both interpreters and the job still
+failed, because the action in front of them had already changed the workspace.
+Read what each `uses:` step does, or say the dry run covers the shell lines only.
+
+### Rollback
+
+Remove the flag. The job returns to failing on current uv, so there is no reason
+to, short of pinning uv below the release that added the refusal.
+
+---
+
+## 2026-10-04: The Common Operating Picture (`maintaining-the-common-operating-picture` 0.1.2)
+
+A new Level 0 skill for how a repo knows its own state. A statement about a host, a
+count, a schedule or a coverage figure goes stale the moment it is written, and a stale
+sentence reads exactly like a fresh one. Two sessions in `assay` lost a day each to that:
+one argued a wave gate already satisfied, off a plan line that stated a measurement; one
+built on a config sentence about which checkout a timer ran, which was false on the box
+it was read on. The repo's sole-source-of-truth config had grown to 61.5 KB, 57 KB of it
+hand-written state.
+
+The skill is two ideas and eight rules. Mark every line as a measurement (value, time,
+collector, subject, universe, shape) or an estimate (a range, a basis, the observation
+that would prove it wrong). Place every line by how it moves: measurements in a generated
+report outside every checkout, estimates and gaps in a tracked register pinned by tests,
+intent in plans, history in records. The vocabulary is defined once with its ADP 5-0 and
+ADP 6-0 sources, so `assessment` is the process and never a line, and a periodic report
+is a measurement at its stamp and an estimate thereafter.
+
+It was drafted after a three-agent pre-draft review (proposer, code-reviewer,
+decision-scientist) of an earlier eight-rule draft; the review's findings are in the
+skill's `EXAMPLES.md` and in the `assay` session record of 2026-10-04. The success
+criterion is open and takes the five-session shape when the first repo renders a picture.
+
+Audience: every repo. A repo with one box and no shared store adopts the same skill; the
+degenerate cases are stated in `ADOPTION.md`.
+
+Reversible: delete the directory and the CLAUDE.md section. If you adopted rows 4 and 5,
+also restore `known_issues`, revert row 5's two edits, and delete
+`test_known_unknowns_live_only_in_the_register`, which fails once the key returns.
+
+### Detect
+
+```bash
+# A config file carrying state prose, the rule 1 smell:
+grep -c -E '^\s+(active_work|known_issues|last_session):' config/project.yaml
+# A plan gate that states a measurement instead of naming a command, the rule 7 smell:
+grep -n -i -E 'still (unswept|pending|open)|suite green at [0-9]+' docs/plans/*.md
+```
+
+Any hit is a line the skill moves.
+
+### Adoption-Mode Table
+
+| # | Artifact | Mode | Notes |
+|---|---|---|---|
+| 1 | `.claude/skills/maintaining-the-common-operating-picture/` | **TEMPLATE-COPY** | Level 0: `adopt_doctrine.py` copies it. Four files. |
+| 2 | `CLAUDE.md` Picture Style section | **PATCH** | The ambient kernel, beside Prose, Figure and Claim Style. Copy the section verbatim. |
+| 3 | A gap register under `docs/` plus its test | **CUSTOMIZE** | The first slice (`ADOPTION.md`). The rows are yours; keep the header. The hub's register is `docs/gaps.md`, checked by `problems(text)` in `src/myproject/utils/gaps.py` and pinned by `tests/unit/test_gaps.py`. In a repo laid out like the template (`src/<pkg>/utils/`, tests importing `src.<pkg>`), both copy with the package name in the test's import changed and the parameters of `test_known_unknowns_live_only_in_the_register` cut to the commands your repo has. Another layout changes `parents[3]` in `gaps.py`: set the index so `REGISTER` resolves under your repo root and check it, `.venv/bin/python -c 'from src.<pkg>.utils import gaps; print(gaps.REGISTER.exists())'` must print `True`. A delivery note to `assay` prescribed `parents[2]` for a package that was not flat; the checker would have read a register above the repo root and found nothing (its review, 2026-10-05). |
+| 4 | `config/project.yaml` `state:` block | **CONDITIONAL** | Where the config carries `known_issues`: the list moves with the first slice, each entry to its one home (a known unknown to a gap row, a defect to the task list, a decision to its record, an operating note to the command it governs), and the key is deleted. The rest of the block waits for the second slice (`ADOPTION.md`). A repo whose house rules protect a known-issues entry as a record may instead keep the key archive-only, pinned by a test that no open item sits under it (`assay`, 2026-10-05); the hub deleted the key. |
+| 5 | `/session-end` Step 4.5, `/sitrep` sources and output | **PATCH** | Both write and read the gap register instead of `known_issues`. Patch both by hand: `adopt_doctrine.py` never overwrites, so it skips `session-end.md` in any repo that has one. Copy the hub's Step 4.5 `docs/gaps.md` bullet, and `/sitrep`'s third source and GAPS block. |
+| 6 | `/session-start`, `/task brief`, and the rest of `/session-end` and `/sitrep` | **DEFER** | Rewrites land in the hub once the first repo has rendered a picture; until then the kernel governs what they may say. |
+
+### Action required
+
+1. Re-run `scripts/adopt_doctrine.py` from your repo root, or copy the directory:
+
+```bash
+cp -r ~/projects/github/tacsop/.claude/skills/maintaining-the-common-operating-picture .claude/skills/
+diff -r ~/projects/github/tacsop/.claude/skills/maintaining-the-common-operating-picture .claude/skills/maintaining-the-common-operating-picture && echo identical
+```
+
+2. Add the Picture Style section to `CLAUDE.md` after Claim Style.
+3. Write the first slice: one gap, two fields, one test. Move `known_issues` into it in
+   the same commit (row 4) and patch `/session-end` Step 4.5 and `/sitrep` (row 5).
+   Record a `COP:` line in the session doc when the picture is first rendered, which
+   opens the success window.
+
+### Rollback
+
+Delete the directory, remove the CLAUDE.md section and the `adopt_doctrine.py` line. If
+you adopted rows 4 and 5, restore `known_issues` from the register's open rows, revert
+the Step 4.5 and `/sitrep` edits, and delete `test_known_unknowns_live_only_in_the_register`,
+which fails once the key returns.
+
+---
+
+## 2026-10-04: The State Block Leaves the Config (picture slice 2; `maintaining-project-context` 1.1.0)
+
+The second slice of the common operating picture, after the gap register in the 2026-10-04
+entry "The Common Operating Picture" (the skill's entry; a notification lists it first). A sentence of state kept in a maintained file reads as current after it stops
+being true. At the hub on 2026-10-04, three did: `README.md` said 189 tests while the
+suite ran 491, and `CONTEXT.md` and `LANGUAGE.md` named the 2026-04-21 propagation as
+the latest after three later cycles. Slice 2 removes the places such sentences lived and
+pins their absence with a test.
+
+`config/project.yaml` holds identity only. The campaign focus moves to a `## Focus`
+section at the head of `docs/tasks.md`, written as intent with absolute dates; the last
+session is the newest file in `docs/sessions/`; known unknowns are already in the gap
+register. `/session-start` tags every summary line with where it came from (`measured`,
+`identity`, `record`, `intent`, or `register`), so the first thing an agent reads in a
+session separates what was measured that turn from what a document held when it was
+written. `CONTEXT.md` Current State names where each part of the state lives and holds
+no snapshot.
+
+This takes the parts of `/session-start`, `/session-end` and `/sitrep` named in rows 2 to 4
+out of the skill entry's row 6 (DEFER). Rendering a picture at `/session-start` is slice 3
+and stays deferred, as does `/task brief`.
+
+Audience: every repo with a `state:` block in its config or a Current State snapshot in
+its `CONTEXT.md`.
+
+Reversible: restore the block and the command text from git, and delete
+`tests/unit/test_state_block.py`.
+
+### Detect
+
+```bash
+# A state block, or a command that writes or reads one:
+grep -n -E '^state:|active_work|last_session' config/project.yaml .claude/commands/*.md CONTEXT.md .claude/README.md
+# A count or a percentage that drifts, kept in an orientation file:
+grep -n -E '\b[0-9][0-9,]*(\.[0-9]+)?(%| ([a-z]+ )?(tests?|repos?|repositories|consumers?|agents?|passed|passing)\b)' README.md CONTEXT.md LANGUAGE.md CLAUDE.md .claude/README.md | grep -v -i -E 'level[ -][0-9]+ agent'
+# A "latest" pinned to a date:
+grep -n -i -E '(most recent|latest)[^.]*20[0-9]{2}-[0-9]{2}-[0-9]{2}' README.md CONTEXT.md LANGUAGE.md CLAUDE.md .claude/README.md
+```
+
+Any hit is a line this slice moves.
+
+### Adoption-Mode Table
+
+| # | Artifact | Mode | Notes |
+|---|---|---|---|
+| 1 | `config/project.yaml` `state:` block | **CUSTOMIZE** | Write `active_work`'s content into a `## Focus` section at the head of `docs/tasks.md` as intent: the order of the next steps, absolute dates, no counts. Then delete the block and add the hub's comment. `last_session` needs no new home. Anything else in the block goes to its one home: identity stays in the config, a gap goes to the register, a measurement becomes the command that takes it. |
+| 2 | `/session-end` Step 4.5 | **PATCH** | Replace it with the hub's "Update Focus and Gaps". `adopt_doctrine.py` skips an existing `session-end.md`, so patch by hand. |
+| 3 | `/session-start` Steps 3, 3.5, 3.7 and 5 | **PATCH** | Copy Step 3 (the newest session doc by name, not by modification time, which a fresh clone makes equal), the Focus bullet, Step 3.7 (read the gap register; it needs slice 1's register), and Step 5's tags and rule. Keep your own summary items and give each a tag. |
+| 4 | `/sitrep` sources 1 and 2, `.claude/README.md` Work Organization | **PATCH** | Both read the Focus section instead of `state.active_work`. |
+| 5 | `CONTEXT.md` Current State, Reading Order, and the artifact table | **CUSTOMIZE** | Replace the snapshot with where each part of the state lives; the hub's list is the model. |
+| 6 | `.claude/skills/maintaining-project-context/` 1.1.0 | **TEMPLATE-COPY** | `adopt_doctrine.py` copies it only where the directory is absent; diff an existing copy and patch it. |
+| 7 | Counts in `README.md`, `LANGUAGE.md`, `CLAUDE.md`, `.claude/README.md` | **CUSTOMIZE** | Replace each count of tests, repos, consumers, or agents with the command that measures it, not with today's number. |
+| 8 | `tests/unit/test_state_block.py` | **CUSTOMIZE** | Copy it and cut `SURFACES` and `ORIENTATION` to the files your repo has. |
+| 9 | `/pcc` check 5's task-list range | **PATCH** | Change `sed -n '/^## Active/,/^## Completed/p' docs/tasks.md` to `sed -n '1,/^## Completed/p' docs/tasks.md`, so the Focus section's paths are checked. Commit it alone, per check 6. |
+
+### Action required
+
+1. Move `active_work` into `## Focus`, delete the `state:` block, and add the comment (row 1).
+2. Patch `/session-end`, `/session-start`, `/sitrep` and `.claude/README.md` (rows 2 to 4).
+3. Rewrite `CONTEXT.md` Current State and update `maintaining-project-context` (rows 5 and 6).
+4. Replace drifting counts with commands (row 7), copy the test (row 8), and run it.
+5. Widen check 5's task-list range (row 9) in its own commit.
+
+### Rollback
+
+Move the Focus section's steps back into `active_work` and restore the `state:` block, the
+four commands, `CONTEXT.md`, and check 5's range from git; return
+`maintaining-project-context` to 1.0.0; delete `tests/unit/test_state_block.py`.

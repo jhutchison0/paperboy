@@ -1,0 +1,17 @@
+## 2026-10-04: The State Block Leaves the Config (picture slice 2; `maintaining-project-context` 1.1.0)
+## 2026-10-04: The Common Operating Picture (`maintaining-the-common-operating-picture` 0.1.2)
+## 2026-09-18: CI Fix: `uv venv --clear` After `setup-uv` (`shift-left-testing` 2.1.1)
+## 2026-08-30: Home Storage for Personal Repos (`lake-conventions` 1.1.0)
+## 2026-08-29: Machine Identity + Lake Conventions (work repos)
+## 2026-08-27: Figure Style Doctrine (designing-clear-data-displays) + Research Tools + Audit-Hook Fallback
+## 2026-08-21: Knowledge-Graph Traversal — Walk the Link Graph Before You Grep
+## 2026-08-03: Environment Doctrine — uv Replaces pip/venv/pyenv/conda (Drop-In)
+## 2026-07-20: NAME CHANGE (`utils` → `tacsop`) + Planning Doctrine + Writing & Testing Doctrine
+## 2026-06-28: Line-Ending Guard — `.gitattributes` as Doctrine
+## 2026-06-28: Branching Doctrine — Short-Lived Topic Branches by Work Shape
+## 2026-05-29: Windows-Portability Patch
+## 2026-05-19: Doctrine Artifact Buildout + Skills Framework v2 + TDD Enforcement Hook
+## 2026-04-21: Agent Output Convention — docs/reviews/ and YYYYMMDD_<subject>.md
+## 2026-03-31: Session-Start — Add Git Sync
+## 2026-03-26: Decision Science Module — Shared MAUT/MCDA Utility
+## 2026-03-24: Planning Framework, Proposer Agent, and Doctrine Propagation
