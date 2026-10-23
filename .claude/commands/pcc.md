@@ -21,14 +21,15 @@ Run these checks and report results:
 
 ### 1. Secrets Check
 ```bash
-# Check for staged secrets
-git diff --cached --name-only | xargs grep -l -E "(API_KEY|SECRET|PASSWORD|TOKEN|PRIVATE_KEY)\s*=" 2>/dev/null || echo "clean"
+# Check for staged secrets (.env.example is excluded: its placeholder lines match by design)
+git diff --cached --name-only | grep -v '^\.env\.example$' | xargs grep -l -E "(API_KEY|SECRET|PASSWORD|TOKEN|PRIVATE_KEY)\s*=" 2>/dev/null || echo "clean"
 
 # Check for .env files staged
-git diff --cached --name-only | grep -E "^\.env" || echo "clean"
+git diff --cached --name-only | grep -E "^\.env" | grep -v '^\.env\.example$' || echo "clean"
 ```
 - FAIL if any secrets patterns found in staged files
 - FAIL if .env files are staged
+- `.env.example` is excluded from both greps: its placeholder `KEY=` lines matched the pattern and its name matched `^\.env`, so the check failed on the tracked template (found 2026-10-22 by the gate review; hallmark hit the same)
 
 ### 2. Tests Pass
 ```bash
@@ -91,12 +92,14 @@ git ls-files -s .claude/hooks/*.sh | grep -v '^100755' && echo "WARN: hook not e
 # Gate surfaces (checks, hooks, settings) change alone:
 # never bundled with work those gates judge.
 staged=$(git diff --cached --name-only)
-gates=$(echo "$staged" | grep -E '^\.claude/(hooks/|settings\.json|commands/(pcc|pci)\.md)' || true)
+gates=$(echo "$staged" | grep -E '^\.claude/(hooks/|settings\.json|commands/(pcc|pci)\.md|agents/code-reviewer\.md)' || true)
 if [ -n "$gates" ] && [ "$(echo "$staged" | grep -c .)" -ne "$(echo "$gates" | grep -c .)" ]; then
   echo "WARN: gate surfaces staged with other files; split into a [gate] commit:"; echo "$gates"
 fi
 ```
 - WARN only; the fix is two commits, with the gate change isolated and tagged `[gate]`
+- `.claude/agents/code-reviewer.md` is a gate surface because its checklist is what the review gate applies (the verifying-claims entry lands its reviewer line alone, 2026-10-22)
+- A test that pins the gate itself may ride in the `[gate]` commit and will still trigger this WARN; record the exception in the commit message (`11ac109`, the audit hook's mode with `tests/test_audit_hook.py`). Work the gate judges never rides
 
 ## Output Format
 
