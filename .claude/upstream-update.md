@@ -826,6 +826,8 @@ to 2.0.0. The relicense requires no downstream action at all.
 ---
 ## 2026-09-18: CI Fix: `uv venv --clear` After `setup-uv` (`shift-left-testing` 2.1.1)
 
+**Processed**: 2026-10-22 on Nidhogg. Row 1 (workflow PATCH): N/A, no `.github/workflows` here. Row 2 (skill re-copy): **TEMPLATE-COPY** ✓ of `SKILL.md` and `CI.md` from hub commit `d4ac4e4`, the commit that staged this entry, not hub HEAD (HEAD carries 2.2.1, held under OVERWATCH; propter, fist and tactics-game copied from the same commit). `ENFORCEMENT.md` and `SCRIPTS.md` keep the flat-layout adaptation; the hub has not changed either since. Row 3 (self-hosted cache inputs): N/A. Commit `fe719bf`.
+
 The workflow example in `shift-left-testing/CI.md` fails on current uv, and every
 repo that copied it fails with it. The job dies in "Install dependencies" with
 exit 2, a few milliseconds in, before any test runs.
@@ -905,6 +907,8 @@ to, short of pinning uv below the release that added the refusal.
 
 ## 2026-10-04: The Common Operating Picture (`maintaining-the-common-operating-picture` 0.1.2)
 
+**Processed**: 2026-10-22 on Nidhogg, after reading how hallmark, propter, fist, assay and tactics-game adopted it. Row 1 skill **TEMPLATE-COPY** ✓ (four files, byte-identical). Row 2 Picture Style **PATCH** ✓ verbatim, after Figure Style; the kernel's Claim Style reference is resolved by adopting `verifying-claims` ahead of its entry (see the slice 2 annotation below). Row 3 first slice **CUSTOMIZE** ✓: `docs/gaps.md` with six rows (every number dated), `src/gaps.py` at `parents[1]` with the Gap cell added to REQUIRED (agent-eval mutation M16), `tests/test_gaps.py` with the `_keys` YAML walk the hub has queued and an empty-Gap-cell pin. Row 4 `known_issues`: N/A, never existed here. Row 5 **PATCH** ✓ `/session-end` Step 4.5 and `/sitrep` source 3 plus a GAPS block. Row 6 DEFER as the hub says. Commit `171b868`.
+
 A new Level 0 skill for how a repo knows its own state. A statement about a host, a
 count, a schedule or a coverage figure goes stale the moment it is written, and a stale
 sentence reads exactly like a fresh one. Two sessions in `assay` lost a day each to that:
@@ -980,6 +984,10 @@ which fails once the key returns.
 ---
 
 ## 2026-10-04: The State Block Leaves the Config (picture slice 2; `maintaining-project-context` 1.1.0)
+
+**Processed**: 2026-10-22 on Nidhogg. Row 1: no `state:` block existed; `last_updated` and `updated_by` were its equivalent (a prose session summary rewritten every session) and left, the hub's comment in their place; `## Focus` written at the head of `docs/tasks.md`. Rows 2 to 4 **PATCH** ✓: `/session-end` 4.5, `/session-start` Steps 3, 3.5, 3.7 and 5 with the six tags, `/sitrep` sources 1 to 4; `.claude/README.md` had no Work Organization line, so it gained a Skills paragraph naming the register. Row 5 **CUSTOMIZE** ✓ CONTEXT.md Current State as pointers (it said 156 tests while the suite ran 180, and a backend order the 2026-09-10 roster preference had changed). Row 6 **TEMPLATE-COPY** ✓ 1.1.0. Row 7 **CUSTOMIZE** ✓ (README weight percentages to config keys; roster size; agent count). Row 8 **CUSTOMIZE** ✓ `tests/test_state_block.py` at `parents[1]`, also pinning `last_updated` and `updated_by` absent (tactics-game). Row 9 **PATCH** ✓ alone, `[gate]` `dbed92e`, which also adds `docs/gaps.md` to both passes and a hook-mode line to check 4. Not adopted, held OVERWATCH 1c content: the hub's `/session-start` Step 4 tool checks and Tools item. Commit `74a14f2`.
+
+**Ahead of its entry**, by the user's decision 2026-10-22: `verifying-claims` 1.0.0 from hub `ff0d8b2` with all of draft entry B's surfaces and its 26 pins (`bf037e8`), the reviewer line alone `[gate]` (`e011fef`); no heading added to `.claude/doctrine-delivered`; revert path in `docs/tasks.md`. **Found on the way**: the audit hook was mode 100644 in the index since its creation on 2026-05-22 and fired only where a box had chmod'ed it locally; fixed `[gate]` `11ac109` with `tests/test_audit_hook.py`. **Not adopted**: the 2.2.x ISOLATION sidecar and tripwire (held entry C; paperboy also has no pyproject for `addopts`).
 
 The second slice of the common operating picture, after the gap register in the 2026-10-04
 entry "The Common Operating Picture" (the skill's entry; a notification lists it first). A sentence of state kept in a maintained file reads as current after it stops
