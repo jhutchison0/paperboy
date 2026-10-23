@@ -21,14 +21,15 @@ Run these checks and report results:
 
 ### 1. Secrets Check
 ```bash
-# Check for staged secrets
-git diff --cached --name-only | xargs grep -l -E "(API_KEY|SECRET|PASSWORD|TOKEN|PRIVATE_KEY)\s*=" 2>/dev/null || echo "clean"
+# Check for staged secrets (.env.example is excluded: its placeholder lines match by design)
+git diff --cached --name-only | grep -v '^\.env\.example$' | xargs grep -l -E "(API_KEY|SECRET|PASSWORD|TOKEN|PRIVATE_KEY)\s*=" 2>/dev/null || echo "clean"
 
 # Check for .env files staged
-git diff --cached --name-only | grep -E "^\.env" || echo "clean"
+git diff --cached --name-only | grep -E "^\.env" | grep -v '^\.env\.example$' || echo "clean"
 ```
 - FAIL if any secrets patterns found in staged files
 - FAIL if .env files are staged
+- `.env.example` is excluded from both greps: its placeholder `KEY=` lines matched the pattern and its name matched `^\.env`, so the check failed on the tracked template (found 2026-10-22 by the gate review; hallmark hit the same)
 
 ### 2. Tests Pass
 ```bash
@@ -49,8 +50,12 @@ git diff --cached | grep -E "^\+" | grep -E "(breakpoint\(\)|import pdb|print\(.
 ```bash
 # Check for uncommitted changes that might be forgotten
 git status --short
+
+# Hooks run by path from settings.json: a hook at mode 644 never fires and never errors
+git ls-files -s .claude/hooks/*.sh | grep -v '^100755' && echo "WARN: hook not executable in the index (git update-index --chmod=+x)"
 ```
 - WARN if unstaged changes exist (might forget to include them)
+- WARN if a hook under `.claude/hooks/` is not mode 100755 in the index; the mode a clone receives is the index's, so a `chmod` on one box is not enough (found 2026-10-22: the audit log had been silent since 2026-07-20; `tests/test_audit_hook.py` pins it)
 - INFO showing current branch
 
 ### 5. Reference Integrity (living docs)
@@ -58,13 +63,13 @@ git status --short
 # Path-shaped references in orientation surfaces must resolve.
 # Allowlist covers runtime artifacts that are legitimately absent
 # (upstream-update.md, gitignored audit logs and output/).
-{ cat CLAUDE.md CONTEXT.md README.md LANGUAGE.md .claude/README.md 2>/dev/null; \
-  sed -n '/^## Active/,/^## Completed/p' docs/tasks.md; } \
+{ cat CLAUDE.md CONTEXT.md README.md LANGUAGE.md .claude/README.md docs/gaps.md 2>/dev/null; \
+  sed -n '1,/^## Completed/p' docs/tasks.md; } \
   | grep -oE '(docs|src|tests|config|scripts|output|\.claude|\.github)/[A-Za-z0-9_./-]+\.[A-Za-z0-9]{2,4}' \
   | grep -vE '^\.claude/(upstream-update\.md|audits/)|^output/' \
   | sort -u | while read -r p; do [ -e "$p" ] || echo "MISSING: $p"; done
 ```
-- The `sed` range assumes headings named exactly `## Active` and `## Completed` (paperboy's `docs/tasks.md` has both, with `## Blocked` between them — the range deliberately covers Active and Blocked). If the headings ever change, re-verify the captured range by hand; a prefix match with no end anchor silently runs to end of file.
+- The task list is scanned from its first line, so the `## Focus` section above `## Active` is covered (it names paths, and the range that began at `## Active` never checked them); `## Completed` and below are records and are not. The range assumes a heading named exactly `## Completed`; if it changes, re-verify the captured range by hand, since a prefix match with no end anchor silently runs to end of file. `docs/gaps.md` joins the surfaces because its collector cells name paths.
 - `output/` is allowlisted whole: everything under it is a gitignored runtime artifact (briefings, `.selection_history.json`) that LANGUAGE.md legitimately names while absent.
 - Expected output: empty. First run 2026-09-10 found 3 findings, dispositioned to a 0-MISSING baseline: `output/.selection_history.json` allowlisted (runtime), `.claude/agent-memory/` allowlisted (runtime), `docs/reviews/` created with `.gitkeep` (convention dir LANGUAGE.md names). WARN on any MISSING line, and record the run's count in the session doc (it is metric M2 in `.claude/skills/traversing-the-knowledge-base/SKILL.md`; an unrecorded run is indistinguishable from an unrun check)
 - Any MISSING line is caught drift and fires that skill's build trigger
@@ -76,7 +81,7 @@ git status --short
 
 ```bash
 # Directory pass, covering blind spot 1. Same surfaces, no extension required.
-{ cat CLAUDE.md CONTEXT.md README.md LANGUAGE.md .claude/README.md 2>/dev/null; } \
+{ cat CLAUDE.md CONTEXT.md README.md LANGUAGE.md .claude/README.md docs/gaps.md 2>/dev/null; } \
   | grep -oE '(docs|src|tests|config|scripts|output|\.claude|\.github)/[A-Za-z0-9_./-]*/' \
   | grep -vE '^(\.claude/audits/|\.claude/agent-memory/|output/)' \
   | sort -u | while read -r p; do [ -d "$p" ] || echo "MISSING-DIR: $p"; done
@@ -87,12 +92,14 @@ git status --short
 # Gate surfaces (checks, hooks, settings) change alone:
 # never bundled with work those gates judge.
 staged=$(git diff --cached --name-only)
-gates=$(echo "$staged" | grep -E '^\.claude/(hooks/|settings\.json|commands/(pcc|pci)\.md)' || true)
+gates=$(echo "$staged" | grep -E '^\.claude/(hooks/|settings\.json|commands/(pcc|pci)\.md|agents/code-reviewer\.md)' || true)
 if [ -n "$gates" ] && [ "$(echo "$staged" | grep -c .)" -ne "$(echo "$gates" | grep -c .)" ]; then
   echo "WARN: gate surfaces staged with other files; split into a [gate] commit:"; echo "$gates"
 fi
 ```
 - WARN only; the fix is two commits, with the gate change isolated and tagged `[gate]`
+- `.claude/agents/code-reviewer.md` is a gate surface because its checklist is what the review gate applies (the verifying-claims entry lands its reviewer line alone, 2026-10-22)
+- A test that pins the gate itself may ride in the `[gate]` commit and will still trigger this WARN; record the exception in the commit message (`11ac109`, the audit hook's mode with `tests/test_audit_hook.py`). Work the gate judges never rides
 
 ## Output Format
 

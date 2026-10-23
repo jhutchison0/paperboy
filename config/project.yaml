@@ -33,7 +33,7 @@ design_pillars:
 # -----------------------------------------------------------------------------
 # Machines
 # -----------------------------------------------------------------------------
-# Roster of the boxes this repo is cloned on, keyed by hostname (`hostname`).
+# Roster of the boxes this repo may run on, keyed by hostname (`hostname`); which of them hold a clone is gap G5 in docs/gaps.md.
 # Read by src/machine.py; /session-start Step 1.5 prints the resolved line.
 #
 # No usernames here. Per-user namespaces are derived from $USER at runtime.
@@ -41,6 +41,11 @@ design_pillars:
 # this box prefers; see README "Claude Backends". Advisory, never binding.
 machines:
   Muninn:
+    role: workstation
+    scope: [personal]
+    backend: agent  # home box: subscription via Claude CLI, no API spend
+    references: {}
+  Nidhogg:
     role: workstation
     scope: [personal]
     backend: agent  # home box: subscription via Claude CLI, no API spend
@@ -176,8 +181,14 @@ commands:
   run_distill: "python main.py distill"
   help: "python main.py --help"
 
-# =============================================================================
-# LAST UPDATED
-# =============================================================================
-last_updated: "2026-09-10"
-updated_by: "Five-entry doctrine catch-up from tacsop hub (2026-08-03 through 2026-08-30): uv environments, machine identity, audit-hook fallback + agent research tools, KB traversal + pcc checks 5-6, figure style, home storage. Follow-on: machine-keyed backend preference (machines.<host>.backend honored by auto mode); D10 upstream-lesson channel seeded with 3 fleet-scope lessons. Suite 166 -> 180"
+# -----------------------------------------------------------------------------
+# No state block
+# -----------------------------------------------------------------------------
+# This file is identity, the slowest-moving facts; a sentence of state kept here
+# reads as current long after it stops being true. The last_updated and
+# updated_by keys that stood here left on 2026-10-22 for that reason. Instead:
+#   last session      the newest file in docs/sessions/ by name (date-first)
+#   campaign focus    the ## Focus section at the head of docs/tasks.md (intent)
+#   known unknowns    docs/gaps.md, the gap register
+#   suite, git        measured by command at /session-start, never written down
+# See .claude/skills/maintaining-the-common-operating-picture/ADOPTION.md.

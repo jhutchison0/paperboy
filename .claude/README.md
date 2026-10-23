@@ -50,7 +50,7 @@ Each template documents its own task ordering, scaling options, and tips.
 
 ### Step 2: Scale to the work
 
-Not every task needs 7 agents. Scale to fit:
+Not every task needs the whole roster. Scale to fit:
 
 | Work Size | Example | Agents |
 |-----------|---------|--------|
@@ -80,6 +80,10 @@ Typical ownership boundaries:
 **Letting distiller-dev and content-curator overlap**: The curator owns what goes IN (sources, selection). The distiller-dev owns what comes OUT (briefing quality, prompt engineering). If work touches both sides of the pipeline, split it into two tasks with clear ownership.
 
 **Forgetting source resilience**: Any change to sourcing must handle failure gracefully. If one feed or ArXiv category breaks, the pipeline must continue. The code-reviewer enforces this.
+
+## Skills the Roster Applies
+
+Paperboy keeps no skills tree here; `.claude/skills/SKILLS_FRAMEWORK.md` is the single index. Four house rules reach every agent as kernels in CLAUDE.md, which subagents receive: prose per `.claude/skills/writing-simple-and-direct/`, figures per `.claude/skills/designing-clear-data-displays/`, success claims per `.claude/skills/verifying-claims/` (an `Evidence:` line under each claim a reader will act on, and the `## Claims` table at `/session-end`), and standing facts per `.claude/skills/maintaining-the-common-operating-picture/` (where state lives, and the gap register `docs/gaps.md`). The `code-reviewer` checklist re-reads the first three at every review.
 
 ## Updating the Roster
 

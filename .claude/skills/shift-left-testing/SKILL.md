@@ -1,7 +1,7 @@
 ---
 name: shift-left-testing
 description: Multi-tier testing strategy with vertical-slicing (tracer-bullet) TDD, mocks, fixtures, simulation, property-based invariants, numeric tolerances, legacy characterization, script/CLI testing, CI integration, and explicit anti-patterns. Use when setting up test infrastructure, designing test strategy, implementing mocks, or driving feature work via test-first one-cycle-at-a-time TDD.
-version: "2.1.0"
+version: "2.1.1"
 ---
 
 # Shift-Left Testing
@@ -110,6 +110,7 @@ Loaded on demand when this SKILL.md cites them. Read only the ones relevant to t
 ---
 
 **Maintained by**: Shift-Left Testing Skill
-**Version**: 2.1.0 adds four sidecars: PROPERTY-BASED (Hypothesis invariants), NUMERIC (tolerances and determinism), REGRESSION (characterization and golden files), SCRIPTS (CLI testing and perimeter widening). New sidecars follow writing-simple-and-direct (2026-07-17).
+**Version**: 2.1.1 fixes the CI sidecar's workflow example: `uv venv --clear`, because `setup-uv@v5` has already created `.venv` and uv refuses a second bare `uv venv` (exit 2); adds the self-hosted cache inputs (2026-09-18, found in `fist`).
+**Prior**: 2.1.0 adds four sidecars: PROPERTY-BASED (Hypothesis invariants), NUMERIC (tolerances and determinism), REGRESSION (characterization and golden files), SCRIPTS (CLI testing and perimeter widening). New sidecars follow writing-simple-and-direct (2026-07-17).
 **Prior**: 2.0.0, restructured to directory form with sidecar progressive disclosure, vertical-slicing discipline added, ENFORCEMENT sidecar describes deterministic hooks (2026-05-19)
 **Replaces**: prior single-file at `.claude/skills/shift-left-testing.md` (deleted in the same commit).

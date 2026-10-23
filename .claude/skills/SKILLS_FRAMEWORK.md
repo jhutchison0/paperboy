@@ -140,9 +140,9 @@ These skills are portable to any software project. They contain no project names
 
 **Path**: `.claude/skills/maintaining-project-context/SKILL.md`
 
-**Focus**: Maintain CONTEXT.md at the repo root capturing project identity, mission, current state, and constraints.
+**Focus**: Maintain CONTEXT.md at the repo root capturing project identity, mission, where the current state lives, and constraints.
 
-**Key concepts**: project identity vs config state, narrative-not-machine-readable, distinguishes from LANGUAGE.md (terms) and project.yaml (machine-readable state).
+**Key concepts**: narrative identity beside `config/project.yaml`'s machine-readable identity; Current State names where each part of the state lives (the Focus in `docs/tasks.md`, the gap register, the newest session doc by name, the command that measures the rest) and holds no snapshot; distinguishes from LANGUAGE.md (terms).
 
 **Use when**: Significant new work starts; mission or scope changes; an agent needs project context quickly; downstream relationships change.
 
@@ -207,6 +207,26 @@ These skills are portable to any software project. They contain no project names
 **Audience in paperboy**: the repo is scope: personal, so only `HOME-STORAGE.md` applies here; the lake sections stay closed.
 
 **Use when**: Adding or reviewing home-storage writes, choosing a format for a stored artifact, or preparing a machine to do storage work.
+
+### verifying-claims (directory form)
+
+**Path**: `.claude/skills/verifying-claims/SKILL.md` + 1 sidecar (`EXAMPLES.md`).
+
+**Focus**: House rule for success claims: six kernel rules, four claim states, one probe per claim type, and seven before/after pairs. The testing skill governs how code gets tested; this one governs what a report may say about the result.
+
+**Key concepts**: claim no higher than the state the evidence reaches (written, tested, deployed, observed), an absence is a claim too, evidence from this turn and after the last change to the thing claimed, check the outcome the claim names with a check that can fail, an `Evidence:` line or `UNVERIFIED: <blocker>` under each claim a reader will act on, a skipped check is not a blocker, a checkout a timer or service runs from is deployed only when clean, probes read and never write; the `## Claims` table at `/session-end`.
+
+**Use when**: Reporting that something passed, landed, synced, exists, or is absent; repeating a number measured earlier; writing or reviewing a session's Claims table.
+
+### maintaining-the-common-operating-picture (directory form)
+
+**Path**: `.claude/skills/maintaining-the-common-operating-picture/SKILL.md` + 3 sidecars (`DOCTRINE.md`, `EXAMPLES.md`, `ADOPTION.md`).
+
+**Focus**: How a repo knows its own state. Two ideas and eight kernel rules: mark every line as a measurement or an estimate, and place every line by how it moves. The vocabulary (assessment, measurement, estimate, projection, horizon, surprise, gap, collector, universe, picture) is defined once, with its ADP 5-0 and 6-0 sources. `verifying-claims` governs a claim about what this turn changed; this skill governs standing facts this turn did not touch, and where they live.
+
+**Key concepts**: the rendered picture is generated and never hand-edited while its registers are authored; a measurement carries value, time, collector, subject identity, universe and shape (exact, bound, interval); an estimate carries a range and the observation that would prove it wrong; every quantity declares its motion (constant, drifting, scheduled), its horizon per decision, and its surprise condition; supersede in place; gaps name their collector and the decision they block and the list is never empty; read the picture before you measure; one horizon per line (current operations, running estimate, plans) with records keeping all three; never report clean (checked with fields, or unchecked with a reason). Success criterion open, in the five-session shape.
+
+**Use when**: Writing or reading any statement about what is true now; before measuring something that may already be measured; designing a probe, a status document or the session-start summary; deciding where a fact lives; reviewing a plan whose gate states a measurement.
 
 ### task management (command: `/task`)
 
@@ -349,21 +369,27 @@ This is why `session-end`, `pcc`, `pci`, `sitrep`, `session-start`, and `task` r
 ├── # Level 0 — directory form (current standard)
 ├── configuration-management/
 │   ├── SKILL.md
-│   ├── STRUCTURE-AND-FILES.md
 │   ├── LOADER.md
+│   ├── PAPERBOY-NOTES.md
 │   ├── SECRETS.md
-│   ├── VALIDATION.md
-│   └── TESTING-AND-PATTERNS.md
+│   ├── STRUCTURE-AND-FILES.md
+│   ├── TESTING-AND-PATTERNS.md
+│   └── VALIDATION.md
 │
 ├── shift-left-testing/
 │   ├── SKILL.md
-│   ├── TIERS.md
-│   ├── PATTERNS.md
-│   ├── MOCKS.md
-│   ├── FIXTURES.md
-│   ├── VERTICAL-SLICING.md
+│   ├── ANTIPATTERNS.md
 │   ├── CI.md
-│   └── ANTIPATTERNS.md
+│   ├── ENFORCEMENT.md
+│   ├── FIXTURES.md
+│   ├── MOCKS.md
+│   ├── NUMERIC.md
+│   ├── PATTERNS.md
+│   ├── PROPERTY-BASED.md
+│   ├── REGRESSION.md
+│   ├── SCRIPTS.md
+│   ├── TIERS.md
+│   └── VERTICAL-SLICING.md
 │
 ├── python-venv-management/
 │   ├── SKILL.md
@@ -378,6 +404,42 @@ This is why `session-end`, `pcc`, `pci`, `sitrep`, `session-start`, and `task` r
 │
 ├── recording-architecture-decisions/
 │   └── SKILL.md
+│
+├── using-topic-branches/
+│   └── SKILL.md
+│
+├── writing-simple-and-direct/
+│   ├── SKILL.md
+│   ├── ADOPTION.md
+│   ├── EXAMPLES.md
+│   ├── REVIEWING.md
+│   └── RULES.md
+│
+├── traversing-the-knowledge-base/
+│   └── SKILL.md
+│
+├── designing-clear-data-displays/
+│   ├── SKILL.md
+│   ├── ADOPTION.md
+│   ├── EXAMPLES.md
+│   ├── REVIEWING.md
+│   └── RULES.md
+│
+├── lake-conventions/
+│   ├── SKILL.md
+│   ├── ADOPTION.md
+│   ├── HOME-STORAGE.md
+│   └── PREFLIGHT.md
+│
+├── verifying-claims/
+│   ├── SKILL.md
+│   └── EXAMPLES.md
+│
+├── maintaining-the-common-operating-picture/
+│   ├── SKILL.md
+│   ├── ADOPTION.md
+│   ├── DOCTRINE.md
+│   └── EXAMPLES.md
 │
 └── # Level 1 — Project-Specific
     (none — this is a template; downstream repos add as needed)

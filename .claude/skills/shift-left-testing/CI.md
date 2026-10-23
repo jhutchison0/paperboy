@@ -32,8 +32,10 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
+        # --clear: setup-uv@v5 has already run `uv venv` for python-version, and
+        # uv refuses to overwrite an existing .venv without it (exit 2).
         run: |
-          uv venv
+          uv venv --clear
           uv pip install -e ".[dev]"
 
       - name: Run unit tests
@@ -56,7 +58,8 @@ jobs:
 - External tests (`tests/external/`) are NOT in CI by default. They run manually or on a nightly schedule.
 - Matrix the Python versions you support, not "all of them." Three versions covers most cases.
 - `uv pip install -e ".[dev]"` requires a `pyproject.toml` with a `[project.optional-dependencies] dev = [...]` section.
-- `setup-uv` with a `python-version` input installs a uv-managed interpreter; `uv venv` then builds on it, so the job never touches the runner's system Python.
+- `setup-uv@v5` with a `python-version` input installs a uv-managed interpreter, sets `UV_PYTHON`, and runs `uv venv` itself, so `.venv` already exists when your install step starts and the job never touches the runner's system Python. Current uv refuses to overwrite an existing environment: a bare `uv venv` exits 2 with "A virtual environment already exists". Write `uv venv --clear`. The flag holds whether or not the action created the environment first (`setup-uv` v6 makes that opt-in), so it is the form to copy. Found 2026-09-18 in `fist`, where the job died in "Install dependencies" 8 ms in; a hosted runner and a self-hosted one fail the same way.
+- A dry run of the workflow's `run:` lines on your own box does not cover what a `uses:` step did to the workspace first. Read the action, or say the dry run covers the shell lines only.
 
 ## Coverage Configuration
 
@@ -139,6 +142,17 @@ Then test failures appear as inline review comments on the changed lines.
 ```
 
 uv's installs are fast enough that cold-cache runs are rarely the bottleneck; the cache mostly saves PyPI bandwidth.
+
+On a self-hosted runner, set two inputs differently. `setup-uv@v5` puts uv's cache under `RUNNER_TEMP` by default, and a self-hosted runner wipes `RUNNER_TEMP` after every job, so every run starts cold. `enable-cache: true` also round-trips the cache through GitHub's cache service, which a box with its own disk does not need:
+
+```yaml
+- uses: astral-sh/setup-uv@v5
+  with:
+    enable-cache: auto             # GitHub's cache service on hosted runners only
+    cache-local-path: ~/.cache/uv  # survives the job on a self-hosted runner
+```
+
+Both values are safe on a hosted runner too, so one workflow serves both (read from `setup-uv` v5's `src/utils/inputs.ts`, 2026-09-18).
 
 ## Parallel Execution
 
