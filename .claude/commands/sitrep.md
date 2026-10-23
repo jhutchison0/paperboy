@@ -10,11 +10,12 @@ Generate a team-facing status report summarizing what was built, what was found,
 
 Read ALL of these to build the report:
 
-1. `config/project.yaml` — `project.current_phase`, `project.version`, `build_phases` status for each phase
-2. `docs/tasks.md` — active, blocked, and recently completed items
-3. Most recent file in `docs/sessions/` — last session details (sort by filename date, take the highest)
-4. `git log --oneline -10` — recent commit messages
-5. `git log --oneline main..HEAD` — commits not yet on main (if on a dev branch)
+1. `config/project.yaml` — `project.current_phase`, `project.version`, `build_phases` status for each phase (identity; nothing in it is measured)
+2. `docs/tasks.md` — the `## Focus` section (the campaign's order), active and blocked items, and the defects the KNOWN ISSUES block reports
+3. `docs/gaps.md` — open gaps: what nobody can see yet, and the decision each one blocks
+4. Newest file in `docs/sessions/` by name (`ls docs/sessions/*.md | sort | tail -1`; on a date with two docs, both) — last session details
+5. `git log --oneline -10` — recent commit messages
+6. `git log --oneline main..HEAD` — commits not yet on main (if on a dev branch)
 
 ## Scope Filtering
 
@@ -41,7 +42,7 @@ A good SITREP has specifics, not summaries. Before writing each section:
 - **Functions**: Find the actual function or class name and include it (e.g., `PaperSelector.score()`, `AgentRunner._invoke()`)
 - **Config**: Pull actual values from `config/paperboy.yaml` — thresholds, weights, limits (e.g., `keyword_weight: 0.3`, `max_papers: 5`)
 - **Test results**: Run `.venv/bin/pytest -q 2>&1 | tail -5` for current counts
-- **Pipeline metrics**: From session docs — papers sourced, papers selected, briefing word count, scoring pass rate
+- **Pipeline metrics**: From session docs, with the date each was taken (papers sourced, papers selected, briefing word count, scoring pass rate); a number a reader will act on today is measured again, not restated
 - **Known issues**: Include the specific symptom and its scope, not just "there's a problem"
 
 ## Output Format
@@ -71,11 +72,14 @@ TEST STATUS:
 KNOWN ISSUES:
   - [Issue name]: [specific symptom and affected module — e.g., "Distiller raises RuntimeError on agent failure instead of returning None (distiller.py:~L120)"]
 
+GAPS (open rows in docs/gaps.md):
+  - [What nobody can see yet]: [the decision it blocks]
+
 BLOCKED:
   - [Item]: [what's blocking it, or "none"]
 
 NEXT:
-  - [Top priority active tasks from docs/tasks.md, with priority tag]
+  - [The Focus section's next steps, then priority active tasks from docs/tasks.md, with priority tag]
 
 OPEN DECISIONS:
   - [Decisions that need input, if any — e.g., "Batch scoring: target batch_size=5, current=1, design not started"]

@@ -64,6 +64,22 @@ Schemas and a repo's UX rules define what a display must contain; this defines h
 Before the eight: could a table or a sentence carry these numbers? Under about twenty, a table usually does (VDQI p. 56).
 A UX rule that asks for a less dense display wins; state the override.
 
+## Picture Style
+
+Every statement about what is true now (a host, a count, a schedule, a coverage figure, a version) follows the maintaining-the-common-operating-picture skill. The kernel:
+
+1. The rendered picture is never hand-edited; its inputs may be.
+2. Every line is a measurement or an estimate, and an input or an outcome, and says which. A measurement carries value, time, collector, subject, universe and shape; an estimate carries a range, its basis, and the observation that would prove it wrong.
+3. Every quantity declares how it moves (constant, drifting, scheduled) and what would be a surprise; the picture shows the last measurement, its age, and the projection, and flags the surprise.
+4. Supersede in place, never overwrite; tests count unmarked lines only.
+5. Gaps are listed, each naming its collector and the decision it blocks, and the list is never empty.
+6. Read the picture before you measure or assert state; re-measure for a named cause, never for comfort.
+7. One horizon per line, not per document: current operations measured by command, the running estimate maintained, plans as intent with gates that name their command. Records keep every horizon and are never rewritten.
+8. Never report clean: checked with its fields, or unchecked with a reason and no value.
+
+A claim about what this turn changed follows Claim Style; a standing fact this turn did not touch follows this.
+`assessment` is the process, never a line. A periodic report is a measurement at its stamp and an estimate thereafter.
+
 ## Environment Setup
 
 This project uses **uv** (Astral) for interpreters, environments, and packages. **All commands must run inside the venv.**
@@ -194,6 +210,9 @@ paperboy/
 │   ├── selector.py            # PaperSelector (keyword + Claude scoring)
 │   ├── distiller.py           # BriefingDistiller (Claude-powered, 8-section output)
 │   ├── pipeline.py            # DailyPipeline orchestrator, PipelineResult
+│   ├── agent_runner.py        # AgentRunner: claude -p subprocess backend
+│   ├── machine.py             # Machine roster lookup (config/project.yaml machines:)
+│   ├── gaps.py                # Gap register checker (docs/gaps.md)
 │   └── tts_interface.py       # TTSProvider ABC, stubs for future TTS
 ├── config/
 │   ├── paperboy.yaml          # ArXiv categories, blogs, keywords, Claude settings
@@ -201,6 +220,8 @@ paperboy/
 ├── tests/                     # pytest suites
 │   └── test_pipeline.py       # Integration tests
 ├── docs/
+│   ├── tasks.md               # Task list; the ## Focus section at its head
+│   ├── gaps.md                # Gap register: what nobody can see yet
 │   ├── design/
 │   │   ├── pillars.md         # 5 design pillars
 │   │   └── roadmap.md         # Project roadmap

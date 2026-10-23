@@ -138,7 +138,13 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 **LANGUAGE.md**: This file. The project's domain glossary. Maintained via the `maintaining-ubiquitous-language` skill.
 
-**CONTEXT.md**: Paperboy's narrative identity, mission, current state, and key constraints. Companion to `LANGUAGE.md` and `config/project.yaml`. Maintained via the `maintaining-project-context` skill.
+**CONTEXT.md**: Paperboy's narrative identity, mission, where its current state lives, and key constraints. Companion to `LANGUAGE.md` and `config/project.yaml`. Maintained via the `maintaining-project-context` skill.
+
+**Focus**: The `## Focus` section at the head of `docs/tasks.md`: the campaign's next steps, in order, as intent, with absolute dates and no counts or status. Rewritten by `/session-end` Step 4.5 when the order changes. Introduced 2026-10-22 with the hub's 2026-10-04 picture entries; paperboy never carried a `state.active_work` key for it to replace.
+
+**Gap Register**: `docs/gaps.md`, the list of what this repo cannot see yet. Each open row names the collector that would close it and the decision it blocks; a row closes or is superseded in place, never deleted; the list is never empty. Checked by `src/gaps.py` and pinned by `tests/test_gaps.py`. A defect is a task in `docs/tasks.md`, not a gap.
+
+**Common Operating Picture**: One rendered display over the data every reader shares, never a maintained paragraph. It and its terms (measurement, estimate, projection, horizon, surprise, gap, collector, universe) are defined once, in the vocabulary table of `.claude/skills/maintaining-the-common-operating-picture/SKILL.md`; this file points there rather than redefining them.
 
 **ADR**: Architecture Decision Record. A numbered file in `docs/adr/NNNN-<slug>.md` capturing one decision that satisfies the triple filter: hard to reverse AND surprising without context AND result of a real trade-off. Maintained via the `recording-architecture-decisions` skill.
 

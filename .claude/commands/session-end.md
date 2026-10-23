@@ -49,8 +49,10 @@ See `/pcc` for the full checklist and output format.
   - Flag any tasks that should be promoted (use the `/task promote` escalation ladder)
 - Run `/task brief` mentally — does the backbrief make sense?
 
-## Step 4.5: Update Project Status
-- **config/project.yaml**: Update `last_updated` and `updated_by`; bump `build_phases.*.status` if a phase advanced; bump `project.version` if appropriate.
+## Step 4.5: Update Focus and Gaps
+- **The `## Focus` section at the head of `docs/tasks.md`**: rewrite it when the order of the campaign changed. It is intent: what comes next, in order, with absolute dates. It holds no count and no status, because a kept number reads as current after it stops being true; a step that needs a number names the command that measures it. A repo without the section starts it here.
+- **`config/project.yaml`** is identity (name, version, phases, machines, paths). Touch it only when one of those changed: bump `build_phases.*.status` if a phase advanced, `project.version` if a release was cut. Do not record the session there: the last session is the newest file in `docs/sessions/` by name, and the suite, branch, and tools are measured at `/session-start`.
+- **`docs/gaps.md`, the gap register** (rule 5 of `.claude/skills/maintaining-the-common-operating-picture/SKILL.md`): add a row for each thing the session found that nobody can see yet, naming the collector that would close it and the decision it blocks. When a collector now covers a gap, or a measurement found it absent, set its Status to `closed YYYY-MM-DD by <pointer>`; when a newer row restates it, to `superseded YYYY-MM-DD by <pointer>`; never delete a row. A defect is a task, not a gap. Step 2 ran before this edit, so run the register's test again after it (here, `.venv/bin/pytest tests/test_gaps.py -q`).
 - Include these updates in the commit (amend if needed).
 
 ## Step 5: Session Documentation
