@@ -20,7 +20,7 @@ Paperboy adopted the three hub entries delivered since its last cycle (the 2026-
 |---|---|
 | Tests on main at start (`3ddde2d`) | 180 passed |
 | Tests on main at close (`b0c27b0`) | 274 passed (`test_gaps.py` 15, `test_state_block.py` 31, `test_verifying_claims.py` 46, `test_audit_hook.py` 2) |
-| Commits on the topic branch / on main after the merge | 11 / 12, this doc's commit excluded |
+| Commits on the topic branch / on main after the merge | 11 / 12, the two commits carrying this doc excluded |
 | Files changed `3ddde2d..b0c27b0` | 36; 2,170 insertions, 89 deletions |
 | Gap register rows at close | 9, all open |
 | Sister repos read first | 5 (hallmark, propter, fist, assay, tactics-game) |
@@ -89,7 +89,7 @@ KB-graph: `/pcc` check 5 (file + directory passes) → 0 MISSING over 27 paths, 
 |---|---|---|
 | The suite passes on main after the merge | tested | `.venv/bin/pytest -q` → `274 passed in 1.13s`, `exit=0`; `.venv/bin/python -V` → `Python 3.12.13`; at `b0c27b0` |
 | The topic branch is merged into main and deleted | deployed, locally | `git merge-base --is-ancestor f275003 main` → `exit=0`; `git rev-parse --short main` → `b0c27b0`; `git branch -d topic/infra-doctrine-picture-20261022` → `Deleted branch topic/infra-doctrine-picture-20261022 (was f275003)` |
-| main is not pushed | stated, not claimed | `git log --oneline origin/main..main \| wc -l` → `12`; `origin/main` at `3ddde2d`. The push is the user's call |
+| main is pushed to origin, through the commit that first carried this doc | deployed | `git push origin main` at `/session-end`; `git ls-remote origin refs/heads/main` → `b23aaa627490974834616374f2716bd205305839`; `git rev-parse main` → the same sha (`b23aaa6`); 13 commits since `3ddde2d`. The commit that updates this row is reported in the session's final message |
 | The working tree is clean | observed | `git status --porcelain` → empty, at `b0c27b0` and again after the hook round trip |
 | The three new skill directories match the hub, and verifying-claims matches hub `ff0d8b2` | observed | `diff -rq` → no output, `exit=0`, for each of the three; `git -C ../tacsop diff --quiet ff0d8b2 HEAD -- .claude/skills/verifying-claims` → `exit=0` |
 | shift-left-testing `SKILL.md` and `CI.md` match hub `d4ac4e4`; `ENFORCEMENT.md` and `SCRIPTS.md` differ by design | observed | `git show d4ac4e4:<path> \| diff -q - <path>` → `exit=0` for both. The message of `fe719bf` called the other two "identical after the src/ substitution"; the gate re-ran it: `SCRIPTS.md` also carries a paperboy intro and omits a hub sentence. Corrected in the annotation (`a070aa9`) |
@@ -154,6 +154,5 @@ The commit that carries this doc is reported in the session's final message.
 ## Next Steps
 
 - [ ] The `## Focus` section of `docs/tasks.md` carries the order: the register's collectors G6, G3, then G4 with G7; the Phase 2 close by command, v0.3.0 and the public flip; Phase 3's run-history log (G8's collector); the selector findings; the hub's held entries; the traversal window.
-- [ ] Push `main` (12 commits ahead of `origin/main` at close, this doc's commit excluded).
 - [ ] Hub harvest: `.claude/upstream-lesson.md` carries seven lessons, four from today (the hook index-mode lesson, G2's same-day confirmation, the eager-dict pin, the copy-from-the-entry's-commit rule).
 - [ ] On Muninn: pull, then `/session-start` (the hook's bit arrives through the index; G5 wants that box's `git cat-file -e 'c06e8ba^{commit}'`).
