@@ -33,7 +33,7 @@ design_pillars:
 # -----------------------------------------------------------------------------
 # Machines
 # -----------------------------------------------------------------------------
-# Roster of the boxes this repo is cloned on, keyed by hostname (`hostname`).
+# Roster of the boxes this repo may run on, keyed by hostname (`hostname`); which of them hold a clone is gap G5 in docs/gaps.md.
 # Read by src/machine.py; /session-start Step 1.5 prints the resolved line.
 #
 # No usernames here. Per-user namespaces are derived from $USER at runtime.
@@ -190,5 +190,5 @@ commands:
 #   last session      the newest file in docs/sessions/ by name (date-first)
 #   campaign focus    the ## Focus section at the head of docs/tasks.md (intent)
 #   known unknowns    docs/gaps.md, the gap register
-#   suite, git, tools measured by command at /session-start, never written down
+#   suite, git        measured by command at /session-start, never written down
 # See .claude/skills/maintaining-the-common-operating-picture/ADOPTION.md.

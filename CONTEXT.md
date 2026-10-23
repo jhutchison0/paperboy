@@ -39,7 +39,7 @@ This section names where each part of the current state lives and holds no snaps
 - **The machine**: `.venv/bin/python -m src.machine`, against the `machines:` roster in `config/project.yaml`.
 - **Which Claude backend a run uses**: resolved at run time from the `--backend` flag, then the machine roster's preference, then what the environment provides (an API key, the `claude` CLI, or neither); `python main.py run --help` and the README's "Claude Backend Options" table say how.
 - **Source roster and selection tunables**: [config/paperboy.yaml](config/paperboy.yaml). Whether a feed is live is measured by a `python main.py source` run (gap G6), never read from this file.
-- **Suite, branch, and tools**: measured by command at `/session-start`, never written down.
+- **Suite and branch**: measured by command at `/session-start`, never written down.
 
 ---
 
@@ -52,7 +52,7 @@ The hard rules. Violating these requires explicit user override per change.
 1. **Content Quality First** — briefings optimized for two-voice podcast dialogue; structure, tone, and depth serve listener comprehension.
 2. **Source Diversity & Resilience** — ArXiv + blog RSS with graceful degradation. If one source fails, the pipeline continues. Pluggable sources via `ContentSourcer` ABC.
 3. **Relevance Through Hybrid Scoring** — two-phase keyword + Claude semantic scoring with configurable weights, thresholds, focus areas.
-4. **Pipeline Idempotency** — same date + same config = same output. Date-stamped runs, deterministic selection, reproducible briefings. No randomness.
+4. **Pipeline Idempotency** — same date + same config = same output, as intent. Date-stamped runs and a deterministic keyword stage by construction; the Claude stages are reproducible only as far as gap G4 measures, and distillation samples at `claude.temperature` on the API path.
 5. **Extensibility by Design** — pluggable sources, scorers, output formats. NotebookLM today, TTS tomorrow.
 
 **Hard rules**:

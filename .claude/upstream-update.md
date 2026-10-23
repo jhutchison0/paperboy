@@ -826,7 +826,7 @@ to 2.0.0. The relicense requires no downstream action at all.
 ---
 ## 2026-09-18: CI Fix: `uv venv --clear` After `setup-uv` (`shift-left-testing` 2.1.1)
 
-**Processed**: 2026-10-22 on Nidhogg. Row 1 (workflow PATCH): N/A, no `.github/workflows` here. Row 2 (skill re-copy): **TEMPLATE-COPY** ✓ of `SKILL.md` and `CI.md` from hub commit `d4ac4e4`, the commit that staged this entry, not hub HEAD (HEAD carries 2.2.1, held under OVERWATCH; propter, fist and tactics-game copied from the same commit). `ENFORCEMENT.md` and `SCRIPTS.md` keep the flat-layout adaptation; the hub has not changed either since. Row 3 (self-hosted cache inputs): N/A. Commit `fe719bf`.
+**Processed**: 2026-10-22 on Nidhogg. Row 1 (workflow PATCH): N/A, no `.github/workflows` here. Row 2 (skill re-copy): **TEMPLATE-COPY** ✓ of `SKILL.md` and `CI.md` from hub commit `d4ac4e4`, the commit that staged this entry, not hub HEAD (HEAD carries 2.2.1, held under OVERWATCH; propter, fist and tactics-game copied from the same commit). `ENFORCEMENT.md` and `SCRIPTS.md` keep the flat-layout adaptation (`SCRIPTS.md` also carries a paperboy intro and omits the hub's 2026-08-27 sentence about its own propagation scripts, dispositioned N/A on 2026-09-10); the hub's `ENFORCEMENT.md` is unchanged since. Row 3 (self-hosted cache inputs): N/A. Commit `fe719bf`, whose message overstated the two files as identical after the `src/` substitution; the gate review caught it.
 
 The workflow example in `shift-left-testing/CI.md` fails on current uv, and every
 repo that copied it fails with it. The job dies in "Install dependencies" with

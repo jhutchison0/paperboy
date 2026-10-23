@@ -83,7 +83,7 @@ Typical ownership boundaries:
 
 ## Skills the Roster Applies
 
-Paperboy keeps no skills tree here; `.claude/skills/SKILLS_FRAMEWORK.md` is the single index. Four house rules reach every agent through CLAUDE.md's kernels and the `code-reviewer` checklist: prose per `.claude/skills/writing-simple-and-direct/`, figures per `.claude/skills/designing-clear-data-displays/`, success claims per `.claude/skills/verifying-claims/` (the `Evidence:` line under each claim a reader will act on, and the `## Claims` table at `/session-end`), and standing facts per `.claude/skills/maintaining-the-common-operating-picture/` (where state lives, and the gap register `docs/gaps.md`).
+Paperboy keeps no skills tree here; `.claude/skills/SKILLS_FRAMEWORK.md` is the single index. Four house rules reach every agent as kernels in CLAUDE.md, which subagents receive: prose per `.claude/skills/writing-simple-and-direct/`, figures per `.claude/skills/designing-clear-data-displays/`, success claims per `.claude/skills/verifying-claims/` (an `Evidence:` line under each claim a reader will act on, and the `## Claims` table at `/session-end`), and standing facts per `.claude/skills/maintaining-the-common-operating-picture/` (where state lives, and the gap register `docs/gaps.md`). The `code-reviewer` checklist re-reads the first three at every review.
 
 ## Updating the Roster
 

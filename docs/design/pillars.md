@@ -87,7 +87,7 @@ If you run the pipeline twice on the same day with the same config, you should g
 - ArXiv queries use date ranges, not "most recent"; same date = same query
 - Selector scoring is deterministic given the same inputs and config
 - Claude API calls use consistent prompts; while not bit-identical, the structure is reproducible
-- `PipelineResult` captures metadata (date, config hash, sources, scores) for audit
+- `PipelineResult` captures the run's outcome (status, counts fetched, the selected paper, the briefing path, any error) for audit; recording the backend and a config hash is an open task in `docs/tasks.md`
 
 **What violating this looks like**: Using "today" as a relative reference that shifts mid-run. Random sampling from candidates. Output files without dates in their names. No way to re-run a past date.
 

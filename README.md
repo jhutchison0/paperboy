@@ -21,11 +21,11 @@ ArXiv API + RSS Feeds  -->  Source  -->  Score & Select  -->  Distill  -->  Podc
 
 1. **Source** — Pulls recent papers from ArXiv categories (cs.AI, cs.LG, cs.CL, stat.ML) and blog posts from configurable RSS feeds (Google Research, OpenAI, Lilian Weng, The Gradient). Graceful degradation: if one source fails, the pipeline continues with the rest.
 
-2. **Score & Select** — Two-phase hybrid scoring. Fast keyword matching filters all candidates, then Claude semantic scoring evaluates the top keyword matches against your configured focus areas. Configurable weights (`keyword_weight` and `claude_weight`), thresholds, and the top-k limit (`top_k_for_claude`), all in `config/paperboy.yaml`, keep API costs predictable.
+2. **Score & Select** — Two-phase hybrid scoring. Fast keyword matching filters all candidates, then Claude semantic scoring evaluates the top keyword matches against your configured focus areas. Configurable weights (`keyword_weight` 0.4 and `claude_weight` 0.6 by default), thresholds, and the top-k limit (`top_k_for_claude`, 5 by default), all in `config/paperboy.yaml`, keep API costs predictable.
 
 3. **Distill** — Claude generates a structured 8-section markdown briefing (~4500 words) from the top-scoring paper. The briefing is written in a conversational style (inspired by 3Blue1Brown) optimized for NotebookLM's two-voice podcast dialogue. Includes challenger sections that present counterarguments and limitations.
 
-4. **Podcast** — Upload the generated markdown to Google NotebookLM, which converts it into a natural two-voice podcast episode (~20 minutes). See [NotebookLM Tips](#notebooklm-tips) for how to get the best results.
+4. **Podcast** — Upload the generated markdown to Google NotebookLM, which converts it into a natural two-voice podcast episode (about 20 minutes: measured once, on 2026-03-11, from a 4,058-word briefing). See [NotebookLM Tips](#notebooklm-tips) for how to get the best results.
 
 ## Quick Start
 
@@ -178,7 +178,7 @@ paperboy/
 
 ## Current Status
 
-**Phase 2 (Configuration & Polish) is in progress.** The pipeline runs end-to-end with both API and CLI backends. It is live-tested against real ArXiv data; the runs produce ~20-minute podcast episodes via NotebookLM.
+**Phase 2 (Configuration & Polish) is in progress.** The pipeline runs end-to-end with both API and CLI backends. It is live-tested against real ArXiv data; the live run of 2026-03-11 produced a 20-minute NotebookLM episode from a 4,058-word briefing.
 
 ### Roadmap
 
