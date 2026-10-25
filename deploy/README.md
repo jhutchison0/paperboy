@@ -30,14 +30,78 @@ During the canary, any deploy is an intervention: note the time in the session r
 
 ## Server-side setup
 
-1. **The account (TrueNAS UI, the lead).** A least-privilege user `paperboy`, next uid, home directory on the apps dataset, bash shell, the lead's SSH public key. The home directory must exist when the form is saved, and the dataset's ACL needs a traverse entry for the user. No sudo, no Docker.
-2. **The alias (workstation).** One name, `<alias>`, for both the git remote and the SSH host in `~/.ssh/config`.
-3. **The repos (as that account).** `git init --bare --initial-branch=main ~/paperboy.git` (HEAD on `main`), then from the workstation `git remote add <alias> <alias>:paperboy.git && git push <alias> main`, then `git clone ~/paperboy.git ~/paperboy`.
-4. **uv and the venv.** Install uv for the account if absent, then `cd ~/paperboy && uv venv --managed-python --python 3.12 && uv pip install -r requirements.txt`. The container runs this venv through the bind mount, so the interpreter must stay under the home.
-5. **supercronic.** Download the pinned linux-amd64 release to `~/bin/supercronic`, check its sha256, `chmod +x`.
-6. **The Claude CLI.** `curl -fsSL https://claude.ai/install.sh | bash -s 2.1.310`, then write `~/.claude/settings.json` as `{"env": {"DISABLE_AUTOUPDATER": "1"}}` so the version stays pinned.
-7. **The token.** On the workstation run `claude setup-token`, then paste the token into the server's `.env` as `CLAUDE_CODE_OAUTH_TOKEN` with the comment `# CLAUDE_CODE_OAUTH_TOKEN generated YYYY-MM-DD; renew by YYYY-MM-DD` beside it.
-8. **The briefings folder.** Create `<briefings-folder>` on the shared dataset, give the account write access, and set `HOME_BRIEFINGS_ROOT` to it in `.env`.
+Every `<placeholder>` below is a value that lives only on your machines, never in this repo. `<apps-dataset>` is the absolute mount path of the dataset that holds the app accounts' homes: read it from an existing app account with `dirname "$HOME"` over SSH, or in the web shell with `getent passwd <existing app> | cut -d: -f6 | xargs dirname`. `<alias>` is the one name you give the account in `~/.ssh/config` and as the git remote. Every `sudo` command runs in the TrueNAS web shell as the admin user (System, Shell); an app account over SSH has no sudo.
+
+1. **The account (web shell, admin).** `home` is the parent folder, written absolute; `home_create` makes `<apps-dataset>/paperboy`:
+
+   ```bash
+   sudo midclt call user.create '{"username":"paperboy","full_name":"paperboy app","group_create":true,"home":"<apps-dataset>","home_create":true,"home_mode":"750","shell":"/usr/bin/bash","password_disabled":true,"smb":false}'
+   ```
+
+   The reply carries `"id": N` (a database id) and `"uid": U`; keep both, the uid for the App YAML. The key goes in a second call with the database id, never the uid; then the traverse entry, then the two checks:
+
+   ```bash
+   sudo midclt call user.update N '{"sshpubkey":"<the public key line your workstation deploys with>"}'
+   sudo nfs4xdr_setfacl -a 'user:paperboy:rwxpDdaARWc--s:fd:allow' <apps-dataset>
+   sudo nfs4xdr_getfacl <apps-dataset> | grep paperboy
+   getent passwd paperboy
+   ```
+
+   `setfacl` echoes `ace_index: 0, mod_string: ...` when it adds the entry; one `paperboy` line from `getfacl` is the proof; `getent` shows the home under the dataset.
+
+2. **The alias (workstation).** In `~/.ssh/config`, a block copied from an existing app account's block, with `Host <alias>` and `User paperboy`; `HostName` and `IdentityFile` unchanged. Test: `ssh <alias> 'id; ls -la ~'` prints the paperboy user and a `.ssh` folder.
+
+3. **The repos (workstation, in the checkout).** A fresh bare repo points at `master`; the second command is why the clone is not empty:
+
+   ```bash
+   ssh <alias> 'git init -q --bare ~/paperboy.git && git -C ~/paperboy.git symbolic-ref HEAD refs/heads/main'
+   git remote add <alias> <alias>:paperboy.git
+   git push <alias> main
+   ssh <alias> 'git clone -q ~/paperboy.git ~/paperboy && git -C ~/paperboy log --oneline -1'
+   ```
+
+4. **uv, the venv, supercronic and the Claude CLI (over SSH as the account).** The interpreter lands under `~/.local/share/uv/python/`, inside the home, so the container reaches it through the bind mount:
+
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh
+   cd ~/paperboy
+   ~/.local/bin/uv venv --managed-python --python 3.12
+   ~/.local/bin/uv pip install -r requirements.txt
+   .venv/bin/python -c "import arxiv, feedparser, anthropic, click, yaml; print('ok')"
+   mkdir -p ~/bin
+   curl -fsSL -o ~/bin/supercronic https://github.com/aptible/supercronic/releases/download/v0.2.49/supercronic-linux-amd64
+   echo "a53ae236602c7338aba3fbaff40bda6300eae3b9fedb8261eb06cfe3724430c1  $HOME/bin/supercronic" | sha256sum -c -
+   chmod +x ~/bin/supercronic
+   curl -fsSL https://claude.ai/install.sh | bash -s 2.1.310
+   ~/.local/bin/claude --version
+   mkdir -p ~/.claude && printf '{"env": {"DISABLE_AUTOUPDATER": "1"}}\n' > ~/.claude/settings.json
+   ```
+
+   Good looks like `ok`, `supercronic: OK`, and `2.1.310 (Claude Code)`.
+
+5. **The token.** On a workstation with a browser, `claude setup-token`; approve; copy the token it prints. Copy the workstation's `.env` to the server and edit it there:
+
+   ```bash
+   scp .env <alias>:paperboy/.env
+   ssh <alias> 'chmod 600 ~/paperboy/.env && nano ~/paperboy/.env'
+   ```
+
+   Set `PAPERBOY_SLACK_CHANNEL` to the dev channel's id, and add at the end:
+
+   ```
+   # CLAUDE_CODE_OAUTH_TOKEN generated YYYY-MM-DD; renew by YYYY-MM-DD
+   CLAUDE_CODE_OAUTH_TOKEN=<the token>
+   HOME_BRIEFINGS_ROOT=<briefings-folder>
+   ```
+
+6. **The briefings folder.** As the account: `mkdir -p <briefings-folder> && touch <briefings-folder>/.probe && rm <briefings-folder>/.probe`. A refused `touch` means the folder's ACL needs a `paperboy` entry like step 1's.
+
+### Traps met on 2026-10-24, with their fixes
+
+- `"Home Directory" must be an absolute path`: the `<apps-dataset>` placeholder was typed as written, or the path lacked its leading slash. Read the real path as the paragraph above says.
+- `stx is not in the sudoers file`: the commands were run over SSH as an app account. Use the web shell as the admin.
+- `[ENOENT] ALL: User <uid> does not exist` from `user.update`: the uid was passed where the database `id` belongs.
+- `File/directory "mnt/..." could not be identified` from `setfacl`: the leading slash was missing.
 
 ## The server's `.env`
 
@@ -52,10 +116,12 @@ Copy `.env.example` to `.env` in the clone. It is never committed, and the App r
 
 As the account, in the clone, with `.env` loaded (`set -a && . ./.env && set +a`):
 
-1. `.venv/bin/python main.py health` exits 0.
-2. `.venv/bin/python main.py source` exits 0.
-3. `.venv/bin/python main.py run --slack` once, with the dev channel in `.env`. The post appears in the dev channel.
-4. From the workstation, find the briefing in the shared folder by the filename in the post.
+1. `~/.local/bin/claude -p "Reply with OK"` prints OK: the token authenticates.
+2. `.venv/bin/python main.py health` exits 0, every line OK or SKIPPED.
+3. `.venv/bin/python main.py source` exits 0 and prints the counts.
+4. `.venv/bin/python main.py run --slack` once, with the dev channel in `.env`; about six minutes. The post appears in the dev channel.
+5. From the workstation, open the briefing in the shared folder by the filename in the post.
+6. `~/bin/supercronic -test deploy/crontab` prints `crontab is valid`.
 
 ## The App YAML
 
