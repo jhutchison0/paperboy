@@ -225,11 +225,12 @@ REASONING: [1-2 sentences explaining why this score]"""
             response = self.claude.messages.create(
                 model=self.config.claude.scoring_model,
                 max_tokens=200,
-                temperature=0.0,
+                thinking={"type": "disabled"},
+                output_config={"effort": "low"},
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            text = response.content[0].text.strip()
+            text = next(b.text for b in response.content if b.type == "text").strip()
 
             # Parse score
             score = 5.0  # default

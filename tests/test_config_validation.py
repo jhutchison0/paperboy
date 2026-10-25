@@ -91,20 +91,6 @@ class TestPlaceholderApiKey:
 class TestClaudeRangeChecks:
     """Claude config range validation."""
 
-    @pytest.mark.parametrize("temp", [-0.1, 1.5, 2.0])
-    def test_temperature_out_of_range(self, temp):
-        cfg = _make_valid_config()
-        cfg.claude.temperature = temp
-        errors, _ = cfg.validate()
-        assert any("temperature" in e for e in errors)
-
-    @pytest.mark.parametrize("temp", [0.0, 0.5, 1.0])
-    def test_temperature_valid(self, temp):
-        cfg = _make_valid_config()
-        cfg.claude.temperature = temp
-        errors, _ = cfg.validate()
-        assert not any("temperature" in e for e in errors)
-
     def test_max_tokens_zero(self):
         cfg = _make_valid_config()
         cfg.claude.max_tokens = 0
@@ -255,3 +241,38 @@ class TestAgentRunnerRangeChecks:
         cfg.agent_runner.max_retries = 0
         errors, _ = cfg.validate()
         assert not any("max_retries" in e for e in errors)
+
+
+class TestRemovedTemperatureKey:
+    """claude.temperature is gone; an old YAML that still has it must load."""
+
+    def test_old_yaml_with_temperature_loads(self, tmp_path):
+        yaml_file = tmp_path / "old.yaml"
+        yaml_file.write_text("claude:\n  model: m\n  temperature: 0.7\n")
+        cfg = PipelineConfig.load(config_path=str(yaml_file), env_path=str(tmp_path / "none.env"))
+        assert cfg.claude.model == "m"
+        assert not hasattr(cfg.claude, "temperature")
+
+
+class TestHomeBriefingsRoot:
+    """HOME_BRIEFINGS_ROOT replaces pipeline.output_dir when set (D15)."""
+
+    def _yaml(self, tmp_path):
+        f = tmp_path / "c.yaml"
+        f.write_text("pipeline:\n  output_dir: ./yaml-dir\n")
+        return str(f)
+
+    def test_env_overrides_output_dir(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME_BRIEFINGS_ROOT", "  /somewhere/briefings ")
+        cfg = PipelineConfig.load(config_path=self._yaml(tmp_path), env_path=str(tmp_path / "none.env"))
+        assert cfg.output_dir == "/somewhere/briefings"
+
+    def test_unset_keeps_yaml_default(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("HOME_BRIEFINGS_ROOT", raising=False)
+        cfg = PipelineConfig.load(config_path=self._yaml(tmp_path), env_path=str(tmp_path / "none.env"))
+        assert cfg.output_dir == "./yaml-dir"
+
+    def test_blank_keeps_yaml_default(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME_BRIEFINGS_ROOT", "   ")
+        cfg = PipelineConfig.load(config_path=self._yaml(tmp_path), env_path=str(tmp_path / "none.env"))
+        assert cfg.output_dir == "./yaml-dir"

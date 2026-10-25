@@ -39,6 +39,7 @@ class _InvocationOutcome:
     """
     text: Optional[str]
     timed_out: bool = False
+    model: Optional[str] = None
 
 # Sections that must be present in a valid briefing (matches distiller.py checks)
 _REQUIRED_BRIEFING_SECTIONS = [
@@ -76,6 +77,10 @@ class AgentRunner:
         # Populated by score_paper / distill_paper when they return None, so
         # callers can surface a specific reason in their own error reporting.
         self.last_error: Optional[str] = None
+        # Model names from the CLI's last successful score_paper / distill_paper
+        # call, so the pipeline can record which model the subscription chose.
+        self.last_score_model: Optional[str] = None
+        self.last_distill_model: Optional[str] = None
 
     # ------------------------------------------------------------------
     # Public interface
@@ -112,9 +117,10 @@ class AgentRunner:
                 )
                 continue
 
-            cleaned = self._strip_preamble_json(outcome.text)
+            cleaned = outcome.text
             result = self._validate_score(cleaned)
             if result is not None:
+                self.last_score_model = outcome.model
                 return result
 
             last_kind = "validation"
@@ -178,9 +184,10 @@ class AgentRunner:
                     )
                 continue
 
-            cleaned = self._strip_preamble_markdown(outcome.text)
+            cleaned = outcome.text
             errors = self._validate_briefing(cleaned, distiller_config)
             if not errors:
+                self.last_distill_model = outcome.model
                 return cleaned
 
             last_kind = "validation"
@@ -253,7 +260,7 @@ class AgentRunner:
 
         try:
             proc = subprocess.Popen(
-                ["claude", "-p", prompt],
+                ["claude", "-p", prompt, "--output-format", "json", "--no-session-persistence", "--tools", ""],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=clean_env,
@@ -309,7 +316,16 @@ class AgentRunner:
             )
             return _InvocationOutcome(text=None, timed_out=False)
 
-        raw_bytes = stdout_bytes
+        try:
+            envelope = json.loads(stdout_bytes.decode("utf-8", errors="replace"))
+            if envelope.get("is_error") or not isinstance(envelope.get("result"), str):
+                raise ValueError(f"CLI reported an error or no result: {str(envelope)[:200]}")
+        except (ValueError, AttributeError) as exc:
+            head = stdout_bytes[:300].decode("utf-8", errors="replace")
+            logger.warning(f"AgentRunner: unusable JSON output from claude: {exc}; stdout head: {head!r}")
+            return _InvocationOutcome(text=None, timed_out=False)
+
+        raw_bytes = envelope["result"].encode("utf-8")
         if len(raw_bytes) > max_output_bytes:
             logger.warning(
                 f"AgentRunner: output truncated from {len(raw_bytes)} to {max_output_bytes} bytes"
@@ -317,51 +333,22 @@ class AgentRunner:
             raw_bytes = raw_bytes[:max_output_bytes]
 
         return _InvocationOutcome(
-            text=raw_bytes.decode("utf-8", errors="replace"), timed_out=False
+            text=raw_bytes.decode("utf-8", errors="replace"),
+            timed_out=False,
+            model=self._main_model(envelope),
         )
 
-    # ------------------------------------------------------------------
-    # Output cleaning
-    # ------------------------------------------------------------------
+    @staticmethod
+    def _main_model(envelope: dict) -> Optional[str]:
+        """Name the model that did the work: the costliest entry in modelUsage.
 
-    def _strip_preamble_json(self, output: str) -> str:
+        The CLI also bills a small auxiliary model on every call, so the first
+        key is not reliably the main one.
         """
-        Strip non-JSON preamble from Claude CLI output.
-
-        The CLI sometimes prints preamble text before the JSON payload.
-        Find the first '{' and last '}' and return that substring.
-
-        Args:
-            output: Raw stdout from the CLI.
-
-        Returns:
-            The JSON substring, or the original string if no braces found.
-        """
-        start = output.find("{")
-        end = output.rfind("}")
-        if start == -1 or end == -1 or end <= start:
-            return output
-        return output[start : end + 1]
-
-    def _strip_preamble_markdown(self, output: str) -> str:
-        """
-        Strip non-markdown preamble from Claude CLI output.
-
-        Find the first occurrence of a markdown heading ('#') or a YAML
-        front-matter delimiter ('---') and return from that point onward.
-
-        Args:
-            output: Raw stdout from the CLI.
-
-        Returns:
-            The markdown substring, or the original string if no marker found.
-        """
-        lines = output.split("\n")
-        for i, line in enumerate(lines):
-            stripped = line.strip()
-            if stripped.startswith("#") or stripped == "---":
-                return "\n".join(lines[i:])
-        return output
+        usage = envelope.get("modelUsage")
+        if not isinstance(usage, dict) or not usage:
+            return None
+        return max(usage, key=lambda m: (usage[m] or {}).get("costUSD", 0))
 
     # ------------------------------------------------------------------
     # Validation helpers
@@ -377,7 +364,13 @@ class AgentRunner:
             Validated dict, or None if parsing or validation fails.
         """
         try:
-            data = json.loads(text.strip())
+            raw = text.strip()
+            if not raw.startswith("{"):
+                # The model may fence or preface its JSON; take the outermost object.
+                start, end = raw.find("{"), raw.rfind("}")
+                if start != -1 and end > start:
+                    raw = raw[start : end + 1]
+            data = json.loads(raw)
             score = float(data["score"])
             reasoning = data["reasoning"]
             if not (0.0 <= score <= 1.0):
@@ -510,9 +503,10 @@ Output format (JSON only):
         """
         Build an environment dict with sensitive variables removed.
 
-        Strips ANTHROPIC_API_KEY and any CLAUDE* variables so the subprocess
-        cannot access credentials or alter Claude Code's own configuration.
-        PATH and all other system variables are preserved.
+        Strips ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN and every CLAUDE*
+        variable except CLAUDE_CODE_OAUTH_TOKEN (the headless subscription
+        token from `claude setup-token`), then sets the variables that keep
+        a run unattended: no CLAUDE.md loading and no auto-update.
 
         Returns:
             A copy of os.environ with sensitive keys removed.
@@ -520,8 +514,11 @@ Output format (JSON only):
         env = dict(os.environ)
         keys_to_remove = [
             key for key in env
-            if key == "ANTHROPIC_API_KEY" or key.startswith("CLAUDE")
+            if key in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
+            or (key.startswith("CLAUDE") and key != "CLAUDE_CODE_OAUTH_TOKEN")
         ]
         for key in keys_to_remove:
             del env[key]
+        env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"] = "1"
+        env["DISABLE_AUTOUPDATER"] = "1"
         return env

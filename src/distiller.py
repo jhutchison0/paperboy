@@ -357,11 +357,10 @@ class BriefingDistiller:
                 response = self.claude.messages.create(
                     model=self.config.claude.model,
                     max_tokens=self.config.claude.max_tokens,
-                    temperature=self.config.claude.temperature,
                     system=SYSTEM_PROMPT,
                     messages=[{"role": "user", "content": user_prompt}],
                 )
-                content = response.content[0].text
+                content = next(b.text for b in response.content if b.type == "text")
                 usage = response.usage
                 logger.info(
                     f"Claude response: {usage.input_tokens} input tokens, "
