@@ -6,6 +6,7 @@ Secrets (API keys) come from env vars or .env files.
 Everything else lives in the YAML config.
 """
 
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -14,6 +15,8 @@ from typing import Optional
 import yaml
 from dotenv import load_dotenv
 
+
+logger = logging.getLogger(__name__)
 
 _PLACEHOLDER_API_KEY = "sk-ant-your-key-here"
 
@@ -47,10 +50,9 @@ class FocusAreas:
 
 @dataclass
 class ClaudeConfig:
-    model: str = "claude-sonnet-4-20250514"
-    scoring_model: str = "claude-haiku-4-5-20251001"
-    max_tokens: int = 8000
-    temperature: float = 0.7
+    model: str = "claude-opus-5-5"
+    scoring_model: str = "claude-haiku-5-5"
+    max_tokens: int = 16000
 
 
 @dataclass
@@ -182,8 +184,9 @@ class PipelineConfig:
             model=claude_raw.get("model", config.claude.model),
             scoring_model=claude_raw.get("scoring_model", config.claude.scoring_model),
             max_tokens=claude_raw.get("max_tokens", config.claude.max_tokens),
-            temperature=claude_raw.get("temperature", config.claude.temperature),
         )
+        if "temperature" in claude_raw:
+            logger.warning("claude.temperature is no longer used and is ignored; remove it from the config.")
 
         # Selector settings
         selector_raw = raw.get("selector", {})
@@ -214,6 +217,11 @@ class PipelineConfig:
             max_output_bytes=ar_raw.get("max_output_bytes", config.agent_runner.max_output_bytes),
             batch_size=ar_raw.get("batch_size", config.agent_runner.batch_size),
         )
+
+        # Home-storage override (D15): a role-named variable replaces the YAML folder
+        home_briefings_root = os.environ.get("HOME_BRIEFINGS_ROOT", "").strip()
+        if home_briefings_root:
+            config.output_dir = home_briefings_root
 
         # Secrets from environment
         config.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -258,8 +266,6 @@ class PipelineConfig:
             errors.append("No focus area keywords configured.")
 
         # Claude settings
-        if not (0.0 <= self.claude.temperature <= 1.0):
-            errors.append(f"claude.temperature must be 0.0-1.0, got {self.claude.temperature}.")
         if self.claude.max_tokens <= 0:
             errors.append("claude.max_tokens must be positive.")
 

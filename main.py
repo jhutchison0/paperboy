@@ -5,6 +5,7 @@ Research Podcast Pipeline — CLI Entry Point
 Usage:
     python main.py run                          # Run the full pipeline
     python main.py run --date 2026-03-10        # Run for a specific date
+    python main.py run --slack                  # Run and post the summary to Slack
     python main.py run --config my_config.yaml  # Use custom config
     python main.py run --output-dir ./my_output # Override output directory
     python main.py source                       # Source papers only
@@ -14,6 +15,7 @@ Usage:
     python main.py info                         # Show current configuration
 """
 
+import os
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -79,15 +81,28 @@ def cli():
     help="Claude backend: auto (machine roster, then detect), api (SDK), agent (CLI), keyword-only (no Claude)",
 )
 @click.option("--no-dedup", is_flag=True, default=False, help="Disable deduplication (allow re-selecting recent papers)")
-def run(config, output_dir, days_back, target_date, backend, no_dedup):
+@click.option("--slack", "use_slack", is_flag=True, default=False, help="Post the run summary to Slack (needs SLACK_BOT_TOKEN and PAPERBOY_SLACK_CHANNEL)")
+def run(config, output_dir, days_back, target_date, backend, no_dedup, use_slack):
     """Run the full pipeline: source -> select -> distill -> save."""
     cfg = _load_and_validate(config)
+
+    deliverer = None
+    if use_slack:
+        missing = [v for v in ("SLACK_BOT_TOKEN", "PAPERBOY_SLACK_CHANNEL") if not os.environ.get(v)]
+        if missing:
+            click.echo(f"Configuration error: --slack needs {', '.join(missing)} in the environment or .env.", err=True)
+            sys.exit(1)
+        from src import slack
+        channel = os.environ["PAPERBOY_SLACK_CHANNEL"]
+
+        def deliverer(result):
+            return slack.post_message(slack.build_message(result), channel)
 
     if output_dir:
         cfg.output_dir = output_dir
     _apply_date_overrides(cfg, target_date, days_back)
 
-    pipeline = DailyPipeline(cfg, backend=backend)
+    pipeline = DailyPipeline(cfg, backend=backend, deliverer=deliverer)
     result = pipeline.run(dedup=not no_dedup)
 
     if result.success:
@@ -102,6 +117,10 @@ def run(config, output_dir, days_back, target_date, backend, no_dedup):
             click.echo(f"\nUpload this file to NotebookLM to generate your podcast!")
         else:
             click.echo(f"\nNo briefing generated (keyword-only mode).")
+        if result.slack_error:
+            click.echo(f"\nSlack delivery failed: {result.slack_error}", err=True)
+            click.echo("The briefing was saved and the run was recorded; only the post is missing.", err=True)
+            sys.exit(3)
     elif result.partial:
         click.echo(f"\n{'=' * 60}", err=True)
         click.echo(f"PARTIAL — paper selected but briefing failed", err=True)
@@ -226,6 +245,18 @@ def distill(config, backend, output_dir, paper_id):
         sys.exit(1)
 
 
+def _check_slack():
+    """True or False from slack.auth_test() when a token is set; None (skipped) otherwise."""
+    if not os.environ.get("SLACK_BOT_TOKEN"):
+        return None
+    try:
+        from src import slack
+        slack.auth_test()
+        return True
+    except Exception:
+        return False
+
+
 @cli.command()
 @click.option("--config", type=click.Path(exists=True), default=None, help="Path to config YAML file")
 def health(config):
@@ -241,10 +272,14 @@ def health(config):
     click.echo(f"\nHealth Check Results:")
     click.echo(f"{'=' * 40}")
     all_ok = True
+    results["slack"] = _check_slack()
     for service, healthy in results.items():
-        status = click.style("OK", fg="green") if healthy else click.style("FAILED", fg="red")
+        if healthy is None:
+            status = click.style("SKIPPED", fg="yellow")
+        else:
+            status = click.style("OK", fg="green") if healthy else click.style("FAILED", fg="red")
         click.echo(f"  {service:.<30} {status}")
-        if not healthy:
+        if healthy is False:
             all_ok = False
 
     if all_ok:

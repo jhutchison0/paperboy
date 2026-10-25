@@ -5,13 +5,16 @@ Chains together sourcing → selection → distillation → output.
 Handles errors gracefully so the pipeline degrades rather than crashes.
 """
 
+import dataclasses
+import hashlib
 import json
 import logging
 import re
+import subprocess
 import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import yaml
 
@@ -193,6 +196,30 @@ class SelectionHistory:
         return normalize_paper_id(paper_id) in self._history
 
 
+RUN_RECORD_FILE = "run_history.jsonl"
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _config_sha256(config: PipelineConfig) -> str:
+    """Hash the effective config as canonical JSON, without the API key, the output folder and the log level."""
+    data = dataclasses.asdict(config)
+    for key in ("anthropic_api_key", "output_dir", "log_level"):  # a secret, a place, a volume: none shapes the briefing
+        data.pop(key, None)
+    return hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def _git_sha() -> Optional[str]:
+    """Short HEAD sha of the repo, or None on any failure."""
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=_REPO_ROOT, capture_output=True, text=True, timeout=5, check=True,
+        )
+        return out.stdout.strip() or None
+    except Exception:
+        return None
+
+
 class PipelineResult:
     """Encapsulates the outcome of a pipeline run."""
 
@@ -205,6 +232,15 @@ class PipelineResult:
         papers_fetched: int = 0,
         articles_fetched: int = 0,
         error: Optional[str] = None,
+        backend: str = "",
+        machine: str = "",
+        scoring_model: Optional[str] = None,
+        distill_model: Optional[str] = None,
+        started_at: Optional[datetime] = None,
+        duration_s: float = 0.0,
+        top_candidates: Optional[list[ScoredPaper]] = None,
+        slack_ts: Optional[str] = None,
+        slack_error: Optional[str] = None,
     ):
         self.status = status
         self.selected_paper = selected_paper
@@ -213,6 +249,15 @@ class PipelineResult:
         self.papers_fetched = papers_fetched
         self.articles_fetched = articles_fetched
         self.error = error
+        self.backend = backend
+        self.machine = machine
+        self.scoring_model = scoring_model
+        self.distill_model = distill_model
+        self.started_at = started_at
+        self.duration_s = duration_s
+        self.top_candidates = top_candidates if top_candidates is not None else []
+        self.slack_ts = slack_ts
+        self.slack_error = slack_error
 
     @property
     def success(self) -> bool:
@@ -254,13 +299,30 @@ class DailyPipeline:
         result = pipeline.run()
     """
 
-    def __init__(self, config: PipelineConfig, backend: str = "auto"):
+    def __init__(
+        self,
+        config: PipelineConfig,
+        backend: str = "auto",
+        deliverer: Optional[Callable[[PipelineResult], Optional[str]]] = None,
+    ):
         self.config = config
         self.backend = backend
+        self.deliverer = deliverer
+        self._agent_runner: Optional[AgentRunner] = None
         self._setup_logging()
 
         # Resolve backend: api, agent, keyword-only, or auto
         claude_client, agent_runner = self._resolve_backend(backend)
+        if claude_client is not None:
+            self.resolved_backend = "api"
+            self.scoring_model, self.distill_model = config.claude.scoring_model, config.claude.model
+        elif agent_runner is not None:
+            self.resolved_backend = "agent"
+            self._agent_runner = agent_runner
+            self.scoring_model = self.distill_model = None  # the CLI reports the model per run (task 1.9)
+        else:
+            self.resolved_backend = "keyword-only"
+            self.scoring_model = self.distill_model = None
 
         # Initialize pipeline stages
         self.source_manager = SourceManager(config)
@@ -356,11 +418,81 @@ class DailyPipeline:
 
     def run(self, paper_override: Optional[Paper] = None, dedup: bool = True) -> PipelineResult:
         """
-        Execute the full pipeline.
+        Execute the full pipeline, deliver the result, and write the run record.
 
         Args:
             paper_override: Skip sourcing/selection and distill this paper directly.
-                           Useful for testing or manually choosing a paper.
+            dedup: If True, skip papers that were selected in recent runs.
+
+        Returns:
+            PipelineResult with status, outputs, run metadata, and any errors.
+        """
+        started_at = datetime.now(timezone.utc)
+        result = self._run(paper_override, dedup)
+        result.started_at = started_at
+        result.backend = self.resolved_backend
+        try:
+            result.duration_s = round((datetime.now(timezone.utc) - started_at).total_seconds(), 3)
+            result.machine = resolve_machine().name
+            result.scoring_model = self.scoring_model
+            result.distill_model = self.distill_model
+            if self._agent_runner is not None:
+                result.scoring_model = self._agent_runner.last_score_model or self.scoring_model
+                result.distill_model = self._agent_runner.last_distill_model or self.distill_model
+
+            if self.deliverer is not None:
+                try:
+                    result.slack_ts = self.deliverer(result)
+                except Exception as e:
+                    result.slack_error = str(e)
+                    logger.warning(f"Delivery failed: {e}")
+        finally:
+            # D5: one record line per run, whatever happened above it.
+            self._write_run_record(result)
+        return result
+
+    def _write_run_record(self, result: PipelineResult) -> None:
+        """Append one JSON line to run_history.jsonl; a failure only warns."""
+        sel = result.selected_paper
+        record = {
+            "date": result.started_at.strftime("%Y-%m-%d"),
+            "started_at": result.started_at.isoformat(),
+            "duration_s": result.duration_s,
+            "status": result.status,
+            "backend": result.backend,
+            "machine": result.machine,
+            "scoring_model": result.scoring_model,
+            "distill_model": result.distill_model,
+            "selected_id": sel.paper.id if sel else None,
+            "score": sel.score if sel else None,
+            "top_candidates": [
+                {"id": c.paper.id, "title": c.paper.title, "score": c.score}
+                for c in result.top_candidates
+            ],
+            "briefing_path": str(result.briefing_path) if result.briefing_path else None,
+            "words": result.briefing.word_count if result.briefing else None,
+            "papers_fetched": result.papers_fetched,
+            "articles_fetched": result.articles_fetched,
+            "error": result.error,
+            "slack_ts": result.slack_ts,
+            "slack_error": result.slack_error,
+            "git_sha": _git_sha(),
+            "config_sha256": _config_sha256(self.config),
+        }
+        try:
+            output_dir = Path(self.config.output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            with open(output_dir / RUN_RECORD_FILE, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record) + "\n")
+        except Exception as e:
+            logger.warning(f"Could not write run record: {e}")
+
+    def _run(self, paper_override: Optional[Paper] = None, dedup: bool = True) -> PipelineResult:
+        """
+        Run the stages and build the result.
+
+        Args:
+            paper_override: Skip sourcing/selection and distill this paper directly.
             dedup: If True, skip papers that were selected in recent runs.
 
         Returns:
@@ -381,10 +513,12 @@ class DailyPipeline:
                 logger.info(f"Using paper override: {paper_override.title[:80]}")
                 selected = ScoredPaper(paper=paper_override, score=1.0, reasoning="Manual override")
                 papers_count, articles_count = 0, 0
+                candidates: list[ScoredPaper] = []
             else:
                 # Stage 1: Source and select
                 exclude_ids = history.get_excluded_ids() if dedup else set()
-                selected, papers_count, articles_count = self._source_and_select(exclude_ids)
+                candidates, papers_count, articles_count = self._source_and_select(exclude_ids)
+                selected = candidates[0]
 
             # Stage 2: Distill (skipped in keyword-only mode)
             briefing = self._distill(selected.paper)
@@ -423,6 +557,7 @@ class DailyPipeline:
                 papers_fetched=papers_count,
                 articles_fetched=articles_count,
                 error=error_reason,
+                top_candidates=candidates,
             )
 
             logger.info("=" * 60)
@@ -434,8 +569,8 @@ class DailyPipeline:
             logger.error(f"Pipeline failed: {e}", exc_info=True)
             return PipelineResult(status="error", error=str(e))
 
-    def _source_and_select(self, exclude_ids: set[str] | None = None) -> tuple[ScoredPaper, int, int]:
-        """Source papers and select the best one."""
+    def _source_and_select(self, exclude_ids: set[str] | None = None) -> tuple[list[ScoredPaper], int, int]:
+        """Source papers and return the scored top candidates, best first."""
         logger.info("Stage 1: Sourcing papers and articles...")
         papers, articles = self.source_manager.fetch_all()
 
@@ -445,12 +580,12 @@ class DailyPipeline:
         logger.info(f"Sourced {len(papers)} papers and {len(articles)} articles")
 
         logger.info("Stage 2: Selecting best paper...")
-        scored = self.selector.select_best(papers, articles, top_k=1, exclude_ids=exclude_ids)
+        scored = self.selector.select_best(papers, articles, top_k=self.config.selector.top_k_for_claude, exclude_ids=exclude_ids)
 
         if not scored:
             raise RuntimeError("No papers scored above threshold. Try broadening focus keywords.")
 
-        return scored[0], len(papers), len(articles)
+        return scored, len(papers), len(articles)
 
     def _distill(self, paper: Paper) -> Optional[BriefingDocument]:
         """Generate the briefing document. Returns None if no Claude backend."""
@@ -477,7 +612,10 @@ class DailyPipeline:
         return filepath
 
     def health_check(self) -> dict:
-        """Check connectivity to all external services."""
+        """Check connectivity to all external services.
+
+        Returns a dict of service to True, False, or None when the check is skipped.
+        """
         logger.info("Running health checks...")
 
         results = self.source_manager.health_check()
@@ -496,19 +634,23 @@ class DailyPipeline:
                 results["claude_api"] = False
                 logger.error(f"Claude API health check failed: {e}")
         else:
-            results["claude_api"] = False
+            results["claude_api"] = None  # skipped
             logger.info("Claude API: skipped (no API key)")
 
-        # Check AgentRunner (Claude Code CLI)
-        runner = AgentRunner(self.config)
-        results["claude_cli"] = runner.is_available()
-        if results["claude_cli"]:
-            logger.info("Claude CLI: available")
+        # Check AgentRunner (Claude Code CLI); skipped on a box the roster puts on the API
+        if resolve_machine().backend == "api":
+            results["claude_cli"] = None
+            logger.info("Claude CLI: skipped (roster backend is api)")
         else:
-            logger.info("Claude CLI: not available")
+            runner = AgentRunner(self.config)
+            results["claude_cli"] = runner.is_available()
+            if results["claude_cli"]:
+                logger.info("Claude CLI: available")
+            else:
+                logger.info("Claude CLI: not available")
 
         for service, healthy in results.items():
-            status = "OK" if healthy else "FAILED"
+            status = "SKIPPED" if healthy is None else "OK" if healthy else "FAILED"
             logger.info(f"  {service}: {status}")
 
         return results

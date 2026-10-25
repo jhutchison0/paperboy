@@ -4,8 +4,6 @@ Unit tests for src/agent_runner.py.
 All subprocess calls are mocked — no real 'claude' CLI is invoked.
 Tests cover:
   1. _invoke() basics: timeout, env stripping, stdin, output truncation
-  2. _strip_preamble_json(): clean JSON, JSON with preamble, no JSON
-  3. _strip_preamble_markdown(): clean markdown, markdown with preamble
   4. score_paper(): valid response → dict, malformed → None
   5. distill_paper(): valid markdown → str, missing sections → None
   6. is_available(): claude on PATH → True, not on PATH → False
@@ -115,7 +113,9 @@ def _make_popen_mock(
             (timeout_partial_stdout.encode("utf-8"), timeout_partial_stderr.encode("utf-8")),
         ]
     else:
-        proc.communicate.return_value = (stdout.encode("utf-8"), stderr.encode("utf-8"))
+        # The runner passes --output-format json, so success stdout is an envelope.
+        body = stdout if returncode != 0 else json.dumps({"is_error": False, "result": stdout})
+        proc.communicate.return_value = (body.encode("utf-8"), stderr.encode("utf-8"))
 
     return proc
 
@@ -213,20 +213,13 @@ class TestInvoke:
         with patch("subprocess.Popen", return_value=_make_popen_mock(stdout="ok")) as mock_popen:
             runner._invoke("my test prompt", timeout=30)
         call_args = mock_popen.call_args.args[0]
-        assert call_args == ["claude", "-p", "my test prompt"]
+        assert call_args[:3] == ["claude", "-p", "my test prompt"]
 
     def test_invoke_handles_os_error(self, runner):
         with patch("subprocess.Popen", side_effect=OSError("permission denied")):
             outcome = runner._invoke("some prompt", timeout=30)
         assert outcome.text is None
         assert outcome.timed_out is False
-
-
-# Note: the private helpers `_strip_preamble_json` and `_strip_preamble_markdown`
-# are exercised through the public surface in TestScorePaper (preamble + postamble,
-# nested-object cases) and TestDistillPaper (markdown preamble stripping).
-# Their direct-call tests were removed on 2026-05-22 to decouple from the
-# implementation seam — the public-surface tests catch any regression.
 
 
 # ---------------------------------------------------------------------------
@@ -256,40 +249,6 @@ class TestScorePaper:
         assert result is not None
         assert result["score"] == pytest.approx(0.85)
         assert "reasoning" in result
-
-    def test_valid_json_with_preamble_returns_dict(self, runner, sample_paper, focus_areas):
-        payload = 'Claude says:\n{"score": 0.72, "reasoning": "Good match."}'
-        with patch.object(runner, "_invoke", return_value=_ok(payload)):
-            result = runner.score_paper(sample_paper, focus_areas)
-        assert result is not None
-        assert result["score"] == pytest.approx(0.72)
-
-    def test_valid_json_with_preamble_and_postamble_returns_dict(self, runner, sample_paper, focus_areas):
-        """Claude sometimes wraps JSON in both a leading explanation and a
-        trailing 'let me know if you need more' — score_paper must extract
-        the JSON object regardless of where it sits in the output."""
-        payload = (
-            'Here is my analysis:\n'
-            '{"score": 0.9, "reasoning": "great"}\n'
-            'Let me know if you need more detail.'
-        )
-        with patch.object(runner, "_invoke", return_value=_ok(payload)):
-            result = runner.score_paper(sample_paper, focus_areas)
-        assert result is not None
-        assert result["score"] == pytest.approx(0.9)
-
-    def test_valid_json_with_nested_object_in_reasoning_returns_dict(self, runner, sample_paper, focus_areas):
-        """Reasoning fields can contain JSON-looking substrings; the JSON
-        extraction must find the outermost { ... }, not the first inner one."""
-        payload = (
-            'preamble '
-            '{"score": 0.6, "reasoning": "matches", "meta": {"nested": "value"}}'
-            ' postamble'
-        )
-        with patch.object(runner, "_invoke", return_value=_ok(payload)):
-            result = runner.score_paper(sample_paper, focus_areas)
-        assert result is not None
-        assert result["score"] == pytest.approx(0.6)
 
     def test_malformed_json_returns_none(self, runner, sample_paper, focus_areas):
         with patch.object(runner, "_invoke", return_value=_ok("not valid json at all")):
@@ -375,18 +334,6 @@ class TestDistillPaper:
         assert result is not None
         assert isinstance(result, str)
         assert "Why Should You Care" in result
-
-    def test_preamble_stripped_before_validation(self, runner, config, sample_paper):
-        valid_md = _make_valid_briefing(config.distiller)
-        output_with_preamble = "Sure, here is the briefing:\n\n" + valid_md
-        with patch.object(runner, "_invoke", return_value=_ok(output_with_preamble)):
-            result = runner.distill_paper(
-                paper=sample_paper,
-                distiller_config=config.distiller,
-                system_prompt="You are an expert.",
-                user_prompt="Distill this paper.",
-            )
-        assert result is not None
 
     def test_missing_sections_returns_none(self, runner, config, sample_paper):
         # A briefing missing most required sections

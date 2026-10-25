@@ -79,6 +79,8 @@ python main.py run --backend keyword-only   # Score only, no briefing
 python main.py health
 ```
 
+For a headless box with no browser, run `claude setup-token` on a machine that has one and put the token in the box's `.env` as `CLAUDE_CODE_OAUTH_TOKEN`. The agent backend then runs on the subscription without a login; the token lasts one year.
+
 ### CLI Commands
 
 ```bash
@@ -91,6 +93,10 @@ python main.py distill --paper-id 1904.12787  # Distill a specific ArXiv paper b
 python main.py health                  # Check connectivity to all services
 python main.py info                    # Show current configuration
 ```
+
+## Scheduling
+
+The daily run lives on the home server: one container runs supercronic, and each morning's tick runs `python main.py run --slack` as a fresh process. The briefing lands in the shared briefings folder, and a summary post (title, link, reasoning, top five, filename) goes to Slack as the reminder to listen. Setup, updates and the canary are in [deploy/README.md](deploy/README.md).
 
 ## NotebookLM Tips
 
