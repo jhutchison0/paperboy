@@ -23,6 +23,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **`requirements.txt`**: `anthropic<1` for this cycle
 - **Removed**: the retired `claude-sonnet-4-20250514` and `claude-haiku-4-5-20251001` IDs and the `claude.temperature` key; `_strip_preamble_json` and `_strip_preamble_markdown`; the dead `OUTPUT_DIR` and `CONFIG_PATH` lines in `.env.example`
 
+### Server Deploy (CONOP COURIER Wave 2, 2026-10-25)
+- **`config/project.yaml`**: `paperboy` joins the roster (role server, backend agent), the name the container reports as its hostname
+- **`deploy/update-server.sh`**: the proof string exports PATH, since `ssh <alias> 'cmd'` is a non-login shell with no `~/.local/bin`; the file carries its executable bit in the index. `tests/test_update_server_script.py` (4 tests) pins both
+- **`.gitignore`**: `.env.server`, the server's env file built on the workstation and sent by one `scp`
+- **`deploy/README.md`**: the `model` key in the server's CLI settings, the `.env.server` staging steps, the second dataset's two ACL entries, the login-shell note for the host proof, four traps met 2026-10-25
+
 ---
 
 ## [0.2.0] - 2026-03-11
