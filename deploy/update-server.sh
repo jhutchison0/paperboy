@@ -96,7 +96,8 @@ fi
 # 5. The proof: the clone's commit, then health and source with .env loaded.
 now=$(remote 'git -C ~/paperboy rev-parse HEAD')
 [ "$now" = "$head" ] || die "the clone is at ${now:0:7}, not ${head:0:7}"
-prove='cd ~/paperboy && set -a && . ./.env && set +a && .venv/bin/python main.py'
+# ssh <alias> 'cmd' is a non-login shell: no ~/.local/bin on PATH, so claude would not be found.
+prove='cd ~/paperboy && export PATH="$HOME/.local/bin:$HOME/bin:$PATH" && set -a && . ./.env && set +a && .venv/bin/python main.py'
 remote "$prove health" >/dev/null ||
     die "main.py health failed on the server; read it with the same command over ssh"
 remote "$prove source" >/dev/null ||

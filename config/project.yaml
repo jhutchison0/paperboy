@@ -50,6 +50,11 @@ machines:
     scope: [personal]
     backend: agent  # home box: subscription via Claude CLI, no API spend
     references: {}
+  paperboy:
+    role: server
+    scope: [personal]
+    backend: agent  # the home server's app account and its container's hostname: subscription via setup-token, no API spend
+    references: {}
   unknown:
     role: unspecified
     scope: [personal]

@@ -74,19 +74,18 @@ Every `<placeholder>` below is a value that lives only on your machines, never i
    chmod +x ~/bin/supercronic
    curl -fsSL https://claude.ai/install.sh | bash -s 2.1.310
    ~/.local/bin/claude --version
-   mkdir -p ~/.claude && printf '{"env": {"DISABLE_AUTOUPDATER": "1"}}\n' > ~/.claude/settings.json
+   mkdir -p ~/.claude && printf '{"model": "claude-opus-5-5", "env": {"DISABLE_AUTOUPDATER": "1"}}\n' > ~/.claude/settings.json
    ```
 
-   Good looks like `ok`, `supercronic: OK`, and `2.1.310 (Claude Code)`.
+   Good looks like `ok`, `supercronic: OK`, and `2.1.310 (Claude Code)`. The `model` key names the model the daily run distills on, the lead's choice of 2026-10-25. Without it the CLI uses its own default, which that day was not the workstation's; the run record's `distill_model` field shows which model ran.
 
-5. **The token.** On a workstation with a browser, `claude setup-token`; approve; copy the token it prints. Copy the workstation's `.env` to the server and edit it there:
+5. **The token.** On a workstation with a browser, `claude setup-token`; approve; copy the whole token it prints, from `sk-ant-oat01-` to the end. A copy taken from a wrapped terminal line loses the head and fails with `401 Invalid bearer token`. Build the server's file on the workstation and send it once; `.env.server` is gitignored:
 
    ```bash
-   scp .env <alias>:paperboy/.env
-   ssh <alias> 'chmod 600 ~/paperboy/.env && nano ~/paperboy/.env'
+   cp .env .env.server && chmod 600 .env.server
    ```
 
-   Set `PAPERBOY_SLACK_CHANNEL` to the dev channel's id, and add at the end:
+   Open `.env.server` in the editor and append:
 
    ```
    # CLAUDE_CODE_OAUTH_TOKEN generated YYYY-MM-DD; renew by YYYY-MM-DD
@@ -94,7 +93,24 @@ Every `<placeholder>` below is a value that lives only on your machines, never i
    HOME_BRIEFINGS_ROOT=<briefings-folder>
    ```
 
-6. **The briefings folder.** As the account: `mkdir -p <briefings-folder> && touch <briefings-folder>/.probe && rm <briefings-folder>/.probe`. A refused `touch` means the folder's ACL needs a `paperboy` entry like step 1's.
+   `PAPERBOY_SLACK_CHANNEL` carries over from the workstation's file; during the canary it holds the dev channel's id. `HOME_BRIEFINGS_ROOT` is the server's own absolute mount path on a shared dataset the desktop sees. A relative path lands inside the clone, where the desktop cannot reach it and a re-clone erases the record. Then prove the token here before it travels, and send the file:
+
+   ```bash
+   CLAUDE_CODE_OAUTH_TOKEN=<the token> claude -p "Reply with OK"
+   scp .env.server <alias>:paperboy/.env
+   ssh <alias> 'chmod 600 ~/paperboy/.env'
+   ```
+
+6. **The briefings folder.** It sits on a dataset the desktop mounts, not the apps dataset, so the account needs two entries there (web shell, admin): traverse on the dataset, and full rights with inheritance on the account's own folder. `sudo` asks for the admin password once; a missed prompt leaves every line unrun.
+
+   ```bash
+   sudo mkdir -p <share-dataset>/paperboy
+   sudo nfs4xdr_setfacl -a 'user:paperboy:--x---a-R-c---:-------:allow' <share-dataset>
+   sudo nfs4xdr_setfacl -a 'user:paperboy:rwxpDdaARWc--s:fd:allow' <share-dataset>/paperboy
+   sudo nfs4xdr_getfacl <share-dataset>/paperboy | grep paperboy
+   ```
+
+   Then as the account: `mkdir -p <briefings-folder> && touch <briefings-folder>/.probe && rm <briefings-folder>/.probe`. The account creates `briefings` itself so the folder inherits its entry. Read a dataset's ACL type as admin, never as the account: `getfacl` on an NFSv4 dataset prints a trivial view of the mode bits, and `nfs4xdr_getfacl` as the account fails until the account holds the read-ACL right, so neither tells the account anything.
 
 ### Traps met on 2026-10-24, with their fixes
 
@@ -102,6 +118,13 @@ Every `<placeholder>` below is a value that lives only on your machines, never i
 - `stx is not in the sudoers file`: the commands were run over SSH as an app account. Use the web shell as the admin.
 - `[ENOENT] ALL: User <uid> does not exist` from `user.update`: the uid was passed where the database `id` belongs.
 - `File/directory "mnt/..." could not be identified` from `setfacl`: the leading slash was missing.
+
+### Traps met on 2026-10-25, with their fixes
+
+- `claude: command not found`, or `health` printing `claude_cli FAILED`, in a shell where `~/.local/bin/claude --version` works: the shell is not a login shell. `.profile` adds `~/.local/bin` to PATH only at login and only if the folder exists then, so a session opened before the install, `su paperboy`, and `ssh <alias> 'command'` all lack it. `source ~/.profile`, or log in again. `deploy/update-server.sh` sets PATH inside its proof string for this reason.
+- `401 Invalid bearer token` from a token that looks complete: the copy lost its `sk-ant-oat01-` head on a wrapped terminal line. Mint it again and prove it on the workstation before it travels (step 5).
+- `nfs4xdr_getfacl: Failed to get NFSv4 ACL` as the account, while `getfacl` shows a plain `user::rwx group::rwx other::---`: not a POSIX dataset. The account lacked the read-ACL right; diagnose as admin (step 6).
+- Inside the clone, `claude -p` warns that the workspace is untrusted and ignores the repo's `.claude/settings.json`. Run it from `~`. The pipeline runs the CLI from the system temp directory and never sees the warning.
 
 ## The server's `.env`
 
@@ -114,9 +137,9 @@ Copy `.env.example` to `.env` in the clone. It is never committed, and the App r
 
 ## First run on the host, before the App exists
 
-As the account, in the clone, with `.env` loaded (`set -a && . ./.env && set +a`):
+As the account, in a login shell (an interactive `ssh <alias>`, or `bash -lc '...'`), in the clone, with `.env` loaded (`set -a && . ./.env && set +a`):
 
-1. `~/.local/bin/claude -p "Reply with OK"` prints OK: the token authenticates.
+1. `cd ~ && claude -p "Reply with OK"` prints OK: the token authenticates. From `~`, not the clone, which prints a trust warning.
 2. `.venv/bin/python main.py health` exits 0, every line OK or SKIPPED.
 3. `.venv/bin/python main.py source` exits 0 and prints the counts.
 4. `.venv/bin/python main.py run --slack` once, with the dev channel in `.env`; about six minutes. The post appears in the dev channel.
