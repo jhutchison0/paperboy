@@ -29,6 +29,8 @@ For detailed usage, boundaries, and workflow for each agent, read its `.md` file
 | `src/distiller.py` | Read/Run | Read | Read | Read | Write | — | **Write** | — |
 | `src/pipeline.py`, `src/config.py`, `main.py` | Read/Run | Read | Read | Read | **Write** | — | — | Read |
 | `src/agent_runner.py`, `src/models.py` | Read/Run | Read | Read | Read | **Write** | Write | Write | — |
+| `src/slack.py` | Read/Run | Read | Read | Read | **Write** | — | — | — |
+| `deploy/` | — | Read | Read | Read | **Write** | — | — | — |
 | `config/paperboy.yaml` | Read | Read | Read | Read | Write | **Write** | Write | Read |
 | `config/project.yaml` | Read | Read | Read | Read | Write | — | — | — |
 | `tests/` | **Read/Run** | Read | Read | — | **Write** | Write | — | — |

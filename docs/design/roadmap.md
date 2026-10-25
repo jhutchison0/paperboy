@@ -51,17 +51,17 @@ Paperboy's **core pipeline is complete** (Phase 1). The system sources papers fr
 - Project identity files (CLAUDE.md, README, pillars, roadmap)
 - Session documentation practices established
 
-### Phase 3: Scheduling & Automation
+### Phase 3: Scheduling & Automation -- IN PROGRESS
 
 **Goal**: Hands-off daily pipeline execution.
 
-**Deliverables**:
-- Cron job or scheduled task configuration for daily runs
-- Date-based deduplication (skip if today's briefing already exists)
-- Output rotation and cleanup (keep last N briefings, archive older)
-- Run history log with success/failure tracking
-- Notification on failure (email, Slack webhook, or similar)
-- Backfill command for generating missed briefings
+**Deliverables** (each line marked 2026-10-24 under CONOP COURIER, `docs/plans/conop_COURIER_daily_run_slack_delivery.md`; the phase closes when every line carries a mark and gaps G8 and G9 have their first readings in `docs/reviews/`):
+- Cron job or scheduled task configuration for daily runs: built, COURIER task 1.8 (`deploy/crontab`, `deploy/README.md`, `deploy/update-server.sh`); the server itself is Wave 2
+- Date-based deduplication (skip if today's briefing already exists): declined 2026-10-24; one tick a day needs no guard and `SelectionHistory` already prevents a repeated paper. Trigger to build: COURIER assumption A7
+- Output rotation and cleanup (keep last N briefings, archive older): declined 2026-10-24; a year of briefings and record lines is small enough to keep (the estimate is in COURIER, What We Do NOT Build)
+- Run history log with success/failure tracking: built, COURIER task 1.1 (`run_history.jsonl` beside the briefings, one JSON line per run, gap G8's collector); its reader is Wave 3 task 3.1
+- Notification on failure (email, Slack webhook, or similar): built, COURIER tasks 1.3 to 1.5 (`run --slack` posts success, partial and error; exit 3 when the post fails after a saved briefing). A dead box posts nothing; trigger to build the watchdog: COURIER assumption A6
+- Backfill command for generating missed briefings: declined 2026-10-24; the dedup history and the lookback window give a missed day's papers their chance at the next morning's run, and `--date` widens the window rather than targeting a day. Pillar 4's sentence amended the same day
 
 ### Phase 4: TTS Integration
 

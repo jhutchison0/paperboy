@@ -75,7 +75,7 @@ Scratch copy at `/tmp/claude-1000/-home-jhutchison-projects-github-paperboy/f451
 | P7 | SMB pattern never matches | test_boundary_line | CAUGHT (1 failed) |
 | P8 | deliverer exception propagates | test_run_record | CAUGHT (1 failed) |
 | P9 | record written before delivery | test_run_record | CAUGHT (7 failed) |
-| P10 | tracked `docs/plant.md` with `\\nas01\media` (copy's index) | test_boundary_line::tracked_tree | CAUGHT (1 failed) |
+| P10 | tracked `docs/plant.md` with `\\<host>\<share>` (copy's index) | test_boundary_line::tracked_tree | CAUGHT (1 failed) |
 | P11 | drop `--no-session-persistence` | test_agent_headless | CAUGHT (1 failed) |
 | P12 | drop `thinking: disabled` on scoring | test_api_fallback | CAUGHT (1 failed) |
 | P13 | hash keeps `anthropic_api_key` | test_run_record | CAUGHT (1 failed) |

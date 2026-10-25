@@ -28,7 +28,15 @@ When a term is missing or contested, invoke the `maintaining-ubiquitous-language
 
 **BriefingDocument**: The in-memory dataclass (`src/models.py:BriefingDocument`) carrying the briefing's structured content before serialization. _Avoid:_ briefing object (say BriefingDocument when you mean the dataclass).
 
-**PipelineResult**: The outcome record (`src/pipeline.py`) of one `DailyPipeline.run()` carrying status (`success` / `partial` / `error`), the briefing path if produced, and the failure reason if not. _Avoid:_ run record.
+**PipelineResult**: The outcome record (`src/pipeline.py`) of one `DailyPipeline.run()` carrying status (`success` / `partial` / `error`), the briefing path if produced, and the failure reason if not. _Avoid:_ run record (the on-disk line; see Run Record).
+
+**Run Record**: The file `run_history.jsonl` beside the briefings, one JSON line per `DailyPipeline.run()` written after delivery; gap G8's collector. _Avoid:_ run log (the reader is `runlog.py`; the file is the record), PipelineResult (in memory; this is on disk).
+
+**Deliverer**: The callable `DailyPipeline` calls with the `PipelineResult` after save and dedup, returning a receipt or raising; Slack today, audio and a feed later. _Avoid:_ notifier, exporter, delivery backend.
+
+**Summary Post**: The one Slack message `build_message` renders per run: title, link, reasoning, trimmed abstract, top five, filename, reaction legend, telemetry. _Avoid:_ parent (say summary post; "parent" only when a thread reply is in view), notification.
+
+**Home Share**: The shared folder on the home server that `HOME_BRIEFINGS_ROOT` names in `.env`, holding the briefings, the dedup history and the run record; its path is never tracked (lake-conventions `HOME-STORAGE.md`). _Avoid:_ output dir (the YAML default it replaces), NAS path.
 
 ---
 

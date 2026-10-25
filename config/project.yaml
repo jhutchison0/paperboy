@@ -101,9 +101,9 @@ build_phases:
 
   phase_3:
     name: "Scheduling & Automation"
-    status: "planned"
-    description: "Cron/scheduled runs, output management, date-based deduplication"
-    deliverable: "Automated daily runs with deduplication, output rotation, run history"
+    status: "in_progress"
+    description: "One scheduled run a day on the home server, a Slack summary as the reminder, one record line per run; CONOP COURIER (docs/plans/conop_COURIER_daily_run_slack_delivery.md), opened 2026-10-24"
+    deliverable: "Automated daily runs with deduplication, a run history and failure notification; closes when every Phase 3 roadmap line carries its mark and gaps G8 and G9 have their first readings"
 
   phase_4:
     name: "TTS Integration"

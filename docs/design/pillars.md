@@ -80,14 +80,14 @@ Not every paper matters to every researcher. Paperboy's value comes from filteri
 
 If you run the pipeline twice on the same day with the same config, you should get the same briefing. This is not a nice-to-have; it's essential for debugging, for trusting the output, and for avoiding duplicate work in automated scheduling.
 
-**Why this matters**: Idempotency makes the pipeline debuggable. If a briefing looks wrong, you can re-run the same date and trace what happened. It prevents automated schedulers from creating duplicate episodes. It enables backfilling: running the pipeline for past dates to generate briefings you missed. And it builds trust: the pipeline does what you expect, every time.
+**Why this matters**: Idempotency makes the pipeline debuggable. If a briefing looks wrong, you can re-run the same date and trace what happened. It prevents automated schedulers from creating duplicate episodes. A missed day needs no backfill: the dedup history and the lookback window give that day's papers their chance at the next morning's run, and `--date` widens the window to include a past date rather than re-creating that day's briefing (declined in the roadmap's Phase 3, 2026-10-24). And it builds trust: the pipeline does what you expect, every time.
 
 **How it's enforced in the codebase**:
 - Pipeline runs are keyed by date; output files include the date in their path
 - ArXiv queries use date ranges, not "most recent"; same date = same query
 - Selector scoring is deterministic given the same inputs and config
 - Claude API calls use consistent prompts; while not bit-identical, the structure is reproducible
-- `PipelineResult` captures the run's outcome (status, counts fetched, the selected paper, the briefing path, any error) for audit; recording the backend and a config hash is an open task in `docs/tasks.md`
+- `PipelineResult` carries the run's outcome and its inputs (status, counts fetched, the selected paper and the day's top candidates, the briefing path, the backend and the models that ran, a SHA-256 of the effective config, any error), and `run_history.jsonl` keeps one line per run (COURIER task 1.1)
 
 **What violating this looks like**: Using "today" as a relative reference that shifts mid-run. Random sampling from candidates. Output files without dates in their names. No way to re-run a past date.
 

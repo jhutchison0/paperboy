@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [Unreleased]
+
+### Daily Run and Delivery (CONOP COURIER Wave 1, 2026-10-24)
+- **`--slack` on `run`**: one summary post per run to `PAPERBOY_SLACK_CHANNEL` (title, link, Claude's reasoning, the abstract trimmed, the day's top five, the briefing's filename, a reaction legend, one telemetry line); partial and failed runs post their error. Exit 1 with `Configuration error:` when `SLACK_BOT_TOKEN` or the channel is missing; exit 3 when the post fails after a saved briefing
+- **`src/slack.py`**: NEW: `post_message`, `auth_test`, `build_message`, `SlackError`; stdlib `urllib` only, one retry on HTTP 429, no retry on timeout, mrkdwn escaping
+- **Run record** (`src/pipeline.py`): one JSON line per run appended to `run_history.jsonl` beside the briefings, written after delivery: date, start, duration, status, backend, machine, the models that ran, the selected paper and the day's top candidates, counts fetched, briefing path and words, error, the Slack receipt, git sha, a SHA-256 of the effective config. Gap G8's collector
+- **Delivery seam**: `DailyPipeline(config, backend, deliverer=None)`; a raising deliverer never rolls back the briefing or the dedup record
+- **`PipelineResult`**: gains `backend`, `machine`, `scoring_model`, `distill_model`, `started_at`, `duration_s`, `top_candidates`, `slack_ts`, `slack_error`; selection returns the Claude-scored top candidates and the pipeline keeps the first
+- **Headless `AgentRunner`** (`src/agent_runner.py`): `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token` survives the environment strip; `ANTHROPIC_AUTH_TOKEN` joins `ANTHROPIC_API_KEY` in it; `CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` and `DISABLE_AUTOUPDATER=1` are set; `claude -p` runs with `--output-format json --no-session-persistence --tools ""`, the text read from the JSON `result` and the model name from `modelUsage`
+- **`HOME_BRIEFINGS_ROOT`**: the first `HOME_*` variable; when set it replaces `pipeline.output_dir` for the briefings, the dedup history and the run record; unset, the YAML default stands
+- **API fallback on current models** (`config/paperboy.yaml`, `src/config.py`, `src/selector.py`, `src/distiller.py`): distill on `claude-opus-5-5`, scoring on `claude-haiku-5-5` with thinking disabled and low effort; no sampling parameter on either call; both call sites read the first `text` block by type; a leftover `claude.temperature` key warns
+- **`health`**: an unconfigured backend prints SKIPPED and does not fail the check; a `slack` line via `auth.test` when the token is set
+- **`deploy/`**: NEW: `README.md` (the Custom App runbook, placeholders only), `crontab` (one tick at 05:30, `run --slack`), `update-server.sh` (push, pull, reinstall when `requirements.txt` changed, `health` and `source` as the proof; prints the CLI version, the token's renewal comment and the gap G5 line)
+- **`tests/test_boundary_line.py`**: no tracked file names a UNC path, an `smb://` host or an IPv4 literal outside the allowlist
+- **`requirements.txt`**: `anthropic<1` for this cycle
+- **Removed**: the retired `claude-sonnet-4-20250514` and `claude-haiku-4-5-20251001` IDs and the `claude.temperature` key; `_strip_preamble_json` and `_strip_preamble_markdown`; the dead `OUTPUT_DIR` and `CONFIG_PATH` lines in `.env.example`
+
+---
+
 ## [0.2.0] - 2026-03-11
 
 **Milestone**: Dual-Backend Architecture & Live End-to-End Validation
