@@ -145,7 +145,7 @@ ADR filter: D1 and D2 are each reversible by one roster line and one `.env` line
 - **MOE 2** (measurable 14 days after Wave 2 exits): a `headphones` reaction (episode produced and heard) on at least 10 of 14 posts. This is G8's second half; the Wave 3 probe reads it.
 - **MOE 3** (measurable 14 days after Wave 3 exits): a verdict reaction on at least 7 of 14 posts, and the agreement rate reported in G9's shape (a rank, exact; agreements of N reacted of M posted).
 
-**Calibration**: the run record is a measurement, not a gate. The one gate, the boundary-line test, must catch a planted `\\host\share` and a planted IPv4 literal in a fixture before it guards a commit.
+**Calibration**: the run record is a measurement, not a gate. The one gate, the boundary-line test, must catch a planted UNC path (`\\<host>\<share>`, written here as a placeholder so this sentence does not trip it) and a planted IPv4 literal in a fixture before it guards a commit.
 
 ---
 
@@ -231,7 +231,7 @@ None new; the existing roster covers it. Wave 1 is `feature-development.md` plus
 ## Status Log
 
 - **2026-10-23**: the lead chose Approach A, the home server (D1 closed), and asked for the backend to be re-checked against the subscription. The source pages (authentication.md, legal-and-compliance.md, headless.md, fetched that day) document `setup-token` for scripts and protect an end user's own subscription on the unmodified binary; D2 reversed to the subscription, task 1.2 added, A0 and A4 rewritten, A10 retargeted at usage limits, the cost column set to $0. The addendum to `docs/reviews/20261022_courier_claude_cli_headless_check.md` holds the quotes.
-- **2026-10-24**: the lead closed the rest. `paperboy` is the app's name and the roster key (D8). Slack carries a summary and the reminder, never the briefing, which lives on the home share under the first `HOME_*` variable, `HOME_BRIEFINGS_ROOT` (D4, D15); the file-upload assumptions A2a and A2b fall away and the Slack permission question with them. Thread replies that expand the post, `daily_weather`'s newer pattern, are sketched as Wave 3 task 3.4. Wave 1 first, the v0.3.0 CHANGELOG naming it (D17). Approved; the Focus in `docs/tasks.md` carries the three waves as steps 4 to 6. Wave 1 opened on `topic/pipeline-courier-wave1-20261024`.
+- **2026-10-24**: the lead closed the rest. `paperboy` is the app's name and the roster key (D8). Slack carries a summary and the reminder, never the briefing, which lives on the home share under the first `HOME_*` variable, `HOME_BRIEFINGS_ROOT` (D4, D15); the file-upload assumptions A2a and A2b fall away and the Slack permission question with them. Thread replies that expand the post, `daily_weather`'s newer pattern, are sketched as Wave 3 task 3.4. Wave 1 first, the v0.3.0 CHANGELOG naming it (D17). Approved; the Focus in `docs/tasks.md` carries the three waves as steps 4 to 6. Wave 1 opened on `topic/pipeline-courier-wave1-20261024`. Same day, two wording fixes: the Focus names the run-log reader by task number until the file exists (`/pcc` check 5 had flagged the path), and the calibration literal above is written as a placeholder.
 
 ---
 
