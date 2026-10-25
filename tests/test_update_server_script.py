@@ -30,3 +30,18 @@ def test_prove_string_puts_local_bin_on_path_before_main():
 def test_script_parses_as_bash():
     result = subprocess.run(["bash", "-n", str(SCRIPT)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_script_is_executable_on_disk():
+    import os
+
+    assert os.access(SCRIPT, os.X_OK), "deploy/update-server.sh is not executable; chmod +x it"
+
+
+def test_script_is_executable_in_the_index():
+    # The index mode is what every clone receives; a chmod on one box is not enough.
+    out = subprocess.run(
+        ["git", "ls-files", "-s", "deploy/update-server.sh"],
+        cwd=SCRIPT.parents[1], capture_output=True, text=True, check=True,
+    ).stdout
+    assert out.startswith("100755"), f"index mode: {out.strip() or 'untracked'} (git update-index --chmod=+x)"
