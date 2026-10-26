@@ -177,7 +177,7 @@ services:
 
 There is no `env_file`: the token must not appear in the App's environment or its YAML. `PATH` carries `<home>/.local/bin` so the run finds `claude`. If the form rejects `mem_limit`, drop it.
 
-`SSL_CERT_FILE` names the venv's certifi bundle: the slim image ships no CA store, and `urllib`, which the Slack post and the feed fetch use, reads the OS store and finds nothing (the first tick, 2026-10-26). The path carries the venv's Python minor; change it when the venv is rebuilt on another. Saving a YAML edit restarts the App; the next tick is the proof.
+`SSL_CERT_FILE` names the venv's certifi bundle: the slim image ships no CA store, and `urllib`, which the Slack post and the feed fetch use, reads the OS store and finds nothing (the first tick, 2026-10-26). The path carries the venv's Python minor; change it when the venv is rebuilt on another. Saving a YAML edit restarts the App; the next tick is the proof. A YAML edit can also be read back the same minute, from the host as the account, without waiting for a tick: the container's processes run as the account's uid, so `pgrep -u "$(id -u)" -f bin/supercronic` finds the scheduler and `tr '\0' '\n' < /proc/<pid>/environ` prints its environment. On 2026-10-26 that read caught two wrong pastes of the `SSL_CERT_FILE` line (the `<home>` placeholder left in; then the clone folder dropped) before any tick ran on them.
 
 ## Canary
 
