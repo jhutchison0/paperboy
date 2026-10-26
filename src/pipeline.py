@@ -10,7 +10,6 @@ import hashlib
 import json
 import logging
 import re
-import subprocess
 import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -208,14 +207,25 @@ def _config_sha256(config: PipelineConfig) -> str:
     return hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()
 
 
-def _git_sha() -> Optional[str]:
-    """Short HEAD sha of the repo, or None on any failure."""
+def _git_sha(root: Path = _REPO_ROOT) -> Optional[str]:
+    """Short HEAD sha read from .git's own files, or None on any failure.
+
+    No git binary: the App image has none, and the first tick's record read None.
+    """
     try:
-        out = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=_REPO_ROOT, capture_output=True, text=True, timeout=5, check=True,
-        )
-        return out.stdout.strip() or None
+        git = root / ".git"
+        head = (git / "HEAD").read_text().strip()
+        if head.startswith("ref: "):
+            ref = head[5:]
+            if (git / ref).exists():
+                head = (git / ref).read_text().strip()
+            else:  # packed after a gc
+                head = next(
+                    line.split()[0]
+                    for line in (git / "packed-refs").read_text().splitlines()
+                    if line.endswith(" " + ref)
+                )
+        return head[:7] or None
     except Exception:
         return None
 

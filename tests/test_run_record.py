@@ -11,7 +11,7 @@ import pytest
 from src.config import PipelineConfig
 from src.machine import Machine
 from src.models import BriefingDocument, Paper, ScoredPaper
-from src.pipeline import DailyPipeline, SelectionHistory, _config_sha256
+from src.pipeline import DailyPipeline, SelectionHistory, _config_sha256, _git_sha
 
 FIELDS = {
     "date", "started_at", "duration_s", "status", "backend", "machine",
@@ -155,15 +155,58 @@ class TestRunRecord:
         a.top_candidates.append("x")
         assert b.top_candidates == []
 
-    def test_git_sha_none_when_git_fails(self, config):
-        with patch("src.pipeline.subprocess.run", side_effect=FileNotFoundError):
-            _pipeline(config).run(paper_override=_paper())
-        assert _records(config)[0]["git_sha"] is None
+    def test_git_sha_needs_no_git_binary(self, config, monkeypatch):
+        # The App image has no git; the sha must still reach the record.
+        if not (Path(__file__).resolve().parents[1] / ".git").is_dir():
+            pytest.skip("no .git directory here")
+        monkeypatch.setenv("PATH", "")
+        _pipeline(config).run(paper_override=_paper())
+        sha = _records(config)[0]["git_sha"]
+        assert sha and len(sha) == 7 and set(sha) <= set("0123456789abcdef"), sha
 
     def test_git_sha_is_short_hash_in_repo(self, config):
         _pipeline(config).run(paper_override=_paper())
         sha = _records(config)[0]["git_sha"]
         assert sha is None or (4 <= len(sha) <= 40 and sha.isalnum())
+
+
+SHA = "0ea43f1" + "c" * 33  # 40 hex characters
+
+
+def _git_dir(tmp_path, head: str) -> Path:
+    git = tmp_path / ".git"
+    git.mkdir()
+    (git / "HEAD").write_text(head + "\n")
+    return git
+
+
+class TestGitSha:
+    """git_sha is read from .git's own files, never a git binary: the App image
+    (debian:bookworm-slim) has none, and the first tick's record line read
+    git_sha: None (2026-10-26)."""
+
+    def test_reads_the_loose_ref_head_names(self, tmp_path):
+        git = _git_dir(tmp_path, "ref: refs/heads/main")
+        (git / "refs" / "heads").mkdir(parents=True)
+        (git / "refs" / "heads" / "main").write_text(SHA + "\n")
+        assert _git_sha(tmp_path) == SHA[:7]
+
+    def test_falls_back_to_packed_refs(self, tmp_path):
+        # After a gc the loose file is gone and the ref lives in packed-refs.
+        git = _git_dir(tmp_path, "ref: refs/heads/main")
+        (git / "packed-refs").write_text(
+            "# pack-refs with: peeled fully-peeled sorted \n"
+            f"{'a' * 40} refs/heads/other\n"
+            f"{SHA} refs/heads/main\n"
+        )
+        assert _git_sha(tmp_path) == SHA[:7]
+
+    def test_detached_head_holds_the_sha_itself(self, tmp_path):
+        _git_dir(tmp_path, SHA)
+        assert _git_sha(tmp_path) == SHA[:7]
+
+    def test_none_without_a_git_dir(self, tmp_path):
+        assert _git_sha(tmp_path) is None
 
 
 class TestRunMetadata:

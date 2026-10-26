@@ -29,6 +29,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **`.gitignore`**: `.env.server`, the server's env file built on the workstation and sent by one `scp`
 - **`deploy/README.md`**: the `model` key in the server's CLI settings, the `.env.server` staging steps, the second dataset's two ACL entries, the login-shell note for the host proof, four traps met 2026-10-25
 
+### First Tick (CONOP COURIER Wave 2, 2026-10-26)
+- **Run record** (`src/pipeline.py`): `git_sha` is read from `.git/HEAD` and the ref it names, loose or packed, not from a `git` binary the App image lacks; the first tick's line had read `None`. `tests/test_run_record.py`: four `_git_sha` tests and a no-binary record test
+- **`deploy/README.md`**: `SSL_CERT_FILE` in the App YAML names the venv's certifi bundle, since `debian:bookworm-slim` has no CA store and `urllib` (the Slack post, the feed fetch) reads it; the first tick posted nothing (`CERTIFICATE_VERIFY_FAILED`) and fetched 0 articles. `tests/test_deploy_readme.py` pins the line. Two traps dated 2026-10-26
+
 ---
 
 ## [0.2.0] - 2026-03-11

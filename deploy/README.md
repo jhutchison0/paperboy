@@ -126,6 +126,11 @@ Every `<placeholder>` below is a value that lives only on your machines, never i
 - `nfs4xdr_getfacl: Failed to get NFSv4 ACL` as the account, while `getfacl` shows a plain `user::rwx group::rwx other::---`: not a POSIX dataset. The account lacked the read-ACL right; diagnose as admin (step 6).
 - Inside the clone, `claude -p` warns that the workspace is untrusted and ignores the repo's `.claude/settings.json`. Run it from `~`. The pipeline runs the CLI from the system temp directory and never sees the warning.
 
+### Traps met on 2026-10-26, with their fixes
+
+- The first tick's record line reads `slack_error: ... CERTIFICATE_VERIFY_FAILED ...` and `articles_fetched: 0`, with `status: success` and a briefing on the share, where the host proof had posted and fetched 21 articles: the container has no CA store (`debian:bookworm-slim` ships none) and Python's `urllib` reads the OS store. arXiv came through because `requests` carries certifi; the CLI because Node bundles its own. Fix: `SSL_CERT_FILE` in the App YAML. Proved on the server as the account: `SSL_CERT_DIR=/nonexistent` reproduces both failures, and `SSL_CERT_FILE=<the venv's certifi bundle>` beside it recovers both.
+- `git_sha: None` on the same line: the image has no `git`. Since 2026-10-26 the record reads `.git/HEAD` and the ref it names itself, so no binary is needed; deploy and the next tick carries the sha.
+
 ## The server's `.env`
 
 Copy `.env.example` to `.env` in the clone. It is never committed, and the App reads no `env_file`: the run loads `.env` itself. The keys:
@@ -164,12 +169,15 @@ services:
       HOME: <home>
       TZ: America/Chicago
       PATH: <home>/.local/bin:/usr/local/bin:/usr/bin:/bin
+      SSL_CERT_FILE: <home>/paperboy/.venv/lib/python3.12/site-packages/certifi/cacert.pem
     command: ["<home>/bin/supercronic", "-passthrough-logs", "deploy/crontab"]
     restart: unless-stopped
     mem_limit: 512m
 ```
 
 There is no `env_file`: the token must not appear in the App's environment or its YAML. `PATH` carries `<home>/.local/bin` so the run finds `claude`. If the form rejects `mem_limit`, drop it.
+
+`SSL_CERT_FILE` names the venv's certifi bundle: the slim image ships no CA store, and `urllib`, which the Slack post and the feed fetch use, reads the OS store and finds nothing (the first tick, 2026-10-26). The path carries the venv's Python minor; change it when the venv is rebuilt on another. Saving a YAML edit restarts the App; the next tick is the proof.
 
 ## Canary
 
